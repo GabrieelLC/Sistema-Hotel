@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check-in / Check-out</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <nav>
+      <a href="index.html">Cadastro de Cliente</a> |
+      <a href="ControleCliente.html">Controle de Clientes</a> |
+      <a href="CheckInCheckOut.html">Check-in / Check-out</a> |
+      <a href="ConsumoFrigobar.html">Consumo do Frigobar</a>
+    </nav>
+    
+    <fieldset id="checkInCheckOut">
+      <legend>Controle de Check-in e Check-out</legend>
+      <label for="codigoCliente">Código do Cliente:</label>
+      <input
+        type="text"
+        id="codigoCliente"
+        name="codigoCliente"
+        placeholder="Código do Cliente"
+        required
+      />
+      <br />
+      <label for="dataCheckIn">Data de Check-in:</label>
+      <input type="date" id="dataCheckIn" name="dataCheckIn" required />
+      <br />
+      <label for="horaCheckIn">Hora de Check-in:</label>
+      <input type="time" id="horaCheckIn" name="horaCheckIn" required />
+      <br />
+      <label for="dataCheckOut">Data de Check-out:</label>
+      <input type="date" id="dataCheckOut" name="dataCheckOut" />
+      <br />
+      <label for="horaCheckOut">Hora de Check-out:</label>
+      <input type="time" id="horaCheckOut" name="horaCheckOut" />
+      <br />
+      <label for="quartoCheckIn">Número do Quarto:</label>
+      <input
+        type="text"
+        id="quartoCheckIn"
+        name="quartoCheckIn"
+        placeholder="Número do Quarto"
+        required
+      />
+      <br />
+      <button type="button" onclick="registrarCheckIn()">
+        Registrar Check-in
+      </button>
+      <button type="button" onclick="registrarCheckOut()">
+        Registrar Check-out
+      </button>
+    </fieldset>
+</body>
+</html>
