@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Cadastro de Clientes</title>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cadastro de Clientes</h1>
+      <form id="cadastroForm">
+        <label for="cpf">CPF:</label>
+        <input type="text" id="cpf" name="cpf" required />
+
+        <label for="nome">Nome:</label>
+        <input type="text" id="nome" name="nome" required />
+
+        <label for="dataNascimento">Data de Nascimento:</label>
+        <input type="date" id="dataNascimento" name="dataNascimento" required />
+
+        <label for="endereco">Endereço:</label>
+        <input type="text" id="endereco" name="endereco" required />
+
+        <label for="cep">CEP:</label>
+        <input type="text" id="cep" name="cep" required />
+
+        <label for="complemento">Complemento:</label>
+        <input type="text" id="complemento" name="complemento" />
+
+        <button type="button" onclick="cadastrarCliente()">Cadastrar</button>
+      </form>
+      <div id="mensagem"></div>
+    </div>
+    <script src="script.js"></script>
+  </body>
+</html>
