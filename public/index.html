@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Clientes com Guias</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <!-- Menu de Guias -->
+    <nav>
+      <a href="#cadastroCliente">Cadastro de Cliente</a> |
+      <a href="#controleClientes">Controle de Clientes</a> |
+      <a href="#checkInCheckOut">Check-in / Check-out</a> |
+      <a href="#consumoFrigobar">Consumo do Frigobar</a>
+    </nav>
+
+    <hr />
+
+    <!-- Fieldset: Cadastro de Cliente -->
+    <fieldset id="cadastroCliente">
+      <legend>Cadastro de Cliente</legend>
+      <label for="cpf">CPF:</label>
+      <input
+        type="text"
+        id="cpf"
+        name="cpf"
+        placeholder="CPF"
+        required
+        pattern="\d{11}"
+      />
+      <br />
+      <label for="nome">Nome Completo:</label>
+      <input
+        type="text"
+        id="nome"
+        name="nome"
+        placeholder="Nome Completo"
+        required
+      />
+      <br />
+      <label for="dataNascimento">Data de Nascimento:</label>
+      <input type="date" id="dataNascimento" name="dataNascimento" required />
+      <br />
+      <label for="cep">CEP:</label>
+      <input
+        type="text"
+        id="cep"
+        name="cep"
+        placeholder="CEP"
+        required
+        pattern="\d{5}-?\d{3}"
+      />
+      <br />
+      <label for="endereco">Endereço:</label>
+      <input
+        type="text"
+        id="endereco"
+        name="endereco"
+        placeholder="Endereço"
+        required
+      />
+      <br />
+      <label for="email">Email:</label>
+      <input
+        type="email"
+        id="email"
+        name="email"
+        placeholder="E-mail"
+        required
+      />
+      <br />
+      <label for="telefone">Telefone:</label>
+      <input
+        type="text"
+        id="telefone"
+        name="telefone"
+        placeholder="Telefone"
+        required
+      />
+      <br />
+      <button type="button">Cadastrar</button>
+    </fieldset>
+
+    <hr />
+
+    <!-- Fieldset: Controle de Clientes -->
+    <fieldset id="controleClientes">
+      <legend>Controle de Clientes</legend>
+      <label for="filtro">Filtro:</label>
+      <input
+        type="text"
+        id="filtro"
+        name="filtro"
+        placeholder="Digite o nome ou CPF"
+      />
+      <button type="button">Filtrar</button>
+      <button type="button">Limpar</button>
+      <table id="tabelaClientes">
+        <thead>
+          <tr>
+            <th>Código do Cliente</th>
+            <th>Nome</th>
+            <th>CPF</th>
+            <th>Data de Nascimento</th>
+            <th>CEP</th>
+            <th>Endereço</th>
+            <th>Email</th>
+            <th>Telefone</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>111</td>
+            <td>João Silva</td>
+            <td>123.456.789-00</td>
+            <td>01/01/1980</td>
+            <td>12345-678</td>
+            <td>Rua A, 123</td>
+            <td>joao.silva@example.com</td>
+            <td>(11) 98765-4321</td>
+          </tr>
+        </tbody>
+      </table>
+    </fieldset>
+
+    <hr />
+
+    <!-- Fieldset: Check-in/Check-out -->
+    <fieldset id="checkInCheckOut">
+      <legend>Controle de Check-in e Check-out</legend>
+      <label for="codigoCliente">Código do Cliente:</label>
+      <input
+        type="text"
+        id="codigoCliente"
+        name="codigoCliente"
+        placeholder="Código do Cliente"
+        required
+      />
+      <br />
+      <label for="dataCheckIn">Data de Check-in:</label>
+      <input type="date" id="dataCheckIn" name="dataCheckIn" required />
+      <br />
+      <label for="horaCheckIn">Hora de Check-in:</label>
+      <input type="time" id="horaCheckIn" name="horaCheckIn" required />
+      <br />
+      <label for="dataCheckOut">Data de Check-out:</label>
+      <input type="date" id="dataCheckOut" name="dataCheckOut" />
+      <br />
+      <label for="horaCheckOut">Hora de Check-out:</label>
+      <input type="time" id="horaCheckOut" name="horaCheckOut" />
+      <br />
+      <button type="button" onclick="registrarCheckIn()">
+        Registrar Check-in
+      </button>
+      <button type="button" onclick="registrarCheckOut()">
+        Registrar Check-out
+      </button>
+    </fieldset>
+
+    <hr />
+
+    <!-- Fieldset: Controle de Consumo do Frigobar -->
+    <fieldset id="consumoFrigobar">
+      <legend>Controle de Consumo do Frigobar</legend>
+      <label for="produto">Produto:</label>
+      <input
+        type="text"
+        id="produto"
+        name="produto"
+        placeholder="Nome do Produto"
+        required
+      />
+      <br />
+      <label for="quantidade">Quantidade:</label>
+      <input type="number" id="quantidade" name="quantidade" min="1" required />
+      <br />
+      <label for="preco">Preço (R$):</label>
+      <input
+        type="text"
+        id="preco"
+        name="preco"
+        placeholder="Preço por Unidade"
+        required
+      />
+      <br />
+      <button type="button" onclick="adicionarProduto()">
+        Adicionar Produto
+      </button>
+      <button type="button" onclick="removerProduto()">Remover Produto</button>
+      <button type="button" onclick="calcularTotal()">Calcular Total</button>
+    </fieldset>
+  </body>
+</html>
