@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Controle Clientes</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
     <nav>
       <a href="index.html">Cadastro de Cliente</a> |
       <a href="ControleCliente.html">Controle de Clientes</a> |
-      <a href="CheckInCheckOut.html">Check-in / Check-out</a> |
-      <a href="ConsumoFrigobar.html">Consumo do Frigobar</a>
+      <a href="CheckInCheckOut.html">Check-in / Check-out</a>
     </nav>
-    
+
     <fieldset id="controleClientes">
       <legend>Controle de Clientes</legend>
       <label for="filtro">Filtro:</label>
@@ -28,7 +27,6 @@
       <table id="tabelaClientes">
         <thead>
           <tr>
-            <th>Código do Cliente</th>
             <th>Nome</th>
             <th>CPF</th>
             <th>Data de Nascimento</th>
@@ -37,11 +35,11 @@
             <th>Email</th>
             <th>Telefone</th>
             <th>Quarto</th>
+            <th>Frigobar</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>111</td>
             <td>João Silva</td>
             <td>123.456.789-00</td>
             <td>01/01/1980</td>
@@ -50,9 +48,10 @@
             <td>joao.silva@example.com</td>
             <td>(11) 98765-4321</td>
             <td>101</td>
+            <td>1x Coca-Cola</td>
           </tr>
         </tbody>
       </table>
     </fieldset>
-</body>
+  </body>
 </html>
