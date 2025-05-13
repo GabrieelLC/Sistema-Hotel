@@ -53,6 +53,37 @@
         </tbody>
       </table>
     </fieldset>
+    <fieldset id="consumoFrigobar">
+      <legend>Controle de Consumo do Frigobar</legend>
+      <label for="numeroQuarto">Número do Quarto:</label>
+      <input type="number" id="numeroQuarto" name="numeroQuarto" required />
+      <label for="produto">Produto:</label>
+      <input
+        type="text"
+        id="produto"
+        name="produto"
+        placeholder="Nome do Produto"
+        required
+      />
+      <br />
+      <label for="quantidade">Quantidade:</label>
+      <input type="number" id="quantidade" name="quantidade" min="1" required />
+      <br />
+      <label for="preco">Preço (R$):</label>
+      <input
+        type="text"
+        id="preco"
+        name="preco"
+        placeholder="Preço por Unidade"
+        required
+      />
+      <br />
+      <button type="button" onclick="adicionarProduto()">
+        Adicionar Produto
+      </button>
+      <button type="button" onclick="removerProduto()">Remover Produto</button>
+      <button type="button" onclick="calcularTotal()">Calcular Total</button>
+    </fieldset>
     <script src="js/script.js"></script>
   </body>
 </html>
