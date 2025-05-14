@@ -1,19 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Controle Clientes</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
     <nav>
       <a href="index.html">Cadastro de Cliente</a> |
       <a href="ControleCliente.html">Controle de Clientes</a> |
-      <a href="CheckInCheckOut.html">Check-in / Check-out</a> |
-      <a href="ConsumoFrigobar.html">Consumo do Frigobar</a>
+      <a href="CheckInCheckOut.html">Check-in / Check-out</a>
     </nav>
-    
+
     <fieldset id="controleClientes">
       <legend>Controle de Clientes</legend>
       <label for="filtro">Filtro:</label>
@@ -36,6 +35,7 @@
             <th>Email</th>
             <th>Telefone</th>
             <th>Quarto</th>
+            <th>Frigobar</th>
           </tr>
         </thead>
         <tbody>
@@ -48,10 +48,42 @@
             <td>joao.silva@example.com</td>
             <td>(11) 98765-4321</td>
             <td>101</td>
+            <td>1x Coca-Cola</td>
           </tr>
         </tbody>
       </table>
     </fieldset>
+    <fieldset id="consumoFrigobar">
+      <legend>Controle de Consumo do Frigobar</legend>
+      <label for="numeroQuarto">Número do Quarto:</label>
+      <input type="number" id="numeroQuarto" name="numeroQuarto" required />
+      <label for="produto">Produto:</label>
+      <input
+        type="text"
+        id="produto"
+        name="produto"
+        placeholder="Nome do Produto"
+        required
+      />
+      <br />
+      <label for="quantidade">Quantidade:</label>
+      <input type="number" id="quantidade" name="quantidade" min="1" required />
+      <br />
+      <label for="preco">Preço (R$):</label>
+      <input
+        type="text"
+        id="preco"
+        name="preco"
+        placeholder="Preço por Unidade"
+        required
+      />
+      <br />
+      <button type="button" onclick="adicionarProduto()">
+        Adicionar Produto
+      </button>
+      <button type="button" onclick="removerProduto()">Remover Produto</button>
+      <button type="button" onclick="calcularTotal()">Calcular Total</button>
+    </fieldset>
     <script src="js/script.js"></script>
-</body>
+  </body>
 </html>

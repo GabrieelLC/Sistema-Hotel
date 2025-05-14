@@ -1,27 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Check-in / Check-out</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
     <nav>
       <a href="index.html">Cadastro de Cliente</a> |
       <a href="ControleCliente.html">Controle de Clientes</a> |
-      <a href="CheckInCheckOut.html">Check-in / Check-out</a> |
-      <a href="ConsumoFrigobar.html">Consumo do Frigobar</a>
+      <a href="CheckInCheckOut.html">Check-in / Check-out</a>
     </nav>
-    
+
     <fieldset id="checkInCheckOut">
       <legend>Controle de Check-in e Check-out</legend>
-      <label for="codigoCliente">Código do Cliente:</label>
+      <label for="cpf">CPF do Cliente:</label>
       <input
         type="text"
-        id="codigoCliente"
-        name="codigoCliente"
-        placeholder="Código do Cliente"
+        id="cpf"
+        name="cpf"
+        placeholder="CPF do Cliente"
         required
       />
       <br />
@@ -46,6 +45,37 @@
         required
       />
       <br />
+      <table id="tabelaHospedagem">
+        <thead>
+          <tr>
+            <th>CPF</th>
+            <th>Nome do Cliente</th>
+            <th>Quarto</th>
+            <th>Data e Hora do Check-in</th>
+            <th>Data e Hora Prevista do Check-out</th>
+            <th>Data e Hora do Check-out Realizado</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>123.456.789-00</td>
+            <td>João Silva</td>
+            <td>101</td>
+            <td>15/05/2023 14:00</td>
+            <td>18/05/2023 12:00</td>
+            <td>18/05/2023 11:45</td>
+          </tr>
+          <tr>
+            <td>987.654.321-11</td>
+            <td>Maria Oliveira</td>
+            <td>102</td>
+            <td>16/05/2023 15:00</td>
+            <td>20/05/2023 10:00</td>
+            <td>--</td>
+          </tr>
+        </tbody>
+      </table>
+      <br />
       <button type="button" onclick="registrarCheckIn()">
         Registrar Check-in
       </button>
@@ -54,5 +84,5 @@
       </button>
     </fieldset>
     <script src="js/script.js"></script>
-</body>
+  </body>
 </html>
