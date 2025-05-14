@@ -12,18 +12,18 @@ router.get('/teste', (req, res) => {
 
 // Rota para cadastrar um cliente
 router.post('/clientes', (req, res) => {
-  const { CPF, Nome, data_nasc, CEP, Endereco, Email, Telefone } = req.body;
+  const { CPF, Nome, data_nasc, CEP, Endereco, Email, Telefone, quarto } = req.body;
 
-  if (!CPF || !Nome || !data_nasc || !CEP || !Email || !Telefone) {
+  if (!CPF || !Nome || !data_nasc || !CEP || !Email || !Telefone || !quarto) {
     return res.status(400).json({ erro: 'Todos os campos obrigatórios devem ser preenchidos.' });
   }
 
   const sql = `
-    INSERT INTO cadastro_clientes (CPF, Nome, data_nasc, CEP, Endereco, Email, Telefone)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO cadastro_clientes (CPF, Nome, data_nasc, CEP, Endereco, Email, Telefone, quarto)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  db.query(sql, [CPF, Nome, data_nasc, CEP, Endereco, Email, Telefone], (err, result) => {
+  db.query(sql, [CPF, Nome, data_nasc, CEP, Endereco, Email, Telefone, quarto], (err, result) => {
     if (err) {
       console.error('Erro ao cadastrar cliente:', err);
       return res.status(500).json({ erro: 'Erro ao cadastrar cliente.' });
