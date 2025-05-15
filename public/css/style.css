@@ -21,6 +21,12 @@ nav a:hover {
   background-color: #ddd;
 }
 
+nav a.ativo{
+  background-color: #4cafaf;
+  color: white;
+  font-weight: bold;
+}
+
 fieldset {
   border: 1px solid #ccc;
   padding: 20px;
