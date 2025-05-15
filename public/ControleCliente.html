@@ -9,7 +9,7 @@
   <body>
     <nav>
       <a href="index.html">Cadastro de Cliente</a> |
-      <a href="ControleCliente.html">Controle de Clientes</a> |
+      <a href="ControleCliente.html" class="ativo">Controle de Clientes</a> |
       <a href="CheckInCheckOut.html">Check-in / Check-out</a>
     </nav>
 
@@ -22,8 +22,8 @@
         name="filtro"
         placeholder="Digite o nome ou CPF"
       />
-      <button type="button">Filtrar</button>
-      <button type="button">Limpar</button>
+      <button type="button" onclick="filtrar()">Filtrar</button>
+      <button type="button" onclick="limpar()">Limpar</button>
       <table id="tabelaClientes">
         <thead>
           <tr>
@@ -39,17 +39,6 @@
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>João Silva</td>
-            <td>123.456.789-00</td>
-            <td>01/01/1980</td>
-            <td>12345-678</td>
-            <td>Rua A, 123</td>
-            <td>joao.silva@example.com</td>
-            <td>(11) 98765-4321</td>
-            <td>101</td>
-            <td>1x Coca-Cola</td>
-          </tr>
         </tbody>
       </table>
     </fieldset>

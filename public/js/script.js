@@ -53,3 +53,40 @@ function limparFormulario() {
   document.getElementById("telefone").value = "";
   document.getElementById("quarto").value = "";
 }
+
+function filtrar() {
+  const filtro = document.getElementById("filtro").value.trim().toLowerCase();
+
+  fetch("http://localhost:3000/api/clientes")
+    .then(response => response.json())
+    .then(clientes => {
+      const tabela = document.getElementById("tabelaClientes").getElementsByTagName('tbody')[0];
+      tabela.innerHTML = ""; // Limpa a tabela
+
+      clientes
+        .filter(cliente =>
+          cliente.Nome.toLowerCase().includes(filtro) ||
+          cliente.CPF.toLowerCase().includes(filtro)
+        )
+        .forEach(cliente => {
+          const linha = tabela.insertRow();
+          linha.insertCell().innerText = cliente.Nome;
+          linha.insertCell().innerText = cliente.CPF;
+          linha.insertCell().innerText = cliente.data_nasc;
+          linha.insertCell().innerText = cliente.CEP;
+          linha.insertCell().innerText = cliente.Endereco;
+          linha.insertCell().innerText = cliente.Email;
+          linha.insertCell().innerText = cliente.Telefone;
+          linha.insertCell().innerText = cliente.quarto;
+          linha.insertCell().innerText = ""; // Frigobar (preencha se desejar)
+        });
+    });
+}
+
+function limpar() {
+  document.getElementById("filtro").value = "";
+  filtrar(); // Mostra todos os clientes novamente
+}
+
+// Carrega todos os clientes ao abrir a página
+window.onload = filtrar;
