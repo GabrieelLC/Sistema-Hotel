@@ -97,3 +97,40 @@ exports.registrarCheckin = (req, res) => {
     res.status(201).json({ mensagem: 'Check-in/Check-out registrado com sucesso!' });
   });
 };
+
+// Criar produto
+exports.adicionarProdutoCardapio = (req, res) => {
+  const { nome, preco } = req.body;
+  if (!nome || !preco) return res.status(400).json({ erro: 'Nome e preço obrigatórios.' });
+  db.query('INSERT INTO cardapio (nome, preco) VALUES (?, ?)', [nome, preco], (err) => {
+    if (err) return res.status(500).json({ erro: 'Erro ao adicionar produto.' });
+    res.status(201).json({ mensagem: 'Produto adicionado!' });
+  });
+};
+
+// Listar produtos
+exports.listarCardapio = (req, res) => {
+  db.query('SELECT * FROM cardapio', (err, results) => {
+    if (err) return res.status(500).json({ erro: 'Erro ao listar cardápio.' });
+    res.json(results);
+  });
+};
+
+// Editar produto
+exports.editarProdutoCardapio = (req, res) => {
+  const { id } = req.params;
+  const { nome, preco } = req.body;
+  db.query('UPDATE cardapio SET nome=?, preco=? WHERE id=?', [nome, preco, id], (err) => {
+    if (err) return res.status(500).json({ erro: 'Erro ao editar produto.' });
+    res.json({ mensagem: 'Produto atualizado!' });
+  });
+};
+
+// Remover produto
+exports.removerProdutoCardapio = (req, res) => {
+  const { id } = req.params;
+  db.query('DELETE FROM cardapio WHERE id=?', [id], (err) => {
+    if (err) return res.status(500).json({ erro: 'Erro ao remover produto.' });
+    res.json({ mensagem: 'Produto removido!' });
+  });
+};

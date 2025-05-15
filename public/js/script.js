@@ -78,15 +78,65 @@ function filtrar() {
           linha.insertCell().innerText = cliente.Email;
           linha.insertCell().innerText = cliente.Telefone;
           linha.insertCell().innerText = cliente.quarto;
-          linha.insertCell().innerText = ""; // Frigobar (preencha se desejar)
         });
     });
 }
 
 function limpar() {
   document.getElementById("filtro").value = "";
-  filtrar(); // Mostra todos os clientes novamente
+  filtrar(); 
 }
 
-// Carrega todos os clientes ao abrir a página
-window.onload = filtrar;
+let listaConsumo = [];
+
+function carregarCardapio() {
+  fetch("http://localhost:3000/api/cardapio")
+    .then(res => res.json())
+    .then(cardapio => {
+      const datalist = document.getElementById("listaCardapio");
+      datalist.innerHTML = "";
+      cardapio.forEach(produto => {
+        const option = document.createElement("option");
+        option.value = produto.nome;
+        datalist.appendChild(option);
+      });
+    });
+}
+
+function adicionarProdutoFrigobar() {
+  const produto = document.getElementById("produto").value;
+  const quantidade = parseInt(document.getElementById("quantidade").value, 10);
+
+  fetch(`http://localhost:3000/api/cardapio`)
+    .then(res => res.json())
+    .then(cardapio => {
+      const item = cardapio.find(p => p.nome === produto);
+      if (!item) {
+        alert("Produto não encontrado no cardápio!");
+        return;
+      }
+      listaConsumo.push({ produto, quantidade, preco: item.preco });
+      atualizarTabelaConsumo();
+    });
+}
+
+function atualizarTabelaConsumo() {
+  const tabela = document.getElementById("tabelaConsumo").getElementsByTagName('tbody')[0];
+  tabela.innerHTML = "";
+  let total = 0;
+  listaConsumo.forEach(item => {
+    const linha = tabela.insertRow();
+    linha.insertCell().innerText = item.produto;
+    linha.insertCell().innerText = item.quantidade;
+    linha.insertCell().innerText = item.preco.toFixed(2);
+    linha.insertCell().innerText = (item.quantidade * item.preco).toFixed(2);
+    total += item.quantidade * item.preco;
+  });
+  document.getElementById("totalConsumo").innerText = "Total: R$ " + total.toFixed(2);
+}
+
+// Carregar cardápio ao abrir a página
+window.onload = function() {
+  carregarCardapio();
+  filtrar(); // Se quiser carregar clientes também
+};

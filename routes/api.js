@@ -20,4 +20,10 @@ router.post('/frigobar', hotelController.registrarFrigobar);
 // Check-in/Check-out
 router.post('/checkin', hotelController.registrarCheckin);
 
+// Cardápio
+router.post('/cardapio', hotelController.adicionarProdutoCardapio);
+router.get('/cardapio', hotelController.listarCardapio);
+router.put('/cardapio/:id', hotelController.editarProdutoCardapio);
+router.delete('/cardapio/:id', hotelController.removerProdutoCardapio);
+
 module.exports = router;
