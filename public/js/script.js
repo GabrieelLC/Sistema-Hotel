@@ -58,17 +58,20 @@ function filtrar() {
   const filtro = document.getElementById("filtro").value.trim().toLowerCase();
 
   fetch("http://localhost:3000/api/clientes")
-    .then(response => response.json())
-    .then(clientes => {
-      const tabela = document.getElementById("tabelaClientes").getElementsByTagName('tbody')[0];
+    .then((response) => response.json())
+    .then((clientes) => {
+      const tabela = document
+        .getElementById("tabelaClientes")
+        .getElementsByTagName("tbody")[0];
       tabela.innerHTML = ""; // Limpa a tabela
 
       clientes
-        .filter(cliente =>
-          cliente.Nome.toLowerCase().includes(filtro) ||
-          cliente.CPF.toLowerCase().includes(filtro)
+        .filter(
+          (cliente) =>
+            cliente.Nome.toLowerCase().includes(filtro) ||
+            cliente.CPF.toLowerCase().includes(filtro)
         )
-        .forEach(cliente => {
+        .forEach((cliente) => {
           const linha = tabela.insertRow();
           linha.insertCell().innerText = cliente.Nome;
           linha.insertCell().innerText = cliente.CPF;
@@ -84,18 +87,18 @@ function filtrar() {
 
 function limpar() {
   document.getElementById("filtro").value = "";
-  filtrar(); 
+  filtrar();
 }
 
 let listaConsumo = [];
 
 function carregarCardapio() {
   fetch("http://localhost:3000/api/cardapio")
-    .then(res => res.json())
-    .then(cardapio => {
+    .then((res) => res.json())
+    .then((cardapio) => {
       const datalist = document.getElementById("listaCardapio");
       datalist.innerHTML = "";
-      cardapio.forEach(produto => {
+      cardapio.forEach((produto) => {
         const option = document.createElement("option");
         option.value = produto.nome;
         datalist.appendChild(option);
@@ -108,9 +111,9 @@ function adicionarProdutoFrigobar() {
   const quantidade = parseInt(document.getElementById("quantidade").value, 10);
 
   fetch(`http://localhost:3000/api/cardapio`)
-    .then(res => res.json())
-    .then(cardapio => {
-      const item = cardapio.find(p => p.nome === produto);
+    .then((res) => res.json())
+    .then((cardapio) => {
+      const item = cardapio.find((p) => p.nome === produto);
       if (!item) {
         alert("Produto não encontrado no cardápio!");
         return;
@@ -121,10 +124,12 @@ function adicionarProdutoFrigobar() {
 }
 
 function atualizarTabelaConsumo() {
-  const tabela = document.getElementById("tabelaConsumo").getElementsByTagName('tbody')[0];
+  const tabela = document
+    .getElementById("tabelaConsumo")
+    .getElementsByTagName("tbody")[0];
   tabela.innerHTML = "";
   let total = 0;
-  listaConsumo.forEach(item => {
+  listaConsumo.forEach((item) => {
     const linha = tabela.insertRow();
     linha.insertCell().innerText = item.produto;
     linha.insertCell().innerText = item.quantidade;
@@ -132,11 +137,38 @@ function atualizarTabelaConsumo() {
     linha.insertCell().innerText = (item.quantidade * item.preco).toFixed(2);
     total += item.quantidade * item.preco;
   });
-  document.getElementById("totalConsumo").innerText = "Total: R$ " + total.toFixed(2);
+  document.getElementById("totalConsumo").innerText =
+    "Total: R$ " + total.toFixed(2);
 }
 
 // Carregar cardápio ao abrir a página
-window.onload = function() {
+window.onload = function () {
   carregarCardapio();
   filtrar(); // Se quiser carregar clientes também
 };
+
+// Cadastro
+if (document.getElementById("cadastroForm")) {
+  document
+    .getElementById("cadastroForm")
+    .addEventListener("submit", function (e) {
+      e.preventDefault();
+      localStorage.setItem("email", document.getElementById("email").value);
+      localStorage.setItem("senha", document.getElementById("senha").value);
+      window.location.href = "Login.html";
+    });
+}
+// Login
+if (window.location.pathname.endsWith("Login.html")) {
+  document.querySelector("button[type='button']").onclick = function () {
+    const email = document.getElementById("email").value;
+    const senha = document.getElementById("senha").value;
+    const emailSalvo = localStorage.getItem("email");
+    const senhaSalva = localStorage.getItem("senha");
+    if (email === emailSalvo && senha === senhaSalva) {
+      window.location.href = "index.html";
+    } else {
+      alert("Email ou senha incorretos!");
+    }
+  };
+}
