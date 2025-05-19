@@ -96,12 +96,14 @@ function carregarCardapio() {
   fetch("http://localhost:3000/api/cardapio")
     .then((res) => res.json())
     .then((cardapio) => {
-      const datalist = document.getElementById("listaCardapio");
-      datalist.innerHTML = "";
+      const select = document.getElementById("produto");
+      if (!select) return;
+      select.innerHTML = ""; // Limpa opções anteriores
       cardapio.forEach((produto) => {
         const option = document.createElement("option");
         option.value = produto.nome;
-        datalist.appendChild(option);
+        option.textContent = produto.nome;
+        select.appendChild(option);
       });
     });
 }
@@ -171,4 +173,116 @@ if (window.location.pathname.endsWith("Login.html")) {
       alert("Email ou senha incorretos!");
     }
   };
+}
+function carregarCardapio() {
+  // Preenche o select de produtos (frigobar)
+  const select = document.getElementById("produto");
+  fetch("http://localhost:3000/api/cardapio")
+    .then((res) => res.json())
+    .then((cardapio) => {
+      if (select) {
+        select.innerHTML = "";
+        cardapio.forEach((produto) => {
+          const option = document.createElement("option");
+          option.value = produto.nome;
+          option.textContent = produto.nome;
+          select.appendChild(option);
+        });
+      }
+      // Preenche a tabela do cardápio, se existir
+      const tbody = document.querySelector("#tabelaCardapio tbody");
+      if (tbody) {
+        tbody.innerHTML = "";
+        cardapio.forEach((produto, index) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${produto.nome}</td>
+            <td>R$ ${parseFloat(produto.preco).toFixed(2)}</td>
+            <td>
+              <button type="button" onclick="removerProdutoCardapio(${index})">Remover</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+    });
+}
+
+function adicionarProdutoCardapio() {
+  const nome = document.getElementById("nomeProduto").value.trim();
+  const preco = document.getElementById("precoProduto").value;
+  if (!nome || !preco) {
+    alert("Preencha todos os campos!");
+    return;
+  }
+  fetch("http://localhost:3000/api/cardapio", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nome, preco }),
+  })
+    .then((res) => res.json())
+    .then(() => {
+      document.getElementById("nomeProduto").value = "";
+      document.getElementById("precoProduto").value = "";
+      carregarCardapio();
+    });
+}
+
+function removerProdutoCardapio(index) {
+  // Implemente a remoção conforme sua API (por id ou nome)
+  // Exemplo: fetch("http://localhost:3000/api/cardapio/"+id, { method: "DELETE" })
+  // Depois chame carregarCardapio();
+}
+
+// Carrega cardápio ao abrir a página
+window.onload = function () {
+  carregarCardapio();
+  if (typeof filtrar === "function") filtrar();
+};
+
+let cardapioProdutos = [];
+function carregarCardapio() {
+  const select = document.getElementById("produto");
+  fetch("http://localhost:3000/api/cardapio")
+    .then((res) => res.json())
+    .then((cardapio) => {
+      cardapioProdutos = cardapio; // Salva para uso posterior
+      if (select) {
+        select.innerHTML = "";
+        cardapio.forEach((produto) => {
+          const option = document.createElement("option");
+          option.value = produto.nome;
+          option.textContent = produto.nome;
+          select.appendChild(option);
+        });
+      }
+      // ...preencher tabela do cardápio se necessário...
+    });
+}
+function adicionarProdutoFrigobar() {
+  const select = document.getElementById("produto");
+  const quantidade = parseInt(document.getElementById("quantidade").value, 10);
+  const numeroQuarto = document.getElementById("numeroQuarto").value;
+  const cpf = document.getElementById("cpf").value; // Captura o CPF
+  const produtoSelecionado = cardapioProdutos.find(
+    (p) => p.nome === select.value
+  );
+  if (!produtoSelecionado) return;
+
+  const preco = Number(produtoSelecionado.preco);
+  const total = quantidade * preco;
+
+  // Adicione à tabela de consumo
+  const tabela = document
+    .getElementById("tabelaConsumo")
+    .getElementsByTagName("tbody")[0];
+  const linha = tabela.insertRow();
+  linha.insertCell().innerText = cpf; // Adiciona o CPF
+  linha.insertCell().innerText = produtoSelecionado.nome;
+  linha.insertCell().innerText = quantidade;
+  linha.insertCell().innerText = preco.toFixed(2);
+  linha.insertCell().innerText = total.toFixed(2);
+  linha.insertCell().innerText = numeroQuarto;
+
+  // Atualize o total geral se necessário
 }
