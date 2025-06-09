@@ -4,12 +4,12 @@ const db = mysql.createConnection({
   host: 'localhost',
   user: 'root',
   password: '',
-  database: '',
+  database: 'Hotel', 
 });
 
 db.connect(err => {
   if (err) throw err;
-  console.log('ta conectado. vambora!');
+  console.log('Conexão com o banco de dados estabelecida!');
 });
 
 module.exports = db;
