@@ -3,11 +3,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const routes = require('./routes/routes'); 
 const db = require('./config/database'); 
+const path = require('path'); // Importa o módulo path para servir arquivos estáticos
 
 const app = express();
 
 app.use(cors());
 app.use(bodyParser.json());
+
+// Configura o Express para servir arquivos estáticos
+app.use(express.static(path.join(__dirname, '../frontend')));
 
 db.connect(err => {
   if (err) {
@@ -19,7 +23,7 @@ db.connect(err => {
 
 // Rota para a raiz
 app.get('/', (req, res) => {
-  res.send('Bem-vindo ao Sistema Hotel!');
+  res.sendFile(path.join(__dirname, '../frontend/index.html')); // Serve a página inicial
 });
 
 // Usa as rotas configuradas no arquivo routes.js

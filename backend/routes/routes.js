@@ -1,5 +1,5 @@
 const express = require('express');
-const { Usuarios } = require('../models/models');
+const { Usuarios, Clientes } = require('../models/models');
 
 const router = express.Router();
 
@@ -22,6 +22,16 @@ router.post('/login', (req, res) => {
     }
 
     res.status(200).json({ message: 'Login realizado com sucesso', user });
+  });
+});
+
+// Rota para listar todos os clientes
+router.get('/clientes', (req, res) => {
+  Clientes.findAll((err, results) => {
+    if (err) {
+      return res.status(500).json({ message: 'Erro ao buscar clientes', error: err });
+    }
+    res.status(200).json(results);
   });
 });
 
