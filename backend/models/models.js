@@ -1,6 +1,5 @@
 const db = require('../config/database');
 
-// Funções para manipular a tabela Usuarios
 const Usuarios = {
   findAll: (callback) => {
     db.query('SELECT * FROM Usuarios', callback);
@@ -21,7 +20,6 @@ const Usuarios = {
   },
 };
 
-// Funções para manipular a tabela TiposQuarto
 const TiposQuarto = {
   findAll: (callback) => {
     db.query('SELECT * FROM TiposQuarto', callback);
@@ -42,7 +40,6 @@ const TiposQuarto = {
   },
 };
 
-// Funções para manipular a tabela Clientes
 const Clientes = {
   findAll: (callback) => {
     db.query('SELECT * FROM Clientes', callback);
@@ -63,11 +60,9 @@ const Clientes = {
   },
 };
 
-// Outros modelos podem ser adicionados aqui...
 
 module.exports = {
   Usuarios,
   TiposQuarto,
   Clientes,
-  // Adicione outros modelos aqui
 };

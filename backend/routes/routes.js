@@ -1,15 +1,9 @@
 const express = require('express');
-const cors = require('cors');
-const bodyParser = require('body-parser');
 const { Usuarios } = require('../models/models');
 
-const app = express();
+const router = express.Router();
 
-app.use(cors());
-app.use(bodyParser.json());
-
-// Rota de login
-app.post('/api/login', (req, res) => {
+router.post('/login', (req, res) => {
   const { usuario, senha } = req.body;
 
   Usuarios.findAll((err, results) => {
@@ -30,7 +24,4 @@ app.post('/api/login', (req, res) => {
   });
 });
 
-const PORT = 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
-});
+module.exports = router;
