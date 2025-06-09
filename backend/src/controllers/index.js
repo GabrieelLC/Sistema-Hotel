@@ -1,11 +1,11 @@
 export const getAllItems = (req, res) => {
-    // Logic to get all items
+
     res.send('Get all items');
 };
 
 export const getItemById = (req, res) => {
     const { id } = req.params;
-    // Logic to get an item by ID
+
     res.send(`Get item with ID: ${id}`);
 };
 

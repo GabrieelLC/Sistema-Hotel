@@ -1,5 +1,3 @@
-// This file defines the data models used in the backend application, typically interacting with a database. 
-
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
