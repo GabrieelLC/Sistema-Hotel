@@ -1,25 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <table border="1">
-      <tr>
-        <td>Usuário:</td>
-        <td><input type="text" name="usuario" /></td>
-      </tr>
-      <tr>
-        <td>Senha:</td>
-        <td><input type="password" name="senha" /></td>
-      </tr>
-      <tr>
-        <td colspan="2" align="center">
-          <input type="submit" value="Entrar" />
-        </td>
-      </tr>
-    </table>
+    <div class="container">
+      <h2>Login</h2>
+      <form>
+        <label for="usuario">Digite seu Usuário</label>
+        <input
+          type="text"
+          id="usuario"
+          placeholder="Usuário"
+          autocomplete="username"
+        />
+
+        <label for="senha">Digite sua senha</label>
+        <input
+          type="password"
+          id="senha"
+          placeholder="Senha"
+          autocomplete="current-password"
+        />
+
+        <button type="submit">Entrar</button>
+      </form>
+    </div>
   </body>
 </html>
