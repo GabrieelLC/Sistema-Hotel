@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cadastro de Quarto</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="container-quarto">
+      <br />
+      <br />
+      <button class="btn-voltar" onclick="window.history.back();">
+        Voltar
+      </button>
+      <form class="form-quarto">
+        <div class="campos-linha">
+          <div class="campo">
+            <label for="tipo">Tipo do quarto</label>
+            <input type="text" id="tipo" name="tipo" required />
+          </div>
+          <div class="campo">
+            <label for="numero">Número do quarto</label>
+            <input type="text" id="numero" name="numero" required />
+          </div>
+        </div>
+        <div class="campos-linha">
+          <div class="campo">
+            <label for="descricao">Descrição do quarto</label>
+            <textarea
+              id="descricao"
+              name="descricao"
+              rows="5"
+              required
+            ></textarea>
+          </div>
+          <div class="campo">
+            <label for="valor">Valor da diária</label>
+            <input type="text" id="valor" name="valor" required />
+          </div>
+        </div>
+        <button class="btn-registrar" type="submit">Registrar</button>
+      </form>
+    </div>
+  </body>
+</html>

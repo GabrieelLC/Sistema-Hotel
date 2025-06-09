@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Consulta de Clientes</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="clientes-container">
+      <div class="clientes-filter-bar">
+        <button class="clientes-back-btn" title="Voltar">&#8592;</button>
+        <label for="clientes-filtro">Filtro</label>
+        <input
+          type="text"
+          id="clientes-filtro"
+          class="clientes-filtro-input"
+          placeholder="Digite o cpf, nome ou email"
+        />
+        <button class="clientes-filter-btn">Filtrar</button>
+      </div>
+
+      <div class="clientes-table-container">
+        <table class="clientes-table">
+          <thead>
+            <tr>
+              <th>CPF</th>
+              <th>Nome</th>
+              <th>CEP</th>
+              <th>Endereço</th>
+              <th>Telefone</th>
+              <th>Email</th>
+              <th>Data Cadastro</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>123.456.789.00</td>
+              <td>Josualdo Justos da Silva</td>
+              <td>12345-678</td>
+              <td>Rua Roberto da Silva</td>
+              <td>61992369194</td>
+              <td>josualdo@gmail.com</td>
+              <td>20/01/2095</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
