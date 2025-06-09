@@ -3,6 +3,7 @@ const { Usuarios } = require('../models/models');
 
 const router = express.Router();
 
+// Rota de login
 router.post('/login', (req, res) => {
   const { usuario, senha } = req.body;
 
