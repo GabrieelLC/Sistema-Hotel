@@ -60,9 +60,37 @@ const Clientes = {
   },
 };
 
+const Quartos = {
+  findAll: (callback) => {
+    db.query('SELECT * FROM Quartos', callback);
+  },
+  findByNumero: (numero, callback) => {
+    db.query('SELECT * FROM Quartos WHERE numero = ?', [numero], callback);
+  },
+  create: (data, callback) => {
+    // status é opcional, se não vier, usa 'disponivel'
+    const status = data.status || 'disponivel';
+    db.query(
+      'INSERT INTO Quartos (numero, tipo_id, status) VALUES (?, ?, ?)',
+      [data.numero, data.tipo_id, status],
+      callback
+    );
+  },
+  update: (numero, data, callback) => {
+    db.query(
+      'UPDATE Quartos SET tipo_id = ?, status = ? WHERE numero = ?',
+      [data.tipo_id, data.status, numero],
+      callback
+    );
+  },
+  delete: (numero, callback) => {
+    db.query('DELETE FROM Quartos WHERE numero = ?', [numero], callback);
+  },
+};
 
 module.exports = {
   Usuarios,
   TiposQuarto,
   Clientes,
+  Quartos,
 };

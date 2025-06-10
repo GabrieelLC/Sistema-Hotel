@@ -10,7 +10,7 @@
       <button class="btn-voltar" onclick="window.history.back();">
         Voltar
       </button>
-      <form class="form-cadastro">
+      <form id="cadastroForm" class="form-cadastro">
         <br />
         <h2>Cadastro de Cliente</h2>
         <div class="linha">
@@ -46,6 +46,10 @@
           </div>
         </div>
         <div class="linha">
+          <div class="campo">
+            <label for="cep">CEP</label>
+            <input type="text" id="cep" name="cep" required />
+          </div>
           <div class="campo grande">
             <label for="endereco">Endereço</label>
             <textarea
@@ -59,5 +63,6 @@
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
     </div>
+    <script src="js/script.js"></script>
   </body>
 </html>

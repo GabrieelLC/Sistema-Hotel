@@ -7,13 +7,67 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <h1>Bem-vindo ao Sistema Hotel!</h1>
-    <p>Escolha uma opção:</p>
-    <ul>
-      <li><a href="login.html">Login</a></li>
-      <li><a href="cadastro_cliente.html">Cadastro de Cliente</a></li>
-      <li><a href="cadastro_quarto.html">Cadastro de Quarto</a></li>
-      <li><a href="clientes.html">Consulta de Clientes</a></li>
-    </ul>
+    <div class="main-flex">
+      <div class="sidebar">
+        <div class="calendar">
+          <div class="calendar-icon">📅</div>
+          <div class="date-time" id="dateTime"></div>
+        </div>
+        <a href="#" class="menu-btn">Check-in</a>
+        <a href="#" class="menu-btn">Check-out</a>
+        <a href="clientes.html" class="menu-btn">Clientes</a>
+        <a href="quartos.html" class="menu-btn">Quartos</a>
+        <a href="#" class="menu-btn">Reservas</a>
+        <a href="#" class="menu-btn">Produtos</a>
+      </div>
+      <div class="main-content">
+        <div class="tab-header">
+          <div class="tab">+ Cadastro</div>
+        </div>
+        <div>
+          <div class="section-title">CHEGADAS DO DIA (CHECK IN)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Quarto</th>
+                <th>Tipo de Quarto</th>
+                <th>Hora</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Valor da diária</th>
+              </tr>
+            </thead>
+            <tbody id="checkin-tbody"></tbody>
+          </table>
+          <div class="section-title">SAÍDAS DO DIA (CHECK OUT)</div>
+          <table>
+            <tr>
+              <th>CPF</th>
+              <th>Nome</th>
+              <th>Quarto</th>
+              <th>Tipo de Quarto</th>
+              <th>Hora</th>
+              <th>Telefone</th>
+              <th>Email</th>
+              <th>Valor da diária</th>
+            </tr>
+            <tbody id="checkout-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Atualiza data e hora em tempo real
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString('pt-BR');
+        const time = now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        document.getElementById('dateTime').textContent = `${date}\n${time}`;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+    </script>
   </body>
 </html>
