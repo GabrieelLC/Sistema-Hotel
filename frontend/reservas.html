@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema Hotel</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
+      body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        background: #f7f8fa;
+        margin: 0;
+        padding: 0;
+      }
+      .main-flex {
+        display: flex;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 220px;
+        background: #fff;
+        border-right: 1.5px solid #e1e2ea;
+        padding: 24px 0 0 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .calendar {
+        display: flex;
+        align-items: center;
+        margin-bottom: 32px;
+      }
+      .calendar-icon {
+        font-size: 22px;
+        margin-right: 8px;
+      }
+      .date-time {
+        font-size: 15px;
+        color: #03b6b1;
+        white-space: pre-line;
+        font-weight: 500;
+      }
+      .menu-btn {
+        width: 160px;
+        margin-bottom: 16px;
+        padding: 12px 0;
+        background: #03b6b1;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        font-weight: 500;
+        transition: background 0.2s;
+        display: block;
+      }
+      .menu-btn:hover {
+        background: #029a97;
+      }
+      .main-content {
+        flex: 1;
+        padding: 38px 48px;
+        background: #f7f8fa;
+      }
+      .tab-header {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 26px;
+      }
+      .cadastro-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .tab {
+        cursor: pointer;
+        background: #03b6b1;
+        color: #fff;
+        padding: 10px 22px;
+        border-radius: 7px;
+        font-weight: 500;
+        font-size: 15px;
+        transition: background 0.2s;
+        user-select: none;
+      }
+      .tab:hover {
+        background: #029a97;
+      }
+      .cadastro-dropdown-content {
+        display: none;
+        position: absolute;
+        background: #fff;
+        min-width: 160px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        border-radius: 8px;
+        z-index: 10;
+        right: 0;
+        top: 38px;
+      }
+      .cadastro-dropdown-content a {
+        color: #222;
+        padding: 12px 18px;
+        text-decoration: none;
+        display: block;
+        border-bottom: 1px solid #eee;
+        font-size: 1rem;
+        transition: background 0.2s;
+      }
+      .cadastro-dropdown-content a:last-child {
+        border-bottom: none;
+      }
+      .cadastro-dropdown-content a:hover {
+        background: #f2f2f2;
+      }
+      .cadastro-dropdown.show .cadastro-dropdown-content {
+        display: block;
+      }
+      .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #222;
+        margin: 32px 0 14px 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: #fff;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 32px;
+      }
+      th,
+      td {
+        padding: 12px 10px;
+        border-bottom: 1px solid #e1e2ea;
+        text-align: left;
+        font-size: 15px;
+      }
+      th {
+        background: #f4f7fa;
+        font-weight: 600;
+        color: #222;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      /* --- Filtro de Clientes --- */
+      .clientes-filter-bar {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 28px;
+        margin-top: 8px;
+      }
+      .clientes-filtro-label {
+        font-size: 15px;
+        font-weight: 500;
+        color: #222;
+        margin-bottom: 2px;
+      }
+      .clientes-filtro-input {
+        width: 230px;
+        padding: 9px 11px;
+        border: 1.4px solid #e1e2ea;
+        border-radius: 6px;
+        font-size: 15px;
+        margin-right: 0;
+        background: #fff;
+      }
+      .clientes-filter-btn {
+        width: 90px;
+        padding: 10px 22px;
+        background: #03b6b1;
+        color: #fff;
+        border: none;
+        border-radius: 7px;
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+        align-self: flex-start;
+      }
+      .clientes-filter-btn:hover {
+        background: #029a97;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="main-flex">
+      <div class="sidebar">
+        <div class="calendar">
+          <div class="calendar-icon">📅</div>
+          <div class="date-time" id="dateTime"></div>
+        </div>
+        <a href="#" class="menu-btn">Check-in</a>
+        <a href="#" class="menu-btn">Check-out</a>
+        <a href="clientes.html" class="menu-btn">Clientes</a>
+        <a href="quartos.html" class="menu-btn">Quartos</a>
+        <a href="#" class="menu-btn">Reservas</a>
+        <a href="#" class="menu-btn">Produtos</a>
+      </div>
+      <div class="main-content">
+        <div class="tab-header">
+          <div class="cadastro-dropdown" id="cadastroDropdown">
+            <div class="tab" id="cadastroTab">+ Cadastro</div>
+            <div class="cadastro-dropdown-content" id="cadastroDropdownContent">
+              <a href="cadastro_cliente.html">Cliente</a>
+              <a href="cadastro_quarto.html">Quarto</a>
+            </div>
+          </div>
+        </div>
+        <!-- Filtro de clientes -->
+        <div class="clientes-filter-bar">
+          <label for="clientes-filtro-input" class="clientes-filtro-label"
+            >Filtro</label
+          >
+          <input
+            id="clientes-filtro-input"
+            class="clientes-filtro-input"
+            type="text"
+            placeholder="Digite o cpf, nome ou email"
+          />
+          <button class="clientes-filter-btn">Filtrar</button>
+        </div>
+        <div>
+          <div class="section-title">CHEGADAS DO DIA (CHECK IN)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Quarto</th>
+                <th>Tipo de Quarto</th>
+                <th>Hora</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Valor da diária</th>
+              </tr>
+            </thead>
+            <tbody id="checkin-tbody"></tbody>
+          </table>
+          <div class="section-title">SAÍDAS DO DIA (CHECK OUT)</div>
+          <table>
+            <thead>
+              <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Quarto</th>
+                <th>Tipo de Quarto</th>
+                <th>Hora</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Valor da diária</th>
+              </tr>
+            </thead>
+            <tbody id="checkout-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <script>
+      // Atualiza data e hora em tempo real
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("pt-BR");
+        const time = now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("dateTime").textContent = `${date}\n${time}`;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      // Dropdown de cadastro
+      const cadastroTab = document.getElementById("cadastroTab");
+      const cadastroDropdown = document.getElementById("cadastroDropdown");
+      document.addEventListener("click", function (e) {
+        if (cadastroDropdown.contains(e.target)) {
+          cadastroDropdown.classList.toggle("show");
+        } else {
+          cadastroDropdown.classList.remove("show");
+        }
+      });
+    </script>
+  </body>
+</html>
