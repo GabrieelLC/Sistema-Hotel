@@ -1,5 +1,5 @@
 const express = require('express');
-const { Usuarios, Clientes, Quartos } = require('../models/models');
+const { Usuarios, Clientes, Quartos, TiposQuarto } = require('../models/models');
 const db = require('../config/database'); // Certifique-se de que o caminho para o seu arquivo de configuração do banco de dados está correto
 
 const router = express.Router();
@@ -184,6 +184,23 @@ router.get('/checkouts-hoje', (req, res) => {
       res.json(results);
     }
   );
+});
+
+// Listar tipos de quarto
+router.get('/tipos-quarto', (req, res) => {
+  TiposQuarto.findAll((err, results) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar tipos', error: err });
+    res.json(results);
+  });
+});
+
+// Criar novo tipo de quarto
+router.post('/tipos-quarto', (req, res) => {
+  const { tipo, descricao, valor_diaria } = req.body;
+  TiposQuarto.create({ tipo, descricao, valor_diaria }, (err, result) => {
+    if (err) return res.status(500).json({ message: 'Erro ao criar tipo', error: err });
+    res.status(201).json({ message: 'Tipo criado', result });
+  });
 });
 
 module.exports = router;

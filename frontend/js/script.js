@@ -56,6 +56,86 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // CADASTRO DE QUARTO DINÂMICO
+  async function carregarTiposQuarto() {
+    const select = document.getElementById('tipo_id');
+    if (!select) return;
+    const resp = await fetch('http://localhost:3000/api/tipos-quarto');
+    const tipos = await resp.json();
+    select.innerHTML = tipos.map(t => `<option value="${t.id}">${t.tipo}</option>`).join('');
+  }
+  carregarTiposQuarto();
+
+  const cadastroQuartoForm = document.getElementById('cadastroQuartoForm');
+  if (cadastroQuartoForm) {
+    cadastroQuartoForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const tipo_id = document.getElementById('tipo_id').value;
+      const numero = document.getElementById('numero').value;
+      const status = 'disponivel';
+
+      try {
+        const response = await fetch('http://localhost:3000/api/quartos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            numero,
+            tipo_id,
+            status
+          }),
+        });
+        const data = await response.json();
+        if (response.ok) {
+          alert('Quarto cadastrado com sucesso!');
+          cadastroQuartoForm.reset();
+        } else {
+          alert(data.message || 'Erro ao cadastrar quarto');
+        }
+      } catch (error) {
+        alert('Erro ao conectar ao servidor');
+      }
+    });
+  }
+
+  // Modal de novo tipo de quarto
+  const novoTipoBtn = document.getElementById('novoTipoBtn');
+  const modalNovoTipo = document.getElementById('modalNovoTipo');
+  const salvarNovoTipo = document.getElementById('salvarNovoTipo');
+  const cancelarNovoTipo = document.getElementById('cancelarNovoTipo');
+
+  if (novoTipoBtn && modalNovoTipo && salvarNovoTipo && cancelarNovoTipo) {
+    novoTipoBtn.onclick = () => { modalNovoTipo.style.display = 'flex'; };
+    cancelarNovoTipo.onclick = () => { modalNovoTipo.style.display = 'none'; };
+    salvarNovoTipo.onclick = async () => {
+      const tipo = document.getElementById('novoTipoTipo').value;
+      const descricao = document.getElementById('novoTipoDescricao').value;
+      const valor_diaria = document.getElementById('novoTipoValor').value;
+      if (!tipo || !descricao || !valor_diaria) {
+        alert('Preencha todos os campos!');
+        return;
+      }
+      const resp = await fetch('http://localhost:3000/api/tipos-quarto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo, descricao, valor_diaria })
+      });
+      if (resp.ok) {
+        alert('Tipo de quarto cadastrado!');
+        modalNovoTipo.style.display = 'none';
+        document.getElementById('novoTipoTipo').value = '';
+        document.getElementById('novoTipoDescricao').value = '';
+        document.getElementById('novoTipoValor').value = '';
+        carregarTiposQuarto();
+      } else {
+        alert('Erro ao cadastrar tipo de quarto');
+      }
+    };
+    // Fechar modal ao clicar fora do conteúdo
+    modalNovoTipo.onclick = (e) => {
+      if (e.target === modalNovoTipo) modalNovoTipo.style.display = 'none';
+    };
+  }
+
   async function carregarCheckins() {
     const tbody = document.getElementById('checkin-tbody');
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
