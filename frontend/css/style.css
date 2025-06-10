@@ -312,6 +312,9 @@ body {
 }
 
 .clientes-back-btn {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 38px;
   height: 38px;
   border: none;
@@ -330,11 +333,11 @@ body {
   background: #02918e;
 }
 
-.clientes-filter-bar label {
-  font-weight: bold;
-  margin-right: 7px;
-  color: #232932;
-  font-size: 16px;
+.clientes-filter-bar {
+  display: flex;
+  align-items: center; /* Alinha verticalmente os itens */
+  gap: 14px;
+  margin-bottom: 28px;
 }
 
 .clientes-filtro-input {
@@ -357,6 +360,7 @@ body {
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
+  align-self: flex-start;
 }
 .clientes-filter-btn:hover {
   background: #02918e;
@@ -487,7 +491,8 @@ table {
   background: #fff;
 }
 
-th, td {
+th,
+td {
   border: 1px solid #888;
   padding: 7px 8px;
   text-align: center;
@@ -499,9 +504,18 @@ th {
 }
 
 @media (max-width: 900px) {
-  .main-flex { flex-direction: column; }
-  .sidebar { width: 100%; flex-direction: row; border-right: none; border-bottom: 2px solid #ccc; }
-  .main-content { padding: 10px; }
+  .main-flex {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    border-right: none;
+    border-bottom: 2px solid #ccc;
+  }
+  .main-content {
+    padding: 10px;
+  }
 }
 
 @media (max-width: 800px) {
