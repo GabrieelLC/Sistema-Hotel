@@ -5,6 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema Hotel</title>
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .cadastro-dropdown {
+        position: relative;
+        display: inline-block;
+      }
+      .cadastro-dropdown-content {
+        display: none;
+        position: absolute;
+        background: #fff;
+        min-width: 160px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+        border-radius: 8px;
+        z-index: 10;
+        right: 0;
+        top: 38px;
+      }
+      .cadastro-dropdown-content a {
+        color: #222;
+        padding: 12px 18px;
+        text-decoration: none;
+        display: block;
+        border-bottom: 1px solid #eee;
+        font-size: 1rem;
+        transition: background 0.2s;
+      }
+      .cadastro-dropdown-content a:last-child {
+        border-bottom: none;
+      }
+      .cadastro-dropdown-content a:hover {
+        background: #f2f2f2;
+      }
+      .cadastro-dropdown.show .cadastro-dropdown-content {
+        display: block;
+      }
+      .tab {
+        cursor: pointer;
+      }
+    </style>
   </head>
   <body>
     <div class="main-flex">
@@ -22,7 +60,13 @@
       </div>
       <div class="main-content">
         <div class="tab-header">
-          <div class="tab">+ Cadastro</div>
+          <div class="cadastro-dropdown" id="cadastroDropdown">
+            <div class="tab" id="cadastroTab">+ Cadastro</div>
+            <div class="cadastro-dropdown-content" id="cadastroDropdownContent">
+              <a href="cadastro_cliente.html">Cliente</a>
+              <a href="cadastro_quarto.html">Quarto</a>
+            </div>
+          </div>
         </div>
         <div>
           <div class="section-title">CHEGADAS DO DIA (CHECK IN)</div>
@@ -43,16 +87,18 @@
           </table>
           <div class="section-title">SAÍDAS DO DIA (CHECK OUT)</div>
           <table>
-            <tr>
-              <th>CPF</th>
-              <th>Nome</th>
-              <th>Quarto</th>
-              <th>Tipo de Quarto</th>
-              <th>Hora</th>
-              <th>Telefone</th>
-              <th>Email</th>
-              <th>Valor da diária</th>
-            </tr>
+            <thead>
+              <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Quarto</th>
+                <th>Tipo de Quarto</th>
+                <th>Hora</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Valor da diária</th>
+              </tr>
+            </thead>
             <tbody id="checkout-tbody"></tbody>
           </table>
         </div>
@@ -68,6 +114,17 @@
       }
       updateDateTime();
       setInterval(updateDateTime, 1000);
+
+      // Dropdown de cadastro
+      const cadastroTab = document.getElementById('cadastroTab');
+      const cadastroDropdown = document.getElementById('cadastroDropdown');
+      document.addEventListener('click', function(e) {
+        if (cadastroDropdown.contains(e.target)) {
+          cadastroDropdown.classList.toggle('show');
+        } else {
+          cadastroDropdown.classList.remove('show');
+        }
+      });
     </script>
   </body>
 </html>
