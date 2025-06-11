@@ -223,4 +223,27 @@ document.addEventListener('DOMContentLoaded', () => {
   carregarCheckins();
   carregarCheckouts();
   carregarClientes();
+
+  async function preencherFormularioEdicaoCliente() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const clienteId = urlParams.get('id');
+    if (clienteId) {
+      try {
+        const resp = await fetch(`/api/clientes/${clienteId}`);
+        const cliente = await resp.json();
+        if (cliente) {
+          document.getElementById('nome').value = cliente.nome || '';
+          document.getElementById('cpf').value = cliente.cpf || '';
+          document.getElementById('telefonecliente').value = cliente.telefone || '';
+          document.getElementById('emailcliente').value = cliente.email || '';
+          document.getElementById('endereco').value = cliente.endereco || '';
+          document.getElementById('cep').value = cliente.cep || '';
+        }
+      } catch (error) {
+        alert('Erro ao carregar dados do cliente');
+      }
+    }
+  }
+
+  preencherFormularioEdicaoCliente();
 });

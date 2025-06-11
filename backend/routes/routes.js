@@ -261,4 +261,22 @@ router.put('/checkout/:id', (req, res) => {
   );
 });
 
+// Listar todas as reservas
+router.get('/reservas', (req, res) => {
+  db.query(
+    `SELECT c.nome, r.quarto_numero as quarto, 
+            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
+            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
+            DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
+            DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida
+     FROM Reservas r
+     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     ORDER BY r.data_checkin DESC, r.hora_checkin DESC`,
+    (err, results) => {
+      if (err) return res.status(500).json({ message: 'Erro ao buscar reservas', error: err });
+      res.json(results);
+    }
+  );
+});
+
 module.exports = router;

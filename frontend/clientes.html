@@ -4,21 +4,117 @@
     <meta charset="UTF-8" />
     <title>Consulta de Clientes</title>
     <link rel="stylesheet" href="css/style.css" />
+    <style>
+      .clientes-table td, .clientes-table th {
+        padding: 12px 16px;
+        text-align: left;
+      }
+
+      .clientes-table input.editavel {
+        width: 95%;
+        padding: 6px 8px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: 1px solid #b5c8de;
+        margin: 0;
+      }
+
+      .acoes-cell {
+        display: flex;
+        flex-direction: row;
+        gap: 8px;
+        align-items: center;
+        justify-content: flex-start;
+        min-width: 180px;
+        padding: 8px 0;
+      }
+
+      .btn-acao {
+        background: #21b5ab;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 18px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin: 0;
+        white-space: nowrap;
+        min-width: 90px;
+        text-align: center;
+        box-sizing: border-box;
+        display: inline-block;
+      }
+
+      .btn-acao:hover {
+        background: #1d968e;
+      }
+
+      .clientes-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 32px;
+        width: 100%;
+      }
+
+      .clientes-back-btn {
+        background: #21b5ab;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        font-size: 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        margin-right: 12px; /* Adicione esta linha */
+      }
+
+      .clientes-filtro-label {
+        font-weight: 600;
+        /* Remova min-width e flex-shrink */
+      }
+
+      .clientes-filtro-input {
+        min-width: 220px;
+        max-width: 400px;
+        flex: 1;
+        padding: 8px 12px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: 1px solid #b5c8de;
+      }
+
+      .clientes-filter-btn {
+        background: #21b5ab;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 24px;
+        font-size: 1rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+        margin-left: 8px;
+        white-space: nowrap;
+        flex-shrink: 0;
+      }
+
+      .clientes-filter-btn:hover {
+        background: #1d968e;
+      }
+    </style>
   </head>
   <body>
     <div class="clientes-container">
       <div class="clientes-filter-bar">
         <button class="clientes-back-btn" onclick="window.history.back()" title="Voltar">&#8592;</button>
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <br />
-        <label for="clientes-filtro">Filtro</label>
+        <label for="clientes-filtro" class="clientes-filtro-label">Filtro</label>
         <input
           type="text"
           id="clientes-filtro"
@@ -38,7 +134,7 @@
               <th>Endereço</th>
               <th>Telefone</th>
               <th>Email</th>
-              <th>Data Cadastro</th>
+              <th style="width: 200px;">Ações</th>
             </tr>
           </thead>
           <tbody id="clientes-tbody">
@@ -48,37 +144,134 @@
       </div>
     </div>
     <script>
-async function carregarClientes() {
+let clientesOriginais = [];
+
+async function carregarClientes(filtro = "") {
   const tbody = document.getElementById('clientes-tbody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
   try {
     const resp = await fetch('/api/clientes');
-    const clientes = await resp.json();
+    let clientes = await resp.json();
+    clientesOriginais = clientes; // Salva para filtro
+
+    if (filtro) {
+      const filtroLower = filtro.toLowerCase();
+      clientes = clientes.filter(c =>
+        c.cpf.toLowerCase().includes(filtroLower) ||
+        c.nome.toLowerCase().includes(filtroLower) ||
+        (c.email && c.email.toLowerCase().includes(filtroLower))
+      );
+    }
+
     if (!clientes.length) {
-      tbody.innerHTML = '<tr><td colspan="7">Nenhum cliente cadastrado</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8">Nenhum cliente cadastrado</td></tr>';
       return;
     }
     tbody.innerHTML = '';
     clientes.forEach(cliente => {
       tbody.innerHTML += `
-        <tr>
+        <tr id="linha-${cliente.cpf}">
           <td>${cliente.cpf}</td>
-          <td>${cliente.nome}</td>
-          <td>${cliente.cep || ''}</td>
-          <td>${cliente.endereco || ''}</td>
-          <td>${cliente.telefone || ''}</td>
-          <td>${cliente.email || ''}</td>
-          <td>${cliente.data_cadastro ? cliente.data_cadastro.split('T')[0] : ''}</td>
+          <td><span class="span-nome">${cliente.nome}</span></td>
+          <td><span class="span-cep">${cliente.cep}</span></td>
+          <td><span class="span-endereco">${cliente.endereco}</span></td>
+          <td><span class="span-telefone">${cliente.telefone}</span></td>
+          <td><span class="span-email">${cliente.email}</span></td>
+          <td class="acoes-cell">
+            <button class="btn-acao" onclick="editarCliente('${cliente.cpf}')">Editar</button>
+            <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
+          </td>
         </tr>
       `;
     });
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="7">Erro ao carregar clientes</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8">Erro ao carregar clientes</td></tr>';
   }
 }
 
-document.addEventListener('DOMContentLoaded', carregarClientes);
+window.editarCliente = function(cpf) {
+  // Impede múltiplas edições simultâneas
+  if (document.querySelector('.salvar-btn')) return;
+
+  const linha = document.getElementById(`linha-${cpf}`);
+  const spans = linha.querySelectorAll('span');
+  const valores = {};
+  spans.forEach(span => {
+    const campo = span.className.replace('span-', '');
+    valores[campo] = span.textContent;
+    span.outerHTML = `<input type="text" class="editavel edit-${campo}" value="${span.textContent}">`;
+  });
+
+  const botoes = linha.querySelectorAll('button');
+  botoes[0].outerHTML = `<button class="btn-acao salvar-btn" onclick="salvarEdicaoCliente('${cpf}')">Salvar</button>`;
+  botoes[1].outerHTML = `<button class="btn-acao cancelar-btn" onclick="cancelarEdicaoCliente('${cpf}')">Cancelar</button>`;
+};
+
+window.cancelarEdicaoCliente = function(cpf) {
+  const cliente = clientesOriginais.find(c => c.cpf === cpf);
+  const linha = document.getElementById(`linha-${cpf}`);
+  linha.innerHTML = `
+    <td>${cliente.cpf}</td>
+    <td><span class="span-nome">${cliente.nome}</span></td>
+    <td><span class="span-cep">${cliente.cep}</span></td>
+    <td><span class="span-endereco">${cliente.endereco}</span></td>
+    <td><span class="span-telefone">${cliente.telefone}</span></td>
+    <td><span class="span-email">${cliente.email}</span></td>
+    <td class="acoes-cell">
+      <button class="btn-acao" onclick="editarCliente('${cliente.cpf}')">Editar</button>
+      <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
+    </td>
+  `;
+};
+
+window.salvarEdicaoCliente = async function(cpf) {
+  const linha = document.getElementById(`linha-${cpf}`);
+  const nome = linha.querySelector('.edit-nome').value;
+  const cep = linha.querySelector('.edit-cep').value;
+  const endereco = linha.querySelector('.edit-endereco').value;
+  const telefone = linha.querySelector('.edit-telefone').value;
+  const email = linha.querySelector('.edit-email').value;
+
+  const resp = await fetch(`/api/clientes/${cpf}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ nome, telefone, email, endereco, cep })
+  });
+  if (resp.ok) {
+    alert('Cliente atualizado!');
+    await carregarClientes(document.getElementById('clientes-filtro').value);
+  } else {
+    alert('Erro ao atualizar cliente');
+  }
+};
+
+window.excluirCliente = async function(cpf) {
+  if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
+  const resp = await fetch(`/api/clientes/${cpf}`, { method: 'DELETE' });
+  if (resp.ok) {
+    alert('Cliente excluído!');
+    await carregarClientes(document.getElementById('clientes-filtro').value);
+  } else {
+    alert('Erro ao excluir cliente');
+  }
+};
+
+// Filtro
+document.querySelector('.clientes-filter-btn').onclick = function() {
+  const filtro = document.getElementById('clientes-filtro').value.trim();
+  carregarClientes(filtro);
+};
+
+// Permite filtrar ao pressionar Enter no campo filtro
+document.getElementById('clientes-filtro').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    document.querySelector('.clientes-filter-btn').click();
+  }
+});
+
+document.addEventListener('DOMContentLoaded', () => carregarClientes());
 </script>
   </body>
 </html>

@@ -116,6 +116,37 @@
           cadastroDropdown.classList.remove('show');
         }
       });
+
+      async function carregarReservas() {
+  const tbody = document.getElementById('checkin-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  try {
+    const resp = await fetch('/api/reservas');
+    const reservas = await resp.json();
+    if (!reservas.length) {
+      tbody.innerHTML = '<tr><td colspan="6">Nenhuma reserva encontrada</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    reservas.forEach(r => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${r.nome}</td>
+          <td>${r.quarto}</td>
+          <td>${r.data_entrada || ''}</td>
+          <td>${r.hora_entrada || ''}</td>
+          <td>${r.data_saida || ''}</td>
+          <td>${r.hora_saida || ''}</td>
+        </tr>
+      `;
+    });
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="6">Erro ao carregar reservas</td></tr>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', carregarReservas);
     </script>
   </body>
 </html>
