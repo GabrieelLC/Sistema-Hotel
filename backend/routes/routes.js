@@ -27,10 +27,8 @@ router.post('/login', (req, res) => {
 
 router.get('/clientes', (req, res) => {
   Clientes.findAll((err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Erro ao buscar clientes', error: err });
-    }
-    res.status(200).json(results);
+    if (err) return res.status(500).json({ message: 'Erro ao buscar clientes', error: err });
+    res.json(results);
   });
 });
 
@@ -201,6 +199,66 @@ router.post('/tipos-quarto', (req, res) => {
     if (err) return res.status(500).json({ message: 'Erro ao criar tipo', error: err });
     res.status(201).json({ message: 'Tipo criado', result });
   });
+});
+
+router.post('/checkin', (req, res) => {
+  const {
+    cliente_cpf,
+    quarto_numero,
+    data_checkin,
+    hora_checkin,
+    data_checkout_prevista,
+    hora_checkout_prevista,
+    valor_diaria,
+    desconto
+  } = req.body;
+
+  if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
+    return res.status(400).json({ message: 'Preencha todos os campos obrigatórios!' });
+  }
+
+  db.query(
+    `INSERT INTO Reservas 
+      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+    [
+      cliente_cpf,
+      quarto_numero,
+      data_checkin,
+      hora_checkin,
+      data_checkout_prevista,
+      hora_checkout_prevista,
+      valor_diaria,
+      desconto || 0
+    ],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erro ao registrar check-in', error: err });
+      }
+      res.status(201).json({ message: 'Check-in registrado com sucesso', result });
+    }
+  );
+});
+
+// PUT /api/checkout/:id - Registrar check-out
+router.put('/checkout/:id', (req, res) => {
+  const { id } = req.params;
+  const { data_checkout, hora_checkout, desconto } = req.body;
+
+  if (!data_checkout || !hora_checkout) {
+    return res.status(400).json({ message: 'Preencha data e hora do check-out!' });
+  }
+
+  db.query(
+    `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, desconto = ?, status = 'finalizado' WHERE id = ?`,
+    [data_checkout, hora_checkout, desconto || 0, id],
+    (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: 'Erro ao registrar check-out', error: err });
+      }
+      res.status(200).json({ message: 'Check-out registrado com sucesso', result });
+    }
+  );
 });
 
 module.exports = router;

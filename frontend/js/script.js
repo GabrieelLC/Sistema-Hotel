@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (response.ok) {
           alert('Cliente cadastrado com sucesso!');
           cadastroForm.reset();
+          carregarClientes && carregarClientes(); // Atualiza a tabela se estiver na página de clientes
         } else {
           alert(data.message || 'Erro ao cadastrar cliente');
         }
@@ -188,6 +189,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Listar clientes na tabela de clientes.html
+  async function carregarClientes() {
+    const tbody = document.getElementById('clientes-tbody');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+    try {
+      const resp = await fetch('/api/clientes');
+      const clientes = await resp.json();
+      if (!clientes.length) {
+        tbody.innerHTML = '<tr><td colspan="7">Nenhum cliente cadastrado</td></tr>';
+        return;
+      }
+      tbody.innerHTML = '';
+      clientes.forEach(cliente => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${cliente.cpf}</td>
+            <td>${cliente.nome}</td>
+            <td>${cliente.cep}</td>
+            <td>${cliente.endereco}</td>
+            <td>${cliente.telefone}</td>
+            <td>${cliente.email}</td>
+            <td>${cliente.data_cadastro ? cliente.data_cadastro : ''}</td>
+          </tr>
+        `;
+      });
+    } catch (error) {
+      tbody.innerHTML = '<tr><td colspan="7">Erro ao carregar clientes</td></tr>';
+    }
+  }
+
   carregarCheckins();
   carregarCheckouts();
+  carregarClientes();
 });

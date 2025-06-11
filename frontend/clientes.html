@@ -8,7 +8,7 @@
   <body>
     <div class="clientes-container">
       <div class="clientes-filter-bar">
-        <button class="clientes-back-btn" title="Voltar">&#8592;</button>
+        <button class="clientes-back-btn" onclick="window.history.back()" title="Voltar">&#8592;</button>
         <br />
         <br />
         <br />
@@ -41,19 +41,44 @@
               <th>Data Cadastro</th>
             </tr>
           </thead>
-          <tbody>
-            <tr>
-              <td>123.456.789.00</td>
-              <td>Josualdo Justos da Silva</td>
-              <td>12345-678</td>
-              <td>Rua Roberto da Silva</td>
-              <td>61992369194</td>
-              <td>josualdo@gmail.com</td>
-              <td>20/01/2095</td>
-            </tr>
+          <tbody id="clientes-tbody">
+            <!-- espaço para os clientes registradosd -->
           </tbody>
         </table>
       </div>
     </div>
+    <script>
+async function carregarClientes() {
+  const tbody = document.getElementById('clientes-tbody');
+  if (!tbody) return;
+  tbody.innerHTML = '<tr><td colspan="7">Carregando...</td></tr>';
+  try {
+    const resp = await fetch('/api/clientes');
+    const clientes = await resp.json();
+    if (!clientes.length) {
+      tbody.innerHTML = '<tr><td colspan="7">Nenhum cliente cadastrado</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    clientes.forEach(cliente => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${cliente.cpf}</td>
+          <td>${cliente.nome}</td>
+          <td>${cliente.cep || ''}</td>
+          <td>${cliente.endereco || ''}</td>
+          <td>${cliente.telefone || ''}</td>
+          <td>${cliente.email || ''}</td>
+          <td>${cliente.data_cadastro ? cliente.data_cadastro.split('T')[0] : ''}</td>
+        </tr>
+      `;
+    });
+  } catch (error) {
+    tbody.innerHTML = '<tr><td colspan="7">Erro ao carregar clientes</td></tr>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', carregarClientes);
+</script>
   </body>
 </html>

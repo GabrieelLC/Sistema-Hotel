@@ -154,7 +154,7 @@
 
     <div class="checkout_screen_container">
         <header class="checkout_screen_header">
-            <a href="#" class="checkout_screen_back_arrow">←</a>
+            <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()">←</a>
             <div class="checkout_screen_title_box">
                 <h1 class="checkout_screen_main_title">Check-In</h1>
             </div>
@@ -220,8 +220,44 @@
             </div>
         </form>
     </div>
+    <script>
+        function VoltarPagina(){
+            window.history.back();
+        }
+        document.querySelector('.checkout_screen_form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+  const cliente_cpf = document.getElementById('cpf_cliente').value;
+  const quarto_numero = document.getElementById('quarto').value;
+  const data_checkin = document.getElementById('data_checkin').value;
+  const hora_checkin = document.getElementById('hora_checkin').value;
+  const data_checkout_prevista = document.getElementById('data_checkout_prrevista').value;
+  const hora_checkout_prevista = document.getElementById('hora_checkout_prevista').value;
+  const valor_diaria = prompt('Informe o valor da diária:'); // ou pegue de outro campo
+  const desconto = 0; // ou pegue de outro campo
+
+  const resp = await fetch('/api/checkin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      cliente_cpf,
+      quarto_numero,
+      data_checkin,
+      hora_checkin,
+      data_checkout_prevista,
+      hora_checkout_prevista,
+      valor_diaria,
+      desconto
+    })
+  });
+  const data = await resp.json();
+  if (resp.ok) {
+    alert('Check-in registrado com sucesso!');
+    this.reset();
+  } else {
+    alert(data.message || 'Erro ao registrar check-in');
+  }
+});
+    </script>
     
     </body>
     </html>
-</body>
-</html>

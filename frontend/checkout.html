@@ -154,7 +154,7 @@
 
     <div class="checkout_screen_container">
         <header class="checkout_screen_header">
-            <a href="#" class="checkout_screen_back_arrow">←</a>
+            <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()">←</a>
             <div class="checkout_screen_title_box">
                 <h1 class="checkout_screen_main_title">Check-out</h1>
             </div>
@@ -249,9 +249,11 @@
         };
         var mask = IMask(horaInput, maskOptions);
       });
+      
+        function VoltarPagina(){
+            window.history.back();
+        }
     </script>
     
     </body>
     </html>
-</body>
-</html>
