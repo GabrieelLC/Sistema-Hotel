@@ -1,241 +1,242 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tela de Check-out Específica</title>
-    <link rel="stylesheet" href="seu_arquivo_css.css">
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tela de Check-in</title>
     <style>
-        /*
- * ===============================================
- * ESTILOS ESPECÍFICOS PARA A TELA DE CHECK-OUT
- * Usa prefixo "checkout_screen_" para evitar conflitos
- * ===============================================
- */
+      /* Container Principal */
+      .checkoutscreencontainer {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        color: #333;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 480px;
+        margin: 40px auto;
+      }
 
-/* Container Principal do Componente */
-.checkout_screen_container {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #333;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 800px;
-    margin: 40px auto; /* Adiciona margem para centralizar caso não esteja em um flex container */
-}
+      /* Cabeçalho */
+      .checkoutscreenheader {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+      }
 
-/* Cabeçalho do Componente */
-.checkout_screen_header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 25px;
-}
+      .checkoutscreenback_arrow {
+        font-size: 28px;
+        text-decoration: none;
+        color: #555;
+        margin-right: 20px;
+        cursor: pointer;
+      }
 
-.checkout_screen_back_arrow {
-    font-size: 28px;
-    text-decoration: none;
-    color: #555;
-    margin-right: 20px;
-}
+      .checkoutscreentitle_box {
+        background-color: #48bbbe;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-align: center;
+        flex-grow: 1;
+      }
 
-.checkout_screen_title_box {
-    background-color: #48BBBE;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-align: center;
-    flex-grow: 1;
-}
+      .checkoutscreenmain_title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+      }
 
-.checkout_screen_main_title {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 500;
-}
+      /* Formulário */
+      .checkoutscreenform {
+        width: 100%;
+      }
 
-/* Estrutura do Formulário */
-.checkout_screen_form {
-    width: 100%;
-}
+      .checkoutscreencolumns_wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+      }
 
-.checkout_screen_columns_wrapper {
-    display: flex;
-    gap: 40px;
-}
+      .checkoutscreencolumn {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
 
-.checkout_screen_column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+      /* Campos */
+      .checkoutscreenfield_group {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
 
-/* Campos (Inputs, Labels) */
-.checkout_screen_field_group {
-    display: flex;
-    flex-direction: column;
-}
+      .checkoutscreenlabel {
+        margin-bottom: 6px;
+        font-weight: 500;
+        color: #555;
+      }
 
-.checkout_screen_label {
-    margin-bottom: 6px;
-    font-weight: 500;
-    color: #555;
-}
+      .checkoutscreeninput {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        width: 100%;
+        box-sizing: border-box;
+      }
 
-.checkout_screen_input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    width: 100%;
-    box-sizing: border-box;
-}
+      .checkoutscreeninput:focus {
+        outline: none;
+        border-color: #48bbbe;
+        box-shadow: 0 0 5px rgba(72, 187, 190, 0.5);
+      }
 
-.checkout_screen_input:focus {
-    outline: none;
-    border-color: #48BBBE;
-    box-shadow: 0 0 5px rgba(72, 187, 190, 0.5);
-}
+      /* Botão Registrar */
+      .checkoutscreensubmit_button {
+        background-color: #48bbbe;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        padding: 5px 28px;
+        height: 39px;
+        min-width: 100px;
+        align-self: flex-start;
+        margin-top: 12px;
+      }
 
-/* Modificador para input menor */
-.checkout_screen_input--small {
-    width: 80px !important;
-}
+      .checkoutscreensubmit_button:hover {
+        background-color: #3a9a9d;
+      }
 
-/* Tabela de Consumo */
-.checkout_screen_consumption_table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5px;
-}
-
-.checkout_screen_table_head {
-    background-color: #f7f7f7;
-}
-
-.checkout_screen_table_header,
-.checkout_screen_table_cell {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-}
-
-.checkout_screen_table_header {
-    font-weight: 600;
-}
-
-/* Rodapé e Botão de Ação */
-.checkout_screen_footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 30px;
-}
-
-.checkout_screen_submit_button {
-    background-color: #48BBBE;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
-
-.checkout_screen_submit_button:hover {
-    background-color: #3a9a9d;
-}
+      /* Responsivo */
+      @media (max-width: 600px) {
+        .checkoutscreencontainer {
+          padding: 15px;
+        }
+        .checkoutscreentitle_box {
+          font-size: 18px;
+          padding: 8px 10px;
+        }
+        .checkoutscreenmain_title {
+          font-size: 18px;
+        }
+      }
     </style>
-</head>
-<body>
-
-    <div class="checkout_screen_container">
-        <header class="checkout_screen_header">
-            <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()">←</a>
-            <div class="checkout_screen_title_box">
-                <h1 class="checkout_screen_main_title">Check-In</h1>
+  </head>
+  <body>
+    <div class="checkoutscreencontainer">
+      <div class="checkoutscreenheader">
+        <a class="checkoutscreenback_arrow" onclick="VoltarPagina()">←</a>
+        <div class="checkoutscreentitle_box">
+          <h2 class="checkoutscreenmain_title">Check-In</h2>
+        </div>
+      </div>
+      <form class="checkoutscreenform">
+        <div class="checkoutscreencolumns_wrapper">
+          <div class="checkoutscreencolumn">
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="cpfcliente"
+                >CPF cliente:</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="text"
+                id="cpfcliente"
+                name="cpfcliente"
+              />
             </div>
-        </header>
-
-        <form class="checkout_screen_form">
-            <div class="checkout_screen_columns_wrapper">
-                <div class="checkout_screen_column">
-                    <div class="checkout_screen_field_group">
-                        <label for="cpf_cliente" class="checkout_screen_label">CPF cliente:</label>
-                        <input type="text" id="cpf_cliente" name="cpf" class="checkout_screen_input">
-                    </div>
-
-                <div class="checkout_screen_column">
-                    <div class="checkout_screen_field_group">
-                        <label for="data_checkin" class="checkout_screen_label">Data Check-In:</label>
-                        <input type="date" id="data_checkin" name="data-checkin" class="checkout_screen_input" placeholder="dd/mm/yyyy">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="data_checkout_prrevista" class="checkout_screen_label">Data Check-out Prevista:</label>
-                        <input type="date" id="data_checkout_prrevista" name="data_checkout_prevista" class="checkout_screen_input" placeholder="dd/mm/yyyy">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="hora_checkin" class="checkout_screen_label">Hora Check-In:</label>
-                        <input type="time" id="hora_checkin" name="hora-checkin" class="checkout_screen_input" placeholder="--:--">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="hora_checkout_prevista" class="checkout_screen_label">Hora Check-out Prevista:</label>
-                        <input type="time" id="hora_checkout_prevista" name="hora-checkout_prevista" class="checkout_screen_input" placeholder="--:--">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="quarto" class="checkout_screen_label">Quarto</label>
-                        <input type="text" id="quarto" name="quarto" class="checkout_screen_input checkout_screen_input--small">
-                    </div>
-                    
-                </div>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="nomecliente"
+                >Nome do Cliente</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="text"
+                id="nomecliente"
+                name="nomecliente"
+              />
             </div>
-
-            <div class="checkout_screen_footer">
-                <button type="submit" class="checkout_screen_submit_button">Registrar</button>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="datacheckin"
+                >Data Check-In:</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="date"
+                id="datacheckin"
+                name="datacheckin"
+              />
             </div>
-        </form>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="datacheckoutprrevista"
+                >Data Check-out Prevista:</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="date"
+                id="datacheckoutprrevista"
+                name="datacheckoutprrevista"
+              />
+            </div>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="horacheckin"
+                >Hora Check-In:</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="time"
+                id="horacheckin"
+                name="horacheckin"
+              />
+            </div>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="horacheckoutprevista"
+                >Hora Check-out Prevista:</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="time"
+                id="horacheckoutprevista"
+                name="horacheckoutprevista"
+              />
+            </div>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="quarto">Quarto</label>
+              <input
+                class="checkoutscreeninput"
+                type="text"
+                id="quarto"
+                name="quarto"
+              />
+              <!-- Botão logo abaixo do input Quarto -->
+              <button class="checkoutscreensubmit_button" type="submit">
+                Registrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
     </div>
     <script>
-        function VoltarPagina(){
-            window.history.back();
-        }
-        document.querySelector('.checkout_screen_form').addEventListener('submit', async function(e) {
-  e.preventDefault();
-  const cliente_cpf = document.getElementById('cpf_cliente').value;
-  const quarto_numero = document.getElementById('quarto').value;
-  const data_checkin = document.getElementById('data_checkin').value;
-  const hora_checkin = document.getElementById('hora_checkin').value;
-  const data_checkout_prevista = document.getElementById('data_checkout_prrevista').value;
-  const hora_checkout_prevista = document.getElementById('hora_checkout_prevista').value;
-  const valor_diaria = prompt('Informe o valor da diária:'); // ou pegue de outro campo
-  const desconto = 0; // ou pegue de outro campo
-
-  const resp = await fetch('/api/checkin', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      cliente_cpf,
-      quarto_numero,
-      data_checkin,
-      hora_checkin,
-      data_checkout_prevista,
-      hora_checkout_prevista,
-      valor_diaria,
-      desconto
-    })
-  });
-  const data = await resp.json();
-  if (resp.ok) {
-    alert('Check-in registrado com sucesso!');
-    this.reset();
-  } else {
-    alert(data.message || 'Erro ao registrar check-in');
-  }
-});
+      function VoltarPagina() {
+        window.history.back();
+      }
+      document
+        .querySelector(".checkoutscreenform")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          // Aqui você pode coletar os dados e enviar via fetch/AJAX
+          alert("Check-in registrado com sucesso!");
+          this.reset();
+        });
     </script>
-    
-    </body>
-    </html>
+  </body>
+</html>
