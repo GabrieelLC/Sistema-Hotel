@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Quartos - Guia de Informações</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f7f8fa;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.09);
+        padding: 32px;
+      }
+      .tabs {
+        display: flex;
+        border-bottom: 2px solid #48bbbe;
+        margin-bottom: 24px;
+        overflow-x: auto;
+        gap: 4px;
+      }
+      .tab {
+        background: #f1f1f1;
+        border: none;
+        border-radius: 8px 8px 0 0;
+        padding: 14px 28px;
+        font-size: 17px;
+        color: #48bbbe;
+        cursor: pointer;
+        margin-right: 2px;
+        transition: background 0.2s, color 0.2s;
+        outline: none;
+      }
+      .tab.active {
+        background: #48bbbe;
+        color: #fff;
+        font-weight: bold;
+      }
+      .tab-content {
+        padding: 28px 18px;
+        border-radius: 0 0 10px 10px;
+        background: #f9f9f9;
+        min-height: 180px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+        margin-bottom: 20px;
+      }
+      .tab-content h3 {
+        margin-top: 0;
+        color: #48bbbe;
+      }
+      .tab-content p {
+        margin: 8px 0;
+        color: #444;
+        font-size: 16px;
+      }
+      @media (max-width: 600px) {
+        .container {
+          padding: 10px;
+        }
+        .tab {
+          padding: 10px 12px;
+          font-size: 15px;
+        }
+        .tab-content {
+          padding: 16px 6px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()"
+        >←</a
+      >
+      <h2 style="color: #48bbbe; margin-bottom: 18px">Quartos Cadastrados</h2>
+      <div class="tabs" id="tabs"></div>
+      <div class="tab-content" id="tabContent">
+        <p>Selecione um quarto acima para ver as informações.</p>
+      </div>
+    </div>
+    <script>
+      function VoltarPagina() {
+        window.location.href = "index.html";
+      }
+      // Função para buscar os quartos cadastrados do backend (com JOIN)
+      async function buscarQuartos() {
+        try {
+          // Busca todos os quartos já com informações do tipo (JOIN no backend)
+          const resp = await fetch("/api/quartos");
+          if (!resp.ok) throw new Error("Erro ao buscar quartos");
+          const quartos = await resp.json();
+          return quartos;
+        } catch (e) {
+          document.getElementById("tabs").innerHTML =
+            '<span style="color:#c00;">Erro ao buscar quartos do servidor.</span>';
+          document.getElementById("tabContent").innerHTML =
+            '<p style="color:#c00;">Não foi possível carregar os quartos.</p>';
+          return [];
+        }
+      }
+
+      // Função para renderizar as guias/tabs
+      function renderTabs(quartos) {
+        const tabsDiv = document.getElementById("tabs");
+        tabsDiv.innerHTML = "";
+        if (quartos.length === 0) {
+          tabsDiv.innerHTML =
+            '<span style="color:#888;">Nenhum quarto cadastrado.</span>';
+          document.getElementById("tabContent").innerHTML =
+            "<p>Nenhum quarto encontrado no sistema.</p>";
+          return;
+        }
+        quartos.forEach((quarto, idx) => {
+          const btn = document.createElement("button");
+          btn.className = "tab" + (idx === 0 ? " active" : "");
+          btn.textContent = `Quarto ${quarto.numero}`;
+          btn.onclick = () => selecionarTab(idx, quartos);
+          tabsDiv.appendChild(btn);
+        });
+        selecionarTab(0, quartos);
+      }
+
+      // Função para mostrar as informações do quarto selecionado
+      function selecionarTab(idx, quartos) {
+        document.querySelectorAll(".tab").forEach((tab, i) => {
+          tab.classList.toggle("active", i === idx);
+        });
+        const quarto = quartos[idx];
+        const contentDiv = document.getElementById("tabContent");
+        contentDiv.innerHTML = `
+    <h3>Quarto ${quarto.numero}</h3>
+    <p><strong>Descrição:</strong> ${quarto.descricao || "---"}</p>
+    <p><strong>Tipo:</strong> ${quarto.tipo || "---"}</p>
+    <p><strong>Valor da diária:</strong> R$ ${Number(
+      quarto.valor_diaria || 0
+    ).toFixed(2)}</p>
+    <p><strong>Status:</strong> ${quarto.status || "---"}</p>
+  `;
+      }
+
+      // Inicialização
+      document.addEventListener("DOMContentLoaded", async () => {
+        const quartos = await buscarQuartos();
+        renderTabs(quartos);
+      });
+    </script>
+  </body>
+</html>
