@@ -5,7 +5,8 @@
     <title>Consulta de Clientes</title>
     <link rel="stylesheet" href="css/style.css" />
     <style>
-      .clientes-table td, .clientes-table th {
+      .clientes-table td,
+      .clientes-table th {
         padding: 12px 16px;
         text-align: left;
       }
@@ -113,15 +114,34 @@
   <body>
     <div class="clientes-container">
       <div class="clientes-filter-bar">
-        <button class="clientes-back-btn" onclick="window.history.back()" title="Voltar">&#8592;</button>
-        <label for="clientes-filtro" class="clientes-filtro-label">Filtro</label>
+        <button
+          class="clientes-back-btn"
+          onclick="window.location.href='index.html';"
+          title="Voltar"
+        >
+          &#8592;
+        </button>
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <br />
+        <label for="clientes-filtro" class="clientes-filtro-label"
+          >Filtro</label
+        >
         <input
           type="text"
           id="clientes-filtro"
           class="clientes-filtro-input"
           placeholder="Digite o cpf, nome ou email"
         />
-        <button class="clientes-filter-btn">Filtrar</button>
+        <div>
+          <button class="clientes-filter-btn">Filtrar</button>
+        </div>
       </div>
 
       <div class="clientes-table-container">
@@ -134,7 +154,7 @@
               <th>Endereço</th>
               <th>Telefone</th>
               <th>Email</th>
-              <th style="width: 200px;">Ações</th>
+              <th style="width: 200px">Ações</th>
             </tr>
           </thead>
           <tbody id="clientes-tbody">
@@ -144,33 +164,35 @@
       </div>
     </div>
     <script>
-let clientesOriginais = [];
+      let clientesOriginais = [];
 
-async function carregarClientes(filtro = "") {
-  const tbody = document.getElementById('clientes-tbody');
-  if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-  try {
-    const resp = await fetch('/api/clientes');
-    let clientes = await resp.json();
-    clientesOriginais = clientes; // Salva para filtro
+      async function carregarClientes(filtro = "") {
+        const tbody = document.getElementById("clientes-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+        try {
+          const resp = await fetch("/api/clientes");
+          let clientes = await resp.json();
+          clientesOriginais = clientes; // Salva para filtro
 
-    if (filtro) {
-      const filtroLower = filtro.toLowerCase();
-      clientes = clientes.filter(c =>
-        c.cpf.toLowerCase().includes(filtroLower) ||
-        c.nome.toLowerCase().includes(filtroLower) ||
-        (c.email && c.email.toLowerCase().includes(filtroLower))
-      );
-    }
+          if (filtro) {
+            const filtroLower = filtro.toLowerCase();
+            clientes = clientes.filter(
+              (c) =>
+                c.cpf.toLowerCase().includes(filtroLower) ||
+                c.nome.toLowerCase().includes(filtroLower) ||
+                (c.email && c.email.toLowerCase().includes(filtroLower))
+            );
+          }
 
-    if (!clientes.length) {
-      tbody.innerHTML = '<tr><td colspan="8">Nenhum cliente cadastrado</td></tr>';
-      return;
-    }
-    tbody.innerHTML = '';
-    clientes.forEach(cliente => {
-      tbody.innerHTML += `
+          if (!clientes.length) {
+            tbody.innerHTML =
+              '<tr><td colspan="8">Nenhum cliente cadastrado</td></tr>';
+            return;
+          }
+          tbody.innerHTML = "";
+          clientes.forEach((cliente) => {
+            tbody.innerHTML += `
         <tr id="linha-${cliente.cpf}">
           <td>${cliente.cpf}</td>
           <td><span class="span-nome">${cliente.nome}</span></td>
@@ -184,34 +206,35 @@ async function carregarClientes(filtro = "") {
           </td>
         </tr>
       `;
-    });
-  } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="8">Erro ao carregar clientes</td></tr>';
-  }
-}
+          });
+        } catch (error) {
+          tbody.innerHTML =
+            '<tr><td colspan="8">Erro ao carregar clientes</td></tr>';
+        }
+      }
 
-window.editarCliente = function(cpf) {
-  // Impede múltiplas edições simultâneas
-  if (document.querySelector('.salvar-btn')) return;
+      window.editarCliente = function (cpf) {
+        // Impede múltiplas edições simultâneas
+        if (document.querySelector(".salvar-btn")) return;
 
-  const linha = document.getElementById(`linha-${cpf}`);
-  const spans = linha.querySelectorAll('span');
-  const valores = {};
-  spans.forEach(span => {
-    const campo = span.className.replace('span-', '');
-    valores[campo] = span.textContent;
-    span.outerHTML = `<input type="text" class="editavel edit-${campo}" value="${span.textContent}">`;
-  });
+        const linha = document.getElementById(`linha-${cpf}`);
+        const spans = linha.querySelectorAll("span");
+        const valores = {};
+        spans.forEach((span) => {
+          const campo = span.className.replace("span-", "");
+          valores[campo] = span.textContent;
+          span.outerHTML = `<input type="text" class="editavel edit-${campo}" value="${span.textContent}">`;
+        });
 
-  const botoes = linha.querySelectorAll('button');
-  botoes[0].outerHTML = `<button class="btn-acao salvar-btn" onclick="salvarEdicaoCliente('${cpf}')">Salvar</button>`;
-  botoes[1].outerHTML = `<button class="btn-acao cancelar-btn" onclick="cancelarEdicaoCliente('${cpf}')">Cancelar</button>`;
-};
+        const botoes = linha.querySelectorAll("button");
+        botoes[0].outerHTML = `<button class="btn-acao salvar-btn" onclick="salvarEdicaoCliente('${cpf}')">Salvar</button>`;
+        botoes[1].outerHTML = `<button class="btn-acao cancelar-btn" onclick="cancelarEdicaoCliente('${cpf}')">Cancelar</button>`;
+      };
 
-window.cancelarEdicaoCliente = function(cpf) {
-  const cliente = clientesOriginais.find(c => c.cpf === cpf);
-  const linha = document.getElementById(`linha-${cpf}`);
-  linha.innerHTML = `
+      window.cancelarEdicaoCliente = function (cpf) {
+        const cliente = clientesOriginais.find((c) => c.cpf === cpf);
+        const linha = document.getElementById(`linha-${cpf}`);
+        linha.innerHTML = `
     <td>${cliente.cpf}</td>
     <td><span class="span-nome">${cliente.nome}</span></td>
     <td><span class="span-cep">${cliente.cep}</span></td>
@@ -223,55 +246,61 @@ window.cancelarEdicaoCliente = function(cpf) {
       <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
     </td>
   `;
-};
+      };
 
-window.salvarEdicaoCliente = async function(cpf) {
-  const linha = document.getElementById(`linha-${cpf}`);
-  const nome = linha.querySelector('.edit-nome').value;
-  const cep = linha.querySelector('.edit-cep').value;
-  const endereco = linha.querySelector('.edit-endereco').value;
-  const telefone = linha.querySelector('.edit-telefone').value;
-  const email = linha.querySelector('.edit-email').value;
+      window.salvarEdicaoCliente = async function (cpf) {
+        const linha = document.getElementById(`linha-${cpf}`);
+        const nome = linha.querySelector(".edit-nome").value;
+        const cep = linha.querySelector(".edit-cep").value;
+        const endereco = linha.querySelector(".edit-endereco").value;
+        const telefone = linha.querySelector(".edit-telefone").value;
+        const email = linha.querySelector(".edit-email").value;
 
-  const resp = await fetch(`/api/clientes/${cpf}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ nome, telefone, email, endereco, cep })
-  });
-  if (resp.ok) {
-    alert('Cliente atualizado!');
-    await carregarClientes(document.getElementById('clientes-filtro').value);
-  } else {
-    alert('Erro ao atualizar cliente');
-  }
-};
+        const resp = await fetch(`/api/clientes/${cpf}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ nome, telefone, email, endereco, cep }),
+        });
+        if (resp.ok) {
+          alert("Cliente atualizado!");
+          await carregarClientes(
+            document.getElementById("clientes-filtro").value
+          );
+        } else {
+          alert("Erro ao atualizar cliente");
+        }
+      };
 
-window.excluirCliente = async function(cpf) {
-  if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
-  const resp = await fetch(`/api/clientes/${cpf}`, { method: 'DELETE' });
-  if (resp.ok) {
-    alert('Cliente excluído!');
-    await carregarClientes(document.getElementById('clientes-filtro').value);
-  } else {
-    alert('Erro ao excluir cliente');
-  }
-};
+      window.excluirCliente = async function (cpf) {
+        if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+        const resp = await fetch(`/api/clientes/${cpf}`, { method: "DELETE" });
+        if (resp.ok) {
+          alert("Cliente excluído!");
+          await carregarClientes(
+            document.getElementById("clientes-filtro").value
+          );
+        } else {
+          alert("Erro ao excluir cliente");
+        }
+      };
 
-// Filtro
-document.querySelector('.clientes-filter-btn').onclick = function() {
-  const filtro = document.getElementById('clientes-filtro').value.trim();
-  carregarClientes(filtro);
-};
+      // Filtro
+      document.querySelector(".clientes-filter-btn").onclick = function () {
+        const filtro = document.getElementById("clientes-filtro").value.trim();
+        carregarClientes(filtro);
+      };
 
-// Permite filtrar ao pressionar Enter no campo filtro
-document.getElementById('clientes-filtro').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    e.preventDefault();
-    document.querySelector('.clientes-filter-btn').click();
-  }
-});
+      // Permite filtrar ao pressionar Enter no campo filtro
+      document
+        .getElementById("clientes-filtro")
+        .addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.querySelector(".clientes-filter-btn").click();
+          }
+        });
 
-document.addEventListener('DOMContentLoaded', () => carregarClientes());
-</script>
+      document.addEventListener("DOMContentLoaded", () => carregarClientes());
+    </script>
   </body>
 </html>
