@@ -1,251 +1,312 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tela de Check-out Específica</title>
-    <link rel="stylesheet" href="seu_arquivo_css.css">
+    <link rel="stylesheet" href="seu_arquivo_css.css" />
     <style>
-        /*
+      /*
  * ===============================================
  * ESTILOS ESPECÍFICOS PARA A TELA DE CHECK-OUT
  * Usa prefixo "checkout_screen_" para evitar conflitos
  * ===============================================
  */
 
-/* Container Principal do Componente */
-.checkout_screen_container {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #333;
-    background-color: #ffffff;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    width: 100%;
-    max-width: 800px;
-    margin: 40px auto; /* Adiciona margem para centralizar caso não esteja em um flex container */
-}
+      /* Container Principal do Componente */
+      .checkout_screen_container {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        color: #333;
+        background-color: #ffffff;
+        padding: 30px;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 800px;
+        margin: 40px auto; /* Adiciona margem para centralizar caso não esteja em um flex container */
+      }
 
-/* Cabeçalho do Componente */
-.checkout_screen_header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 25px;
-}
+      /* Cabeçalho do Componente */
+      .checkout_screen_header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+      }
 
-.checkout_screen_back_arrow {
-    font-size: 28px;
-    text-decoration: none;
-    color: #555;
-    margin-right: 20px;
-}
+      .checkout_screen_back_arrow {
+        font-size: 28px;
+        text-decoration: none;
+        color: #555;
+        margin-right: 20px;
+      }
 
-.checkout_screen_title_box {
-    background-color: #48BBBE;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 8px;
-    text-align: center;
-    flex-grow: 1;
-}
+      .checkout_screen_title_box {
+        background-color: #48bbbe;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        text-align: center;
+        flex-grow: 1;
+      }
 
-.checkout_screen_main_title {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 500;
-}
+      .checkout_screen_main_title {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 500;
+      }
 
-/* Estrutura do Formulário */
-.checkout_screen_form {
-    width: 100%;
-}
+      /* Estrutura do Formulário */
+      .checkout_screen_form {
+        width: 100%;
+      }
 
-.checkout_screen_columns_wrapper {
-    display: flex;
-    gap: 40px;
-}
+      .checkout_screen_columns_wrapper {
+        display: flex;
+        gap: 40px;
+      }
 
-.checkout_screen_column {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
+      .checkout_screen_column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
 
-/* Campos (Inputs, Labels) */
-.checkout_screen_field_group {
-    display: flex;
-    flex-direction: column;
-}
+      /* Campos (Inputs, Labels) */
+      .checkout_screen_field_group {
+        display: flex;
+        flex-direction: column;
+      }
 
-.checkout_screen_label {
-    margin-bottom: 6px;
-    font-weight: 500;
-    color: #555;
-}
+      .checkout_screen_label {
+        margin-bottom: 6px;
+        font-weight: 500;
+        color: #555;
+      }
 
-.checkout_screen_input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    width: 100%;
-    box-sizing: border-box;
-}
+      .checkout_screen_input {
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 16px;
+        width: 100%;
+        box-sizing: border-box;
+      }
 
-.checkout_screen_input:focus {
-    outline: none;
-    border-color: #48BBBE;
-    box-shadow: 0 0 5px rgba(72, 187, 190, 0.5);
-}
+      .checkout_screen_input:focus {
+        outline: none;
+        border-color: #48bbbe;
+        box-shadow: 0 0 5px rgba(72, 187, 190, 0.5);
+      }
 
-/* Modificador para input menor */
-.checkout_screen_input--small {
-    width: 80px !important;
-}
+      /* Modificador para input menor */
+      .checkout_screen_input--small {
+        width: 80px !important;
+      }
 
-/* Tabela de Consumo */
-.checkout_screen_consumption_table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 5px;
-}
+      /* Tabela de Consumo */
+      .checkout_screen_consumption_table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 5px;
+      }
 
-.checkout_screen_table_head {
-    background-color: #f7f7f7;
-}
+      .checkout_screen_table_head {
+        background-color: #f7f7f7;
+      }
 
-.checkout_screen_table_header,
-.checkout_screen_table_cell {
-    border: 1px solid #ddd;
-    padding: 10px;
-    text-align: left;
-}
+      .checkout_screen_table_header,
+      .checkout_screen_table_cell {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
 
-.checkout_screen_table_header {
-    font-weight: 600;
-}
+      .checkout_screen_table_header {
+        font-weight: 600;
+      }
 
-/* Rodapé e Botão de Ação */
-.checkout_screen_footer {
-    display: flex;
-    justify-content: flex-end;
-    margin-top: 30px;
-}
+      /* Rodapé e Botão de Ação */
+      .checkout_screen_footer {
+        display: flex;
+        justify-content: flex-end;
+        margin-top: 30px;
+      }
 
-.checkout_screen_submit_button {
-    background-color: #48BBBE;
-    color: white;
-    border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+      .checkout_screen_submit_button {
+        background-color: #48bbbe;
+        color: white;
+        border: none;
+        padding: 12px 25px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
 
-.checkout_screen_submit_button:hover {
-    background-color: #3a9a9d;
-}
+      .checkout_screen_submit_button:hover {
+        background-color: #3a9a9d;
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <div class="checkout_screen_container">
-        <header class="checkout_screen_header">
-            <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()">←</a>
-            <div class="checkout_screen_title_box">
-                <h1 class="checkout_screen_main_title">Check-out</h1>
-            </div>
-        </header>
+      <header class="checkout_screen_header">
+        <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()"
+          >←</a
+        >
+        <div class="checkout_screen_title_box">
+          <h1 class="checkout_screen_main_title">Check-out</h1>
+        </div>
+      </header>
 
-        <form class="checkout_screen_form">
-            <div class="checkout_screen_columns_wrapper">
-                <div class="checkout_screen_column">
-                    <div class="checkout_screen_field_group">
-                        <label for="cpf_cliente" class="checkout_screen_label">CPF cliente:</label>
-                        <input type="text" id="cpf_cliente" name="cpf" class="checkout_screen_input">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="valor_diaria" class="checkout_screen_label">Valor da diaria</label>
-                        <input type="text" id="valor_diaria" name="valor-diaria" class="checkout_screen_input">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="qtd_dias" class="checkout_screen_label">Quantidade de dias</label>
-                        <input type="number" id="qtd_dias" name="qtd-dias" class="checkout_screen_input checkout_screen_input--small">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="desconto" class="checkout_screen_label">Desconto</label>
-                        <input type="text" id="desconto" name="desconto" class="checkout_screen_input">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="total" class="checkout_screen_label">Total a pagar</label>
-                        <input type="text" id="total" name="total" class="checkout_screen_input" readonly>
-                    </div>
-                </div>
-
-                <div class="checkout_screen_column">
-                    <div class="checkout_screen_field_group">
-                        <label for="data_checkout" class="checkout_screen_label">Data Check-out:</label>
-                        <input type="date" id="data_checkout" name="data-checkout" class="checkout_screen_input" placeholder="dd/mm/yyyy">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="hora_checkout" class="checkout_screen_label">Hora Check-out:</label>
-                        <input type="time" id="hora_checkout" name="hora-checkout" class="checkout_screen_input" placeholder="--:--">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label for="quarto" class="checkout_screen_label">Quarto</label>
-                        <input type="text" id="quarto" name="quarto" class="checkout_screen_input checkout_screen_input--small">
-                    </div>
-                    <div class="checkout_screen_field_group">
-                        <label class="checkout_screen_label">Consumo</label>
-                        <table class="checkout_screen_consumption_table">
-                            <thead class="checkout_screen_table_head">
-                                <tr>
-                                    <th class="checkout_screen_table_header">Produto</th>
-                                    <th class="checkout_screen_table_header">Quantidade</th>
-                                    <th class="checkout_screen_table_header">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody class="checkout_screen_table_body">
-                                <tr>
-                                    <td class="checkout_screen_table_cell">heineken</td>
-                                    <td class="checkout_screen_table_cell">2</td>
-                                    <td class="checkout_screen_table_cell">16</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+      <form class="checkout_screen_form">
+        <div class="checkout_screen_columns_wrapper">
+          <div class="checkout_screen_column">
+            <div class="checkout_screen_field_group">
+              <label for="cpf_cliente" class="checkout_screen_label"
+                >CPF cliente:</label
+              >
+              <input
+                type="text"
+                id="cpf_cliente"
+                name="cpf"
+                class="checkout_screen_input"
+              />
             </div>
-
-            <div class="checkout_screen_footer">
-                <button type="submit" class="checkout_screen_submit_button">Registrar</button>
+            <div class="checkout_screen_field_group">
+              <label for="valor_diaria" class="checkout_screen_label"
+                >Valor da diaria</label
+              >
+              <input
+                type="text"
+                id="valor_diaria"
+                name="valor-diaria"
+                class="checkout_screen_input"
+              />
             </div>
-        </form>
+            <div class="checkout_screen_field_group">
+              <label for="qtd_dias" class="checkout_screen_label"
+                >Quantidade de dias</label
+              >
+              <input
+                type="number"
+                id="qtd_dias"
+                name="qtd-dias"
+                class="checkout_screen_input checkout_screen_input--small"
+              />
+            </div>
+            <div class="checkout_screen_field_group">
+              <label for="desconto" class="checkout_screen_label"
+                >Desconto</label
+              >
+              <input
+                type="text"
+                id="desconto"
+                name="desconto"
+                class="checkout_screen_input"
+              />
+            </div>
+            <div class="checkout_screen_field_group">
+              <label for="total" class="checkout_screen_label"
+                >Total a pagar</label
+              >
+              <input
+                type="text"
+                id="total"
+                name="total"
+                class="checkout_screen_input"
+                readonly
+              />
+            </div>
+          </div>
+
+          <div class="checkout_screen_column">
+            <div class="checkout_screen_field_group">
+              <label for="data_checkout" class="checkout_screen_label"
+                >Data Check-out:</label
+              >
+              <input
+                type="date"
+                id="data_checkout"
+                name="data-checkout"
+                class="checkout_screen_input"
+                placeholder="dd/mm/yyyy"
+              />
+            </div>
+            <div class="checkout_screen_field_group">
+              <label for="hora_checkout" class="checkout_screen_label"
+                >Hora Check-out:</label
+              >
+              <input
+                type="time"
+                id="hora_checkout"
+                name="hora-checkout"
+                class="checkout_screen_input"
+                placeholder="--:--"
+              />
+            </div>
+            <div class="checkout_screen_field_group">
+              <label for="quarto" class="checkout_screen_label">Quarto</label>
+              <input
+                type="text"
+                id="quarto"
+                name="quarto"
+                class="checkout_screen_input checkout_screen_input--small"
+              />
+            </div>
+            <div class="checkout_screen_field_group">
+              <label class="checkout_screen_label">Consumo</label>
+              <table class="checkout_screen_consumption_table">
+                <thead class="checkout_screen_table_head">
+                  <tr>
+                    <th class="checkout_screen_table_header">Produto</th>
+                    <th class="checkout_screen_table_header">Quantidade</th>
+                    <th class="checkout_screen_table_header">Total</th>
+                  </tr>
+                </thead>
+                <tbody class="checkout_screen_table_body">
+                  <tr>
+                    <td class="checkout_screen_table_cell">heineken</td>
+                    <td class="checkout_screen_table_cell">2</td>
+                    <td class="checkout_screen_table_cell">16</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="checkout_screen_footer">
+          <button type="submit" class="checkout_screen_submit_button">
+            Registrar
+          </button>
+        </div>
+      </form>
     </div>
     <script src="https://unpkg.com/imask"></script>
 
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        var horaInput = document.getElementById('hora_checkout');
+      document.addEventListener("DOMContentLoaded", function () {
+        var horaInput = document.getElementById("hora_checkout");
         var maskOptions = {
-          mask: '00:00', // Define a máscara para horas e minutos
+          mask: "00:00", // Define a máscara para horas e minutos
           blocks: {
-            '00': {
+            "00": {
               mask: IMask.MaskedRange,
               from: 0,
               to: 23, // Limita o campo de hora de 00 a 23
-              maxLength: 2
+              maxLength: 2,
             },
-            '00': {
+            "00": {
               mask: IMask.MaskedRange,
               from: 0,
               to: 59, // Limita o campo de minutos de 00 a 59
-              maxLength: 2
-            }
-          }
+              maxLength: 2,
+            },
+          },
         };
         var mask = IMask(horaInput, maskOptions);
       });
@@ -366,6 +427,5 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
   }
 });
     </script>
-    
-    </body>
-    </html>
+  </body>
+</html>
