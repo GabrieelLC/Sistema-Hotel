@@ -427,32 +427,32 @@
               body: JSON.stringify({ nome, telefone, email, endereco, cep }),
             });
 
-          const resp = await fetch('/api/checkin', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cliente_cpf,
-              quarto_numero,
-              data_checkin,
-              hora_checkin,
-              data_checkout_prevista,
-              hora_checkout_prevista,
-              valor_diaria,
-              desconto
-            })
-          });
-          const data = await resp.json();
-          if (resp.ok) {
-            alert('Check-in registrado com sucesso!');
-            this.reset();
-            carregarQuartosDisponiveis(); // Atualiza lista de quartos disponíveis
-          } else {
-            alert(data.message || 'Erro ao registrar check-in');
+            const resp = await fetch('/api/checkin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                cliente_cpf,
+                quarto_numero,
+                data_checkin,
+                hora_checkin,
+                data_checkout_prevista,
+                hora_checkout_prevista,
+                valor_diaria,
+                desconto
+              })
+            });
+            const data = await resp.json();
+            if (resp.ok) {
+              alert('Check-in registrado com sucesso!');
+              this.reset();
+              carregarQuartosDisponiveis();
+            } else {
+              alert(data.message || 'Erro ao registrar check-in');
+            }
+          } catch (error) {
+            alert('Erro ao conectar ao servidor');
           }
-        } catch (error) {
-          alert('Erro ao conectar ao servidor');
-        }
-      });
+        });
     </script>
   </body>
 </html>
