@@ -326,6 +326,14 @@
           alert('Erro ao conectar ao servidor');
         }
       });
+
+      document.addEventListener('DOMContentLoaded', function() {
+  const dataInput = document.getElementById('datacheckin');
+  const horaInput = document.getElementById('horacheckin');
+  const now = new Date();
+  dataInput.value = now.toISOString().slice(0,10);
+  horaInput.value = now.toTimeString().slice(0,5);
+});
     </script>
   </body>
 </html>

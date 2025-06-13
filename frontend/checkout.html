@@ -253,6 +253,118 @@
         function VoltarPagina(){
             window.history.back();
         }
+
+        async function buscarReservaAtivaPorCpf(cpf) {
+          const resp = await fetch(`/api/reservas?cpf=${cpf}&status=ativo`);
+          if (resp.ok) {
+            const reservas = await resp.json();
+            if (reservas.length > 0) {
+              preencherFormularioCheckout(reservas[0]);
+            } else {
+              alert('Nenhuma reserva ativa encontrada para este CPF.');
+            }
+          }
+        }
+
+        async function realizarCheckout(reservaId, data_checkout, hora_checkout, desconto) {
+          const resp = await fetch(`/api/checkout/${reservaId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data_checkout, hora_checkout, desconto })
+          });
+          if (resp.ok) {
+            alert('Checkout realizado com sucesso!');
+          } else {
+            alert('Erro ao realizar checkout');
+          }
+        }
+
+        let reservaAtivaId = null;
+
+document.getElementById('cpf_cliente').addEventListener('blur', async function() {
+  const cpf = this.value.trim();
+  if (!cpf) return;
+
+  // Limpa campos antes de buscar
+  document.getElementById('valor_diaria').value = '';
+  document.getElementById('qtd_dias').value = '';
+  document.getElementById('desconto').value = '';
+  document.getElementById('total').value = '';
+  document.getElementById('quarto').value = '';
+  reservaAtivaId = null;
+
+  try {
+    const resp = await fetch(`/api/reserva-ativa/${cpf}`);
+    if (!resp.ok) {
+      alert('Nenhuma reserva ativa encontrada para este CPF.');
+      return;
+    }
+    const reserva = await resp.json();
+    reservaAtivaId = reserva.id;
+
+    // Preencha os campos normalmente...
+    document.getElementById('valor_diaria').value = reserva.valor_diaria || '';
+
+    // Calcula quantidade de dias (do check-in até hoje)
+    const dataCheckin = new Date(reserva.data_checkin);
+    const hoje = new Date();
+    const diffTime = hoje - dataCheckin;
+    let dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    if (dias < 1) dias = 1;
+    document.getElementById('qtd_dias').value = dias;
+
+    // Preenche desconto
+    document.getElementById('desconto').value = reserva.desconto || 0;
+
+    // Preenche quarto
+    document.getElementById('quarto').value = reserva.quarto || '';
+
+    // Calcula total
+    const valorDiaria = Number(reserva.valor_diaria) || 0;
+    const desconto = Number(reserva.desconto) || 0;
+    const total = (valorDiaria * dias) - desconto;
+    document.getElementById('total').value = total.toFixed(2);
+
+  } catch (error) {
+    alert('Erro ao buscar reserva ativa');
+  }
+});
+
+        // Preencher data/hora automaticamente ao abrir a tela (mas permite editar)
+        document.addEventListener('DOMContentLoaded', function() {
+          const dataInput = document.getElementById('data_checkout');
+          const horaInput = document.getElementById('hora_checkout');
+          const now = new Date();
+          dataInput.value = now.toISOString().slice(0,10);
+          horaInput.value = now.toTimeString().slice(0,5);
+        });
+
+        document.querySelector('.checkout_screen_form').addEventListener('submit', async function(e) {
+  e.preventDefault();
+
+  if (!reservaAtivaId) {
+    alert('Busque o CPF do cliente primeiro!');
+    return;
+  }
+
+  const data_checkout = document.getElementById('data_checkout').value;
+  const hora_checkout = document.getElementById('hora_checkout').value;
+  const desconto = document.getElementById('desconto').value;
+
+  const resp = await fetch(`/api/checkout/${reservaAtivaId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data_checkout, hora_checkout, desconto })
+  });
+
+  if (resp.ok) {
+    alert('Checkout realizado com sucesso!');
+    // Limpe o formulário ou redirecione
+  } else {
+    const erro = await resp.json();
+    alert('Erro ao registrar checkout: ' + (erro.message || ''));
+  }
+});
     </script>
     
     </body>

@@ -79,17 +79,8 @@
                 <th>Hora</th>
                 <th>Data de Saida</th>
                 <th>Hora</th>
+                <th>Status</th> <!-- NOVO -->
               </tr>
-              <tbody>
-                <tr>
-                  <td>Bia</td>
-                  <td>11</td>
-                  <td>12/5/25</td>
-                  <td>10:00</td>
-                  <td>13/5/25</td>
-                  <td>11:00</td>
-                </tr>
-              </tbody>
             </thead>
             <tbody id="checkin-tbody"></tbody>
           </table>
@@ -117,12 +108,12 @@
         }
       });
 
-      async function carregarReservas() {
+      async function carregarReservas(futuras = true) {
   const tbody = document.getElementById('checkin-tbody');
   if (!tbody) return;
   tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
   try {
-    const resp = await fetch('/api/reservas');
+    const resp = await fetch(`/api/reservas${futuras ? '?futuras=1' : ''}`);
     const reservas = await resp.json();
     if (!reservas.length) {
       tbody.innerHTML = '<tr><td colspan="6">Nenhuma reserva encontrada</td></tr>';
@@ -138,6 +129,7 @@
           <td>${r.hora_entrada || ''}</td>
           <td>${r.data_saida || ''}</td>
           <td>${r.hora_saida || ''}</td>
+          <td>${r.status || ''}</td> <!-- NOVO -->
         </tr>
       `;
     });
@@ -146,7 +138,9 @@
   }
 }
 
-document.addEventListener('DOMContentLoaded', carregarReservas);
+// Chame assim ao carregar a página:
+document.addEventListener('DOMContentLoaded', () => carregarReservas(true));
+
     </script>
   </body>
 </html>

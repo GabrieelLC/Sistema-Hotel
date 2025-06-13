@@ -175,7 +175,7 @@ router.get('/checkouts-hoje', (req, res) => {
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
-     WHERE DATE(r.data_checkout) = ?`,
+     WHERE DATE(r.data_checkout) = ? AND r.status = 'finalizado'`,
     [hoje],
     (err, results) => {
       if (err) return res.status(500).json({ message: 'Erro ao buscar check-outs', error: err });
@@ -256,27 +256,77 @@ router.put('/checkout/:id', (req, res) => {
       if (err) {
         return res.status(500).json({ message: 'Erro ao registrar check-out', error: err });
       }
-      res.status(200).json({ message: 'Check-out registrado com sucesso', result });
+      // Atualize o status do quarto
+      db.query(
+        `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
+        [id],
+        (err2) => {
+          if (err2) {
+            return res.status(500).json({ message: 'Erro ao atualizar status do quarto', error: err2 });
+          }
+          res.status(200).json({ message: 'Check-out registrado com sucesso', result });
+        }
+      );
     }
   );
 });
 
-// Listar todas as reservas
+// GET /api/reservas?futuras=1
 router.get('/reservas', (req, res) => {
+  const { futuras } = req.query;
+  let sql = `
+    SELECT c.nome, r.quarto_numero as quarto, 
+           DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
+           DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
+           DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
+           DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
+           r.status
+    FROM Reservas r
+    JOIN Clientes c ON r.cliente_cpf = c.cpf
+  `;
+  const params = [];
+  if (futuras === '1') {
+    sql += ' WHERE r.data_checkin >= CURDATE()';
+  }
+  sql += ' ORDER BY r.data_checkin DESC, r.hora_checkin DESC';
+  db.query(sql, params, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar reservas', error: err });
+    res.json(results);
+  });
+});
+
+// GET /api/reserva-ativa/:cpf
+router.get('/reserva-ativa/:cpf', (req, res) => {
+  const cpf = req.params.cpf;
   db.query(
-    `SELECT c.nome, r.quarto_numero as quarto, 
-            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
-            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
-            DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
-            DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida
+    `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria, r.desconto
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
-     ORDER BY r.data_checkin DESC, r.hora_checkin DESC`,
+     JOIN Quartos q ON r.quarto_numero = q.numero
+     JOIN TiposQuarto tq ON q.tipo_id = tq.id
+     WHERE r.cliente_cpf = ? AND r.status = 'ativo'
+     ORDER BY r.data_checkin DESC LIMIT 1`,
+    [cpf],
     (err, results) => {
-      if (err) return res.status(500).json({ message: 'Erro ao buscar reservas', error: err });
-      res.json(results);
+      if (err) return res.status(500).json({ message: 'Erro ao buscar reserva', error: err });
+      if (!results.length) return res.status(404).json({ message: 'Nenhuma reserva ativa encontrada' });
+      res.json(results[0]);
     }
   );
 });
+
+async function realizarCheckout(reservaId, data_checkout, hora_checkout, desconto) {
+  const resp = await fetch(`/api/checkout/${reservaId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ data_checkout, hora_checkout, desconto })
+  });
+  if (resp.ok) {
+    alert('Checkout realizado com sucesso!');
+    // Atualize a tela, redirecione, etc.
+  } else {
+    alert('Erro ao realizar checkout');
+  }
+}
 
 module.exports = router;

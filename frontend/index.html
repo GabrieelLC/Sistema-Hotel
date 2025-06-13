@@ -128,6 +128,63 @@
           cadastroDropdown.classList.remove("show");
         }
       });
+
+      async function carregarCheckins() {
+        const tbody = document.getElementById('checkin-tbody');
+        tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+        const resp = await fetch('/api/checkins-hoje');
+        const dados = await resp.json();
+        if (dados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8">Nenhum check-in hoje</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        dados.forEach(item => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${item.cpf}</td>
+              <td>${item.nome}</td>
+              <td>${item.quarto}</td>
+              <td>${item.tipo_quarto}</td>
+              <td>${item.hora}</td>
+              <td>${item.telefone}</td>
+              <td>${item.email}</td>
+              <td>R$${item.valor_diaria}</td>
+            </tr>
+          `;
+        });
+      }
+
+      async function carregarCheckouts() {
+        const tbody = document.getElementById('checkout-tbody');
+        tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
+        const resp = await fetch('/api/checkouts-hoje');
+        const dados = await resp.json();
+        if (dados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8">Nenhum check-out hoje</td></tr>';
+          return;
+        }
+        tbody.innerHTML = '';
+        dados.forEach(item => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${item.cpf}</td>
+              <td>${item.nome}</td>
+              <td>${item.quarto}</td>
+              <td>${item.tipo_quarto}</td>
+              <td>${item.hora}</td>
+              <td>${item.telefone}</td>
+              <td>${item.email}</td>
+              <td>R$${item.valor_diaria}</td>
+            </tr>
+          `;
+        });
+      }
+
+      document.addEventListener('DOMContentLoaded', () => {
+        carregarCheckins();
+        carregarCheckouts();
+      });
     </script>
   </body>
 </html>
