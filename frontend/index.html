@@ -56,7 +56,7 @@
         <a href="clientes.html" class="menu-btn">Clientes</a>
         <a href="quartos.html" class="menu-btn">Quartos</a>
         <a href="reservas.html" class="menu-btn">Reservas</a>
-        <a href="#" class="menu-btn">Produtos</a>
+        <a href="produtos.html" class="menu-btn">Produtos</a>
       </div>
       <div class="main-content">
         <div class="tab-header">
@@ -130,16 +130,17 @@
       });
 
       async function carregarCheckins() {
-        const tbody = document.getElementById('checkin-tbody');
+        const tbody = document.getElementById("checkin-tbody");
         tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-        const resp = await fetch('/api/checkins-hoje');
+        const resp = await fetch("/api/checkins-hoje");
         const dados = await resp.json();
         if (dados.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8">Nenhum check-in hoje</td></tr>';
+          tbody.innerHTML =
+            '<tr><td colspan="8">Nenhum check-in hoje</td></tr>';
           return;
         }
-        tbody.innerHTML = '';
-        dados.forEach(item => {
+        tbody.innerHTML = "";
+        dados.forEach((item) => {
           tbody.innerHTML += `
             <tr>
               <td>${item.cpf}</td>
@@ -156,16 +157,17 @@
       }
 
       async function carregarCheckouts() {
-        const tbody = document.getElementById('checkout-tbody');
+        const tbody = document.getElementById("checkout-tbody");
         tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-        const resp = await fetch('/api/checkouts-hoje');
+        const resp = await fetch("/api/checkouts-hoje");
         const dados = await resp.json();
         if (dados.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8">Nenhum check-out hoje</td></tr>';
+          tbody.innerHTML =
+            '<tr><td colspan="8">Nenhum check-out hoje</td></tr>';
           return;
         }
-        tbody.innerHTML = '';
-        dados.forEach(item => {
+        tbody.innerHTML = "";
+        dados.forEach((item) => {
           tbody.innerHTML += `
             <tr>
               <td>${item.cpf}</td>
@@ -181,7 +183,7 @@
         });
       }
 
-      document.addEventListener('DOMContentLoaded', () => {
+      document.addEventListener("DOMContentLoaded", () => {
         carregarCheckins();
         carregarCheckouts();
       });

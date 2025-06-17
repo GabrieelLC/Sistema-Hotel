@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cadastro de Produtos</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f7f8fa;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background-color: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #48bbbe;
+        margin-bottom: 20px;
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      form .form-group {
+        flex: 1;
+        min-width: 200px;
+      }
+
+      form label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+
+      form input,
+      form button {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+      }
+
+      form button {
+        background-color: #48bbbe;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      form button:hover {
+        background-color: #3a9a9d;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      table th,
+      table td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: left;
+      }
+
+      table th {
+        background-color: #48bbbe;
+        color: white;
+      }
+
+      table td button {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      table td .edit-btn {
+        background-color: #ffc107;
+        color: white;
+      }
+
+      table td .delete-btn {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      table td button:hover {
+        opacity: 0.9;
+      }
+
+      .empty-message {
+        text-align: center;
+        color: #888;
+        margin-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Cadastro de Produtos</h1>
+      <button
+        class="clientes-back-btn"
+        onclick="window.location.href='index.html';"
+        title="Voltar"
+      >
+        &#8592;
+      </button>
+      <!-- Formulário de Cadastro -->
+      <form id="productForm">
+        <div class="form-group">
+          <label for="productName">Nome do Produto</label>
+          <input
+            type="text"
+            id="productName"
+            placeholder="Digite o nome do produto"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="productPrice">Preço Unitário (R$)</label>
+          <input
+            type="number"
+            id="productPrice"
+            placeholder="Digite o preço"
+            step="0.01"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <button type="submit">Adicionar Produto</button>
+        </div>
+      </form>
+
+      <!-- Tabela de Produtos -->
+      <table id="productTable">
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Preço (R$)</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Os produtos cadastrados aparecerão aqui -->
+        </tbody>
+      </table>
+      <p class="empty-message" id="emptyMessage">Nenhum produto cadastrado.</p>
+    </div>
+
+    <script>
+      // Referências aos elementos do DOM
+      const productForm = document.getElementById("productForm");
+      const productTable = document
+        .getElementById("productTable")
+        .querySelector("tbody");
+      const emptyMessage = document.getElementById("emptyMessage");
+
+      // Função para adicionar um produto à tabela
+      function addProduct(event) {
+        event.preventDefault(); // Evita o reload da página ao enviar o formulário
+
+        // Obtém os valores dos campos do formulário
+        const productName = document.getElementById("productName").value.trim();
+        const productPrice = parseFloat(
+          document.getElementById("productPrice").value
+        ).toFixed(2);
+
+        // Verifica se todos os campos foram preenchidos
+        if (!productName || !productPrice) {
+          alert("Por favor, preencha todos os campos!");
+          return;
+        }
+
+        // Cria uma nova linha na tabela
+        const row = document.createElement("tr");
+        row.innerHTML = `
+        <td>${productName}</td>
+        <td>${productPrice}</td>
+        <td>
+          <button class="edit-btn" onclick="editProduct(this)">Editar</button>
+          <button class="delete-btn" onclick="deleteProduct(this)">Excluir</button>
+        </td>
+      `;
+
+        // Adiciona a nova linha à tabela
+        productTable.appendChild(row);
+
+        // Limpa o formulário
+        productForm.reset();
+
+        // Esconde a mensagem de "Nenhum produto cadastrado"
+        emptyMessage.style.display = "none";
+      }
+
+      // Função para editar um produto
+      function editProduct(button) {
+        const row = button.parentElement.parentElement; // Obtém a linha da tabela
+        const nameCell = row.children[0];
+        const priceCell = row.children[1];
+
+        // Preenche os campos do formulário com os valores da linha
+        document.getElementById("productName").value = nameCell.textContent;
+        document.getElementById("productPrice").value = parseFloat(
+          priceCell.textContent
+        );
+
+        // Remove a linha da tabela
+        row.remove();
+
+        // Mostra a mensagem de "Nenhum produto cadastrado" se não houver mais produtos
+        if (productTable.children.length === 0) {
+          emptyMessage.style.display = "block";
+        }
+      }
+
+      // Função para excluir um produto
+      function deleteProduct(button) {
+        const row = button.parentElement.parentElement; // Obtém a linha da tabela
+        row.remove();
+
+        // Mostra a mensagem de "Nenhum produto cadastrado" se não houver mais produtos
+        if (productTable.children.length === 0) {
+          emptyMessage.style.display = "block";
+        }
+      }
+
+      // Adiciona o evento de submissão ao formulário
+      productForm.addEventListener("submit", addProduct);
+    </script>
+  </body>
+</html>
