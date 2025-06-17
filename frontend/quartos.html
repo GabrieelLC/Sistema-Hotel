@@ -84,6 +84,18 @@
       <div class="tab-content" id="tabContent">
         <p>Selecione um quarto acima para ver as informações.</p>
       </div>
+      <table style="width: 100%; border-collapse: collapse; margin-top: 20px">
+        <thead>
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 8px">Número</th>
+            <th style="border: 1px solid #ddd; padding: 8px">Tipo</th>
+            <th style="border: 1px solid #ddd; padding: 8px">Descrição</th>
+            <th style="border: 1px solid #ddd; padding: 8px">Valor Diária</th>
+            <th style="border: 1px solid #ddd; padding: 8px">Status</th>
+          </tr>
+        </thead>
+        <tbody id="quartos-tbody"></tbody>
+      </table>
     </div>
     <script>
       function VoltarPagina() {
@@ -149,6 +161,19 @@
       document.addEventListener("DOMContentLoaded", async () => {
         const quartos = await buscarQuartos();
         renderTabs(quartos);
+        const tbody = document.getElementById("quartos-tbody");
+        quartos.forEach(q => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${q.numero}</td>
+              <td>${q.tipo}</td>
+              <td>${q.descricao || ''}</td>
+              <td>R$ ${q.valor_diaria}</td>
+              <td>${q.status}</td>
+              <!-- ... -->
+            </tr>
+          `;
+        });
       });
     </script>
   </body>

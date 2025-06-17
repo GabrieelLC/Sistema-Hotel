@@ -84,12 +84,15 @@ router.delete('/clientes/:cpf', (req, res) => {
 
 // Listar todos os quartos
 router.get('/quartos', (req, res) => {
-  Quartos.findAll((err, results) => {
-    if (err) {
-      return res.status(500).json({ message: 'Erro ao buscar quartos', error: err });
+  db.query(
+    `SELECT q.numero, q.descricao, tq.tipo, tq.valor_diaria, q.status
+     FROM Quartos q
+     JOIN TiposQuarto tq ON q.tipo_id = tq.id`,
+    (err, results) => {
+      if (err) return res.status(500).json({ message: 'Erro ao buscar quartos', error: err });
+      res.json(results);
     }
-    res.status(200).json(results);
-  });
+  );
 });
 
 // Buscar quarto por número
@@ -311,6 +314,20 @@ router.get('/reserva-ativa/:cpf', (req, res) => {
       if (err) return res.status(500).json({ message: 'Erro ao buscar reserva', error: err });
       if (!results.length) return res.status(404).json({ message: 'Nenhuma reserva ativa encontrada' });
       res.json(results[0]);
+    }
+  );
+});
+
+// Rota para calendário de ocupação dos quartos
+router.get('/ocupacao-quartos', (req, res) => {
+  db.query(
+    `SELECT r.quarto_numero, r.data_checkin, r.data_checkout, c.nome as cliente
+     FROM Reservas r
+     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     WHERE r.status IN ('ativo', 'reservado', 'finalizado')`,
+    (err, results) => {
+      if (err) return res.status(500).json({ message: 'Erro ao buscar ocupação', error: err });
+      res.json(results);
     }
   );
 });

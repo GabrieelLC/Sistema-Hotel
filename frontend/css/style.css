@@ -608,3 +608,18 @@ th {
   background: #1d968e;
 }
 
+.btn-menu {
+  display: inline-block;
+  background: #21b5ab;
+  color: #fff;
+  padding: 10px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 600;
+  margin: 8px 0;
+  transition: background 0.2s;
+}
+.btn-menu:hover {
+  background: #1d968e;
+}
+
