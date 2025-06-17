@@ -68,11 +68,10 @@ const Quartos = {
     db.query('SELECT * FROM Quartos WHERE numero = ?', [numero], callback);
   },
   create: (data, callback) => {
-    // status é opcional, se não vier, usa 'disponivel'
     const status = data.status || 'disponivel';
     db.query(
-      'INSERT INTO Quartos (numero, tipo_id, status) VALUES (?, ?, ?)',
-      [data.numero, data.tipo_id, status],
+      'INSERT INTO Quartos (numero, tipo_id, descricao, valor_diaria, status) VALUES (?, ?, ?, ?, ?)',
+      [data.numero, data.tipo_id, data.descricao, data.valor_diaria, status],
       callback
     );
   },

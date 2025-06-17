@@ -58,14 +58,37 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // CADASTRO DE QUARTO DINÂMICO
+  // Supondo que você já tem um array de tipos de quarto carregado do backend
+  let tiposQuarto = [];
+
   async function carregarTiposQuarto() {
+    const resp = await fetch('http://localhost:3000/api/tiposquarto');
+    tiposQuarto = await resp.json();
     const select = document.getElementById('tipo_id');
-    if (!select) return;
-    const resp = await fetch('http://localhost:3000/api/tipos-quarto');
-    const tipos = await resp.json();
-    select.innerHTML = tipos.map(t => `<option value="${t.id}">${t.tipo}</option>`).join('');
+    if (select) {
+      select.innerHTML = tiposQuarto.map(tipo =>
+        `<option value="${tipo.id}" data-valor="${tipo.valor_diaria}">${tipo.tipo}</option>`
+      ).join('');
+    }
   }
-  carregarTiposQuarto();
+
+  const selectTipo = document.getElementById('tipo_id');
+  const inputValor = document.getElementById('valor');
+
+  if (selectTipo && inputValor) {
+    selectTipo.addEventListener('change', function () {
+      const selectedOption = selectTipo.options[selectTipo.selectedIndex];
+      const valor = selectedOption.getAttribute('data-valor');
+      if (valor) {
+        inputValor.value = valor;
+      }
+    });
+  }
+
+  // Chame carregarTiposQuarto ao carregar a página de cadastro
+  if (document.getElementById('cadastroQuartoForm')) {
+    carregarTiposQuarto();
+  }
 
   const cadastroQuartoForm = document.getElementById('cadastroQuartoForm');
   if (cadastroQuartoForm) {
@@ -73,6 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
       event.preventDefault();
       const tipo_id = document.getElementById('tipo_id').value;
       const numero = document.getElementById('numero').value;
+      const descricao = document.getElementById('descricao').value;
+      const valor_diaria = parseFloat(document.getElementById('valor').value.replace(',', '.'));
       const status = 'disponivel';
 
       try {
@@ -82,6 +107,8 @@ document.addEventListener('DOMContentLoaded', () => {
           body: JSON.stringify({
             numero,
             tipo_id,
+            descricao,
+            valor_diaria,
             status
           }),
         });
@@ -139,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function carregarCheckins() {
     const tbody = document.getElementById('checkin-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
     const resp = await fetch('/api/checkins-hoje');
     const dados = await resp.json();
@@ -165,6 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function carregarCheckouts() {
     const tbody = document.getElementById('checkout-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
     const resp = await fetch('/api/checkouts-hoje');
     const dados = await resp.json();

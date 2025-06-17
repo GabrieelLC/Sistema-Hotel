@@ -363,25 +363,26 @@
       carregarQuartosDisponiveis();
 
       // Preencher valor da diária ao selecionar o quarto
-      document
-        .getElementById("quarto")
-        .addEventListener("change", async function () {
-          const tipoId = this.selectedOptions[0]?.getAttribute("data-tipoid");
-          if (!tipoId) {
-            document.getElementById("valor_diaria").value = "";
-            return;
-          }
-          try {
-            const resp = await fetch(`/api/tipos-quarto`);
-            const tipos = await resp.json();
-            const tipo = tipos.find((t) => t.id == tipoId);
-            document.getElementById("valor_diaria").value = tipo
-              ? tipo.valor_diaria
-              : "";
-          } catch (error) {
-            document.getElementById("valor_diaria").value = "";
-          }
-        });
+      document.getElementById("quarto").addEventListener("change", async function () {
+  const numeroQuarto = this.value;
+  if (!numeroQuarto) {
+    document.getElementById("valor_diaria").value = "";
+    return;
+  }
+  try {
+    // Busca os dados do quarto selecionado
+    const resp = await fetch(`/api/quartos/${numeroQuarto}`);
+    if (resp.ok) {
+      const quarto = await resp.json();
+      // Usa o valor_diaria do quarto (já vem correto do backend)
+      document.getElementById("valor_diaria").value = quarto.valor_diaria || "";
+    } else {
+      document.getElementById("valor_diaria").value = "";
+    }
+  } catch (error) {
+    document.getElementById("valor_diaria").value = "";
+  }
+});
 
       // Envio do formulário de check-in
       document

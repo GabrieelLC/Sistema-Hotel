@@ -85,7 +85,9 @@ router.delete('/clientes/:cpf', (req, res) => {
 // Listar todos os quartos
 router.get('/quartos', (req, res) => {
   db.query(
-    `SELECT q.numero, q.descricao, tq.tipo, tq.valor_diaria, q.status
+    `SELECT q.numero, tq.tipo, q.descricao, 
+            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria, 
+            q.status
      FROM Quartos q
      JOIN TiposQuarto tq ON q.tipo_id = tq.id`,
     (err, results) => {
@@ -111,11 +113,12 @@ router.get('/quartos/:numero', (req, res) => {
 
 // Criar novo quarto
 router.post('/quartos', (req, res) => {
-  const { numero, tipo_id, status } = req.body;
-  if (!numero || !tipo_id) {
+  console.log('Dados recebidos no cadastro de quarto:', req.body); // ADICIONE ESTA LINHA
+  const { numero, tipo_id, descricao, valor_diaria, status } = req.body;
+  if (!numero || !tipo_id || !descricao || !valor_diaria) {
     return res.status(400).json({ message: 'Preencha todos os campos obrigatórios!' });
   }
-  Quartos.create({ numero, tipo_id, status }, (err, result) => {
+  Quartos.create({ numero, tipo_id, descricao, valor_diaria, status }, (err, result) => {
     if (err) {
       return res.status(500).json({ message: 'Erro ao cadastrar quarto', error: err });
     }
@@ -154,7 +157,8 @@ router.get('/checkins-hoje', (req, res) => {
   const hoje = new Date().toISOString().slice(0, 10); // formato YYYY-MM-DD
   db.query(
     `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
-            DATE_FORMAT(r.data_checkin, '%H:%i') as hora, c.telefone, c.email, tq.valor_diaria
+            r.hora_checkin as hora, c.telefone, c.email, 
+            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
@@ -173,12 +177,13 @@ router.get('/checkouts-hoje', (req, res) => {
   const hoje = new Date().toISOString().slice(0, 10);
   db.query(
     `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
-            DATE_FORMAT(r.data_checkout, '%H:%i') as hora, c.telefone, c.email, tq.valor_diaria
+            r.hora_checkout as hora, c.telefone, c.email, 
+            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
-     WHERE DATE(r.data_checkout) = ? AND r.status = 'finalizado'`,
+     WHERE DATE(r.data_checkout) = ?`,
     [hoje],
     (err, results) => {
       if (err) return res.status(500).json({ message: 'Erro ao buscar check-outs', error: err });
