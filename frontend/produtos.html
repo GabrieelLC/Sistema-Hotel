@@ -145,6 +145,16 @@
           />
         </div>
         <div class="form-group">
+          <label for="productStock">Estoque</label>
+          <input
+            type="number"
+            id="productStock"
+            placeholder="Digite o estoque"
+            min="1"
+            required
+          />
+        </div>
+        <div class="form-group">
           <button type="submit">Adicionar Produto</button>
         </div>
       </form>
@@ -168,82 +178,78 @@
     <script>
       // Referências aos elementos do DOM
       const productForm = document.getElementById("productForm");
-      const productTable = document
-        .getElementById("productTable")
-        .querySelector("tbody");
+      const productTable = document.getElementById("productTable").querySelector("tbody");
       const emptyMessage = document.getElementById("emptyMessage");
 
-      // Função para adicionar um produto à tabela
-      function addProduct(event) {
-        event.preventDefault(); // Evita o reload da página ao enviar o formulário
+      // Função para carregar produtos do banco e exibir na tabela
+      async function carregarProdutos() {
+        productTable.innerHTML = '<tr><td colspan="3">Carregando...</td></tr>';
+        try {
+          const resp = await fetch('/api/produtos');
+          const produtos = await resp.json();
+          if (!produtos.length) {
+            productTable.innerHTML = '';
+            emptyMessage.style.display = "block";
+            return;
+          }
+          emptyMessage.style.display = "none";
+          productTable.innerHTML = '';
+          produtos.forEach(produto => {
+            const row = document.createElement("tr");
+            row.innerHTML = `
+              <td>${produto.nome}</td>
+              <td>${Number(produto.preco_unitario).toFixed(2)}</td>
+              <td>
+                <button class="delete-btn" onclick="excluirProduto(${produto.id})">Excluir</button>
+              </td>
+            `;
+            productTable.appendChild(row);
+          });
+        } catch (error) {
+          productTable.innerHTML = '<tr><td colspan="3">Erro ao carregar produtos</td></tr>';
+        }
+      }
 
-        // Obtém os valores dos campos do formulário
-        const productName = document.getElementById("productName").value.trim();
-        const productPrice = parseFloat(
-          document.getElementById("productPrice").value
-        ).toFixed(2);
+      // Função para adicionar produto no banco de dados
+      productForm.addEventListener("submit", async function(event) {
+        event.preventDefault();
+        const nome = document.getElementById("productName").value.trim();
+        const preco = parseFloat(document.getElementById("productPrice").value);
+        const estoque = parseInt(document.getElementById("productStock").value, 10);
 
-        // Verifica se todos os campos foram preenchidos
-        if (!productName || !productPrice) {
+        if (!nome || isNaN(preco) || isNaN(estoque) || estoque < 1) {
           alert("Por favor, preencha todos os campos!");
           return;
         }
 
-        // Cria uma nova linha na tabela
-        const row = document.createElement("tr");
-        row.innerHTML = `
-        <td>${productName}</td>
-        <td>${productPrice}</td>
-        <td>
-          <button class="edit-btn" onclick="editProduct(this)">Editar</button>
-          <button class="delete-btn" onclick="deleteProduct(this)">Excluir</button>
-        </td>
-      `;
-
-        // Adiciona a nova linha à tabela
-        productTable.appendChild(row);
-
-        // Limpa o formulário
-        productForm.reset();
-
-        // Esconde a mensagem de "Nenhum produto cadastrado"
-        emptyMessage.style.display = "none";
-      }
-
-      // Função para editar um produto
-      function editProduct(button) {
-        const row = button.parentElement.parentElement; // Obtém a linha da tabela
-        const nameCell = row.children[0];
-        const priceCell = row.children[1];
-
-        // Preenche os campos do formulário com os valores da linha
-        document.getElementById("productName").value = nameCell.textContent;
-        document.getElementById("productPrice").value = parseFloat(
-          priceCell.textContent
-        );
-
-        // Remove a linha da tabela
-        row.remove();
-
-        // Mostra a mensagem de "Nenhum produto cadastrado" se não houver mais produtos
-        if (productTable.children.length === 0) {
-          emptyMessage.style.display = "block";
+        const resp = await fetch('/api/produtos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, preco, estoque })
+        });
+        const data = await resp.json();
+        if (resp.ok) {
+          alert('Produto cadastrado com sucesso!');
+          productForm.reset();
+          carregarProdutos();
+        } else {
+          alert(data.message || 'Erro ao cadastrar produto');
         }
-      }
+      });
 
-      // Função para excluir um produto
-      function deleteProduct(button) {
-        const row = button.parentElement.parentElement; // Obtém a linha da tabela
-        row.remove();
-
-        // Mostra a mensagem de "Nenhum produto cadastrado" se não houver mais produtos
-        if (productTable.children.length === 0) {
-          emptyMessage.style.display = "block";
+      // Função para excluir produto
+      window.excluirProduto = async function(id) {
+        if (!confirm("Deseja excluir este produto?")) return;
+        const resp = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+        if (resp.ok) {
+          carregarProdutos();
+        } else {
+          alert('Erro ao excluir produto');
         }
-      }
+      };
 
-      // Adiciona o evento de submissão ao formulário
-      productForm.addEventListener("submit", addProduct);
+      // Carrega produtos ao abrir a página
+      document.addEventListener("DOMContentLoaded", carregarProdutos);
     </script>
   </body>
 </html>

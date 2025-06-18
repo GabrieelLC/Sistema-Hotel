@@ -337,6 +337,49 @@ router.get('/ocupacao-quartos', (req, res) => {
   );
 });
 
+// Modelo básico para produtos (adicione em models/models.js)
+const Produtos = {
+  findAll: (callback) => {
+    db.query('SELECT * FROM Produtos', callback);
+  },
+  create: (data, callback) => {
+    db.query(
+      'INSERT INTO Produtos (nome, preco_unitario, estoque) VALUES (?, ?, ?)',
+      [data.nome, data.preco, data.estoque],
+      callback
+    );
+  },
+  delete: (id, callback) => {
+    db.query('DELETE FROM Produtos WHERE id = ?', [id], callback);
+  }
+};
+
+// Rotas para produtos
+router.get('/produtos', (req, res) => {
+  Produtos.findAll((err, results) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar produtos', error: err });
+    res.json(results);
+  });
+});
+
+router.post('/produtos', (req, res) => {
+  const { nome, preco, estoque } = req.body;
+  if (!nome || !preco || !estoque) {
+    return res.status(400).json({ message: 'Preencha todos os campos!' });
+  }
+  Produtos.create({ nome, preco, estoque }, (err, result) => {
+    if (err) return res.status(500).json({ message: 'Erro ao cadastrar produto', error: err });
+    res.status(201).json({ message: 'Produto cadastrado com sucesso', result });
+  });
+});
+
+router.delete('/produtos/:id', (req, res) => {
+  Produtos.delete(req.params.id, (err, result) => {
+    if (err) return res.status(500).json({ message: 'Erro ao deletar produto', error: err });
+    res.status(200).json({ message: 'Produto deletado com sucesso', result });
+  });
+});
+
 async function realizarCheckout(reservaId, data_checkout, hora_checkout, desconto) {
   const resp = await fetch(`/api/checkout/${reservaId}`, {
     method: 'PUT',
