@@ -62,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let tiposQuarto = [];
 
   async function carregarTiposQuarto() {
-    const resp = await fetch('http://localhost:3000/api/tiposquarto');
-    tiposQuarto = await resp.json();
+    const resp = await fetch('http://localhost:3000/api/tipos-quarto');
+    const tiposQuarto = await resp.json();
     const select = document.getElementById('tipo_id');
     if (select) {
       select.innerHTML = tiposQuarto.map(tipo =>
@@ -138,22 +138,38 @@ document.addEventListener('DOMContentLoaded', () => {
       const tipo = document.getElementById('novoTipoTipo').value;
       const descricao = document.getElementById('novoTipoDescricao').value;
       const valor_diaria = document.getElementById('novoTipoValor').value;
-      if (!tipo || !descricao || !valor_diaria) {
+      // O número do quarto não é cadastrado no tipo, mas pode ser usado para já preencher o campo do formulário principal
+      const numero = document.getElementById('novoTipoNumero').value;
+
+      if (!tipo || !descricao || !valor_diaria || !numero) {
         alert('Preencha todos os campos!');
         return;
       }
+
+      // Salva o novo tipo no backend
       const resp = await fetch('http://localhost:3000/api/tipos-quarto', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tipo, descricao, valor_diaria })
       });
+
       if (resp.ok) {
         alert('Tipo de quarto cadastrado!');
         modalNovoTipo.style.display = 'none';
+        // Limpa campos do modal
         document.getElementById('novoTipoTipo').value = '';
         document.getElementById('novoTipoDescricao').value = '';
         document.getElementById('novoTipoValor').value = '';
-        carregarTiposQuarto();
+        document.getElementById('novoTipoNumero').value = '';
+        // Atualiza o select de tipos e já seleciona o novo tipo
+        await carregarTiposQuarto();
+        const select = document.getElementById('tipo_id');
+        if (select) {
+          // Seleciona o último tipo cadastrado
+          select.selectedIndex = select.options.length - 1;
+        }
+        // Preenche o campo número do quarto no formulário principal
+        document.getElementById('numero').value = numero;
       } else {
         alert('Erro ao cadastrar tipo de quarto');
       }
