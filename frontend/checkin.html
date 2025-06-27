@@ -209,6 +209,19 @@
               />
             </div>
             <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="motivo_hospedagem"
+                >Motivo da hospedagem</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="text"
+                id="motivo_hospedagem"
+                name="motivo_hospedagem"
+                maxlength="100"
+                placeholder="Motivo da hospedagem"
+              />
+            </div>
+            <div class="checkoutscreenfield_group">
               <label class="checkoutscreenlabel" for="datacheckin"
                 >Data Check-In:</label
               >
@@ -275,18 +288,6 @@
                 id="valor_diaria"
                 name="valor_diaria"
                 readonly
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="desconto">Desconto</label>
-              <input
-                class="checkoutscreeninput"
-                type="number"
-                id="desconto"
-                name="desconto"
-                value="0"
-                min="0"
-                step="0.01"
               />
             </div>
             <button class="checkoutscreensubmit_button" type="submit">
@@ -363,26 +364,29 @@
       carregarQuartosDisponiveis();
 
       // Preencher valor da diária ao selecionar o quarto
-      document.getElementById("quarto").addEventListener("change", async function () {
-  const numeroQuarto = this.value;
-  if (!numeroQuarto) {
-    document.getElementById("valor_diaria").value = "";
-    return;
-  }
-  try {
-    // Busca os dados do quarto selecionado
-    const resp = await fetch(`/api/quartos/${numeroQuarto}`);
-    if (resp.ok) {
-      const quarto = await resp.json();
-      // Usa o valor_diaria do quarto (já vem correto do backend)
-      document.getElementById("valor_diaria").value = quarto.valor_diaria || "";
-    } else {
-      document.getElementById("valor_diaria").value = "";
-    }
-  } catch (error) {
-    document.getElementById("valor_diaria").value = "";
-  }
-});
+      document
+        .getElementById("quarto")
+        .addEventListener("change", async function () {
+          const numeroQuarto = this.value;
+          if (!numeroQuarto) {
+            document.getElementById("valor_diaria").value = "";
+            return;
+          }
+          try {
+            // Busca os dados do quarto selecionado
+            const resp = await fetch(`/api/quartos/${numeroQuarto}`);
+            if (resp.ok) {
+              const quarto = await resp.json();
+              // Usa o valor_diaria do quarto (já vem correto do backend)
+              document.getElementById("valor_diaria").value =
+                quarto.valor_diaria || "";
+            } else {
+              document.getElementById("valor_diaria").value = "";
+            }
+          } catch (error) {
+            document.getElementById("valor_diaria").value = "";
+          }
+        });
 
       // Envio do formulário de check-in
       document
@@ -428,9 +432,9 @@
               body: JSON.stringify({ nome, telefone, email, endereco, cep }),
             });
 
-            const resp = await fetch('/api/checkin', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+            const resp = await fetch("/api/checkin", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 cliente_cpf,
                 quarto_numero,
@@ -439,19 +443,19 @@
                 data_checkout_prevista,
                 hora_checkout_prevista,
                 valor_diaria,
-                desconto
-              })
+                desconto,
+              }),
             });
             const data = await resp.json();
             if (resp.ok) {
-              alert('Check-in registrado com sucesso!');
+              alert("Check-in registrado com sucesso!");
               this.reset();
               carregarQuartosDisponiveis();
             } else {
-              alert(data.message || 'Erro ao registrar check-in');
+              alert(data.message || "Erro ao registrar check-in");
             }
           } catch (error) {
-            alert('Erro ao conectar ao servidor');
+            alert("Erro ao conectar ao servidor");
           }
         });
     </script>
