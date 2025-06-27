@@ -410,6 +410,7 @@
           const email = document.getElementById("emailcliente").value;
           const cep = document.getElementById("cepcliente").value;
           const endereco = document.getElementById("enderecocliente").value;
+          const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
 
           if (
             !cliente_cpf ||
@@ -444,6 +445,7 @@
                 hora_checkout_prevista,
                 valor_diaria,
                 desconto,
+                motivo_hospedagem,
               }),
             });
             const data = await resp.json();

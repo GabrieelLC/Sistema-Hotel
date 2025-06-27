@@ -138,10 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const tipo = document.getElementById('novoTipoTipo').value;
       const descricao = document.getElementById('novoTipoDescricao').value;
       const valor_diaria = document.getElementById('novoTipoValor').value;
-      // O número do quarto não é cadastrado no tipo, mas pode ser usado para já preencher o campo do formulário principal
-      const numero = document.getElementById('novoTipoNumero').value;
 
-      if (!tipo || !descricao || !valor_diaria || !numero) {
+      if (!tipo || !descricao || !valor_diaria) {
         alert('Preencha todos os campos!');
         return;
       }
@@ -160,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('novoTipoTipo').value = '';
         document.getElementById('novoTipoDescricao').value = '';
         document.getElementById('novoTipoValor').value = '';
-        document.getElementById('novoTipoNumero').value = '';
         // Atualiza o select de tipos e já seleciona o novo tipo
         await carregarTiposQuarto();
         const select = document.getElementById('tipo_id');
@@ -168,8 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
           // Seleciona o último tipo cadastrado
           select.selectedIndex = select.options.length - 1;
         }
-        // Preenche o campo número do quarto no formulário principal
-        document.getElementById('numero').value = numero;
       } else {
         alert('Erro ao cadastrar tipo de quarto');
       }
@@ -291,4 +286,102 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   preencherFormularioEdicaoCliente();
+
+  let sql = `
+    SELECT c.nome, r.quarto_numero as quarto, 
+           DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
+           DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
+           DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
+           DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
+           r.status,
+           r.motivo_hospedagem
+    FROM Reservas r
+    JOIN Clientes c ON r.cliente_cpf = c.cpf
+  `;
+
+  let quartoAtual = null;
+
+  async function abrirModalConsumo(numero) {
+    window.quartoSelecionado = numero;
+    // Buscar reserva ativa do quarto
+    const respReserva = await fetch(`/api/reserva-ativa-quarto/${numero}`);
+    if (!respReserva.ok) {
+      alert('Nenhuma reserva ativa para este quarto.');
+      return;
+    }
+    const reserva = await respReserva.json();
+    window.reservaSelecionada = reserva.id;
+
+    // Carregar produtos
+    const respProdutos = await fetch('/api/produtos');
+    const produtos = await respProdutos.json();
+    const select = document.getElementById('consumoProduto');
+    if (produtos.length === 0) {
+      select.innerHTML = '<option disabled selected>Nenhum produto cadastrado</option>';
+    } else {
+      select.innerHTML = produtos.map(p =>
+        `<option value="${p.id}" data-preco="${p.preco_unitario}">${p.nome}</option>`
+      ).join('');
+      // Preencher preço ao selecionar produto
+      select.onchange = function() {
+        const preco = select.options[select.selectedIndex].getAttribute('data-preco');
+        document.getElementById('consumoValor').value = preco;
+      };
+      // Preencher preço do primeiro produto
+      document.getElementById('consumoValor').value = produtos[0].preco_unitario;
+    }
+    document.getElementById('modalConsumo').style.display = 'block';
+  }
+
+  function fecharModalConsumo() {
+    document.getElementById('modalConsumo').style.display = 'none';
+    document.getElementById('consumoQuantidade').value = '';
+    document.getElementById('consumoValor').value = '';
+  }
+
+  async function salvarConsumo() {
+    const produto_id = document.getElementById('consumoProduto').value;
+    const quantidade = document.getElementById('consumoQuantidade').value;
+    const preco_unitario = document.getElementById('consumoValor').value;
+    const reserva_id = window.reservaSelecionada;
+
+    if (!produto_id || !quantidade || !preco_unitario || !reserva_id) {
+      alert('Preencha todos os campos!');
+      return;
+    }
+
+    const resp = await fetch('/api/consumos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reserva_id,
+        produto_id,
+        quantidade,
+        preco_unitario
+      })
+    });
+    if (resp.ok) {
+      alert('Consumo adicionado!');
+      fecharModalConsumo();
+      // Atualize a lista de consumos do quarto, se desejar
+    } else {
+      alert('Erro ao adicionar consumo');
+    }
+  }
+
+  async function mostrarConsumos(quarto_numero) {
+    const resp = await fetch(`/api/consumos/${quarto_numero}`);
+    const consumos = await resp.json();
+    let html = '<h4>Consumos:</h4>';
+    if (!consumos.length) {
+      html += '<p>Nenhum consumo registrado.</p>';
+    } else {
+      html += '<ul>';
+      consumos.forEach(c => {
+        html += `<li>${c.produto} - ${c.quantidade} x R$${c.valor} (${new Date(c.data_consumo).toLocaleString()})</li>`;
+      });
+      html += '</ul>';
+    }
+    document.getElementById('consumos-quarto').innerHTML = html;
+  }
 });

@@ -426,6 +426,29 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
     alert('Erro ao registrar checkout: ' + (erro.message || ''));
   }
 });
+
+async function preencherFormularioCheckout(reserva) {
+  // ...preenche campos do formulário...
+
+  // Buscar consumos
+  const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
+  const consumos = await respConsumos.json();
+  const tbody = document.querySelector('.checkout_screen_table_body');
+  tbody.innerHTML = '';
+  if (consumos.length) {
+    consumos.forEach(c => {
+      tbody.innerHTML += `
+        <tr>
+          <td class="checkout_screen_table_cell">${c.produto_nome}</td>
+          <td class="checkout_screen_table_cell">${c.quantidade}</td>
+          <td class="checkout_screen_table_cell">${(c.quantidade * c.preco_unitario).toFixed(2)}</td>
+        </tr>
+      `;
+    });
+  } else {
+    tbody.innerHTML = '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
+  }
+}
     </script>
   </body>
 </html>

@@ -72,6 +72,59 @@
           padding: 16px 6px;
         }
       }
+      /* Estilos para o modal */
+      #modalConsumo {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgb(0, 0, 0);
+        background-color: rgba(0, 0, 0, 0.4);
+        padding-top: 60px;
+      }
+      #modalConsumo div {
+        background-color: #fefefe;
+        margin: 5% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      #modalConsumo h3 {
+        margin-top: 0;
+        color: #48bbbe;
+      }
+      #modalConsumo label {
+        display: block;
+        margin: 12px 0 4px;
+        color: #333;
+      }
+      #modalConsumo input,
+      #modalConsumo select {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+      }
+      #modalConsumo button {
+        background-color: #48bbbe;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+      }
+      #modalConsumo button:hover {
+        background-color: #3caea3;
+      }
     </style>
   </head>
   <body>
@@ -97,6 +150,25 @@
         <tbody id="quartos-tbody"></tbody>
       </table>
     </div>
+
+    <!-- Modal para Adicionar Consumo -->
+    <div id="modalConsumo" style="display:none;">
+      <div>
+        <h3>Adicionar Consumo</h3>
+        <label>Produto:
+          <select id="consumoProduto"></select>
+        </label>
+        <label>Quantidade:
+          <input type="number" id="consumoQuantidade" min="1" />
+        </label>
+        <label>Preço Unitário:
+          <input type="number" id="consumoValor" step="0.01" min="0" />
+        </label>
+        <button onclick="salvarConsumo()">Salvar</button>
+        <button onclick="fecharModalConsumo()">Cancelar</button>
+      </div>
+    </div>
+
     <script>
       function VoltarPagina() {
         window.location.href = "index.html";
@@ -154,7 +226,85 @@
       quarto.valor_diaria || 0
     ).toFixed(2)}</p>
     <p><strong>Status:</strong> ${quarto.status || "---"}</p>
+    <button onclick="abrirModalConsumo(${quarto.numero})">Adicionar Consumo</button>
   `;
+      }
+
+      function abrirModalConsumo(numero) {
+        window.quartoSelecionado = numero;
+        const modal = document.getElementById("modalConsumo");
+        modal.style.display = "block";
+
+        // Buscar produtos do backend e preencher o select
+        fetch("/api/produtos")
+          .then(resp => resp.json())
+          .then(produtos => {
+            const select = document.getElementById("consumoProduto");
+            if (!produtos.length) {
+              select.innerHTML = '<option disabled selected>Nenhum produto cadastrado</option>';
+              document.getElementById('consumoValor').value = '';
+              return;
+            }
+            select.innerHTML = produtos.map(p =>
+              `<option value="${p.id}" data-preco="${p.preco_unitario}">${p.nome}</option>`
+            ).join('');
+            // Preencher preço ao selecionar produto
+            select.onchange = function() {
+              const preco = select.options[select.selectedIndex].getAttribute('data-preco');
+              document.getElementById('consumoValor').value = preco;
+            };
+            // Preencher preço do primeiro produto
+            document.getElementById('consumoValor').value = produtos[0].preco_unitario;
+          });
+      }
+
+      function fecharModalConsumo() {
+        // Lógica para fechar o modal de consumo
+        const modal = document.getElementById("modalConsumo");
+        modal.style.display = "none";
+        // Limpa os campos do modal
+        document.getElementById("consumoProduto").value = "";
+        document.getElementById("consumoQuantidade").value = "";
+        document.getElementById("consumoValor").value = "";
+      }
+
+      async function salvarConsumo() {
+        const produto_id = document.getElementById("consumoProduto").value;
+        const quantidade = document.getElementById("consumoQuantidade").value;
+        const preco_unitario = document.getElementById("consumoValor").value;
+        const numeroQuarto = window.quartoSelecionado;
+
+        // Buscar reserva ativa do quarto
+        const respReserva = await fetch(`/api/reserva-ativa-quarto/${numeroQuarto}`);
+        if (!respReserva.ok) {
+          alert('Nenhuma reserva ativa para este quarto.');
+          return;
+        }
+        const reserva = await respReserva.json();
+        const reserva_id = reserva.id;
+
+        if (!produto_id || !quantidade || !preco_unitario) {
+          alert("Por favor, preencha todos os campos.");
+          return;
+        }
+
+        try {
+          const resp = await fetch("/api/consumos", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              reserva_id,
+              produto_id,
+              quantidade: Number(quantidade),
+              preco_unitario: Number(preco_unitario)
+            }),
+          });
+          if (!resp.ok) throw new Error("Erro ao salvar consumo");
+          alert("Consumo salvo com sucesso!");
+          fecharModalConsumo();
+        } catch (e) {
+          alert("Erro ao salvar consumo: " + e.message);
+        }
       }
 
       // Inicialização

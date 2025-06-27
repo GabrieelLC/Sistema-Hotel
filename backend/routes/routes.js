@@ -154,11 +154,12 @@ router.delete('/quartos/:numero', (req, res) => {
 
 // Chegadas do dia (check-in)
 router.get('/checkins-hoje', (req, res) => {
-  const hoje = new Date().toISOString().slice(0, 10); // formato YYYY-MM-DD
+  const hoje = new Date().toISOString().slice(0, 10);
   db.query(
     `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkin as hora, c.telefone, c.email, 
-            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria
+            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
+            r.motivo_hospedagem
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
@@ -218,7 +219,8 @@ router.post('/checkin', (req, res) => {
     data_checkout_prevista,
     hora_checkout_prevista,
     valor_diaria,
-    desconto
+    desconto,
+    motivo_hospedagem // <-- NOVO
   } = req.body;
 
   if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
@@ -227,17 +229,18 @@ router.post('/checkin', (req, res) => {
 
   db.query(
     `INSERT INTO Reservas 
-      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status, motivo_hospedagem)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)`,
     [
       cliente_cpf,
       quarto_numero,
       data_checkin,
       hora_checkin,
-      data_checkout_prevista,
-      hora_checkout_prevista,
+      null,
+      null,
       valor_diaria,
-      desconto || 0
+      desconto || 0,
+      motivo_hospedagem || null
     ],
     (err, result) => {
       if (err) {
@@ -356,7 +359,7 @@ const Produtos = {
 
 // Rotas para produtos
 router.get('/produtos', (req, res) => {
-  Produtos.findAll((err, results) => {
+  db.query('SELECT * FROM Produtos', (err, results) => {
     if (err) return res.status(500).json({ message: 'Erro ao buscar produtos', error: err });
     res.json(results);
   });
@@ -393,5 +396,50 @@ async function realizarCheckout(reservaId, data_checkout, hora_checkout, descont
     alert('Erro ao realizar checkout');
   }
 }
+
+// Listar consumos de um quarto
+router.get('/consumos/:reserva_id', (req, res) => {
+  const { reserva_id } = req.params;
+  db.query(
+    `SELECT c.*, p.nome as produto_nome 
+     FROM Consumos c 
+     JOIN Produtos p ON c.produto_id = p.id 
+     WHERE c.reserva_id = ?`,
+    [reserva_id],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: 'Erro ao buscar consumos', error: err });
+      res.json(results);
+    }
+  );
+});
+
+// Adicionar consumo a um quarto
+router.post('/consumos', (req, res) => {
+  const { reserva_id, produto_id, quantidade, preco_unitario } = req.body;
+  if (!reserva_id || !produto_id || !quantidade || !preco_unitario) {
+    return res.status(400).json({ message: 'Preencha todos os campos!' });
+  }
+  db.query(
+    'INSERT INTO Consumos (reserva_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)',
+    [reserva_id, produto_id, quantidade, preco_unitario],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Erro ao adicionar consumo', error: err });
+      res.status(201).json({ message: 'Consumo adicionado', result });
+    }
+  );
+});
+
+// Nova rota para buscar a reserva ativa de um quarto pelo número
+router.get('/reserva-ativa-quarto/:numero', (req, res) => {
+  const { numero } = req.params;
+  db.query(
+    `SELECT * FROM Reservas WHERE quarto_numero = ? AND status = 'ativo' ORDER BY id DESC LIMIT 1`,
+    [numero],
+    (err, results) => {
+      if (err || !results.length) return res.status(404).json({ message: 'Nenhuma reserva ativa encontrada' });
+      res.json(results[0]);
+    }
+  );
+});
 
 module.exports = router;
