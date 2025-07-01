@@ -145,11 +145,11 @@
             <th style="border: 1px solid #ddd; padding: 8px">Descrição</th>
             <th style="border: 1px solid #ddd; padding: 8px">Valor Diária</th>
             <th style="border: 1px solid #ddd; padding: 8px">Status</th>
+            <th style="border: 1px solid #ddd; padding: 8px">Ações</th>
           </tr>
         </thead>
         <tbody id="quartos-tbody"></tbody>
       </table>
-    </div>
 
     <!-- Modal para Adicionar Consumo -->
     <div id="modalConsumo" style="display:none;">
@@ -175,20 +175,16 @@
       }
       // Função para buscar os quartos cadastrados do backend (com JOIN)
       async function buscarQuartos() {
-        try {
-          // Busca todos os quartos já com informações do tipo (JOIN no backend)
-          const resp = await fetch("http://localhost:3000/api/quartos");
-          if (!resp.ok) throw new Error("Erro ao buscar quartos");
-          const quartos = await resp.json();
-          return quartos;
-        } catch (e) {
-          document.getElementById("tabs").innerHTML =
-            '<span style="color:#c00;">Erro ao buscar quartos do servidor.</span>';
-          document.getElementById("tabContent").innerHTML =
-            '<p style="color:#c00;">Não foi possível carregar os quartos.</p>';
-          return [];
-        }
-      }
+  const resp = await fetch("/api/quartos");
+  if (!resp.ok) throw new Error("Erro ao buscar quartos");
+  return await resp.json();
+}
+
+      async function buscarTiposQuarto() {
+  const resp = await fetch("/api/tipos-quarto");
+  if (!resp.ok) return [];
+  return await resp.json();
+}
 
       // Função para renderizar as guias/tabs
       function renderTabs(quartos) {
@@ -219,17 +215,156 @@
         const quarto = quartos[idx];
         const contentDiv = document.getElementById("tabContent");
         contentDiv.innerHTML = `
-    <h3>Quarto ${quarto.numero}</h3>
-    <p><strong>Descrição:</strong> ${quarto.descricao || "---"}</p>
-    <p><strong>Tipo:</strong> ${quarto.tipo || "---"}</p>
-    <p><strong>Valor da diária:</strong> R$ ${Number(
-      quarto.valor_diaria || 0
-    ).toFixed(2)}</p>
-    <p><strong>Status:</strong> ${quarto.status || "---"}</p>
-    <button onclick="abrirModalConsumo(${quarto.numero})">Adicionar Consumo</button>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+      <div>
+        <h3>Quarto ${quarto.numero}</h3>
+        <p><strong>Descrição:</strong> <span id="desc-q">${quarto.descricao || "---"}</span></p>
+        <p><strong>Tipo:</strong> <span id="tipo-q">${quarto.tipo || "---"}</span></p>
+        <p><strong>Valor da diária:</strong> R$ <span id="valor-q">${Number(quarto.valor_diaria || 0).toFixed(2)}</span></p>
+        <p><strong>Status:</strong> <span id="status-q">${quarto.status || "---"}</span></p>
+        <button onclick="abrirModalConsumo(${quarto.numero})">Adicionar Consumo</button>
+      </div>
+      <div>
+        <button id="btn-editar-quarto-info">Editar</button>
+        <span id="acoes-quarto-info" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
+          <button id="btn-salvar-quarto" style="margin-bottom:4px;">Salvar</button>
+          <button id="btn-interditar-quarto-info" style="margin-bottom:4px;">Interditar</button>
+          <button id="btn-excluir-quarto-info">Excluir</button>
+        </span>
+      </div>
+    </div>
+    <div id="dependencias-quarto" style="margin-top:24px; background:#f6f6f6; padding:12px; border-radius:8px;"></div>
   `;
-      }
 
+  // Evento do botão Editar
+  document.getElementById("btn-editar-quarto-info").onclick = async function() {
+    const tipos = await buscarTiposQuarto();
+    const tipoOptions = tipos.map(t =>
+      `<option value="${t.id}"${t.tipo === quarto.tipo ? " selected" : ""}>${t.tipo}</option>`
+    ).join('');
+    document.getElementById("desc-q").outerHTML = `<input id="edit-desc-q" value="${quarto.descricao || ""}" style="width:180px;">`;
+    document.getElementById("tipo-q").outerHTML = `<select id="edit-tipo-q">${tipoOptions}</select>`;
+    document.getElementById("valor-q").outerHTML = `<input id="edit-valor-q" type="number" min="0" step="0.01" value="${Number(quarto.valor_diaria || 0).toFixed(2)}" style="width:90px;">`;
+    document.getElementById("status-q").outerHTML = `<select id="edit-status-q">
+      <option value="disponivel"${quarto.status === "disponivel" ? " selected" : ""}>disponível</option>
+      <option value="ocupado"${quarto.status === "ocupado" ? " selected" : ""}>ocupado</option>
+      <option value="interditado"${quarto.status === "interditado" ? " selected" : ""}>interditado</option>
+    </select>`;
+    document.getElementById("acoes-quarto-info").style.display = "flex";
+    this.style.display = "none";
+  };
+
+  // Evento do botão Salvar
+  setTimeout(() => { // Garante que o DOM já tem os elementos
+    const btnSalvar = document.getElementById("btn-salvar-quarto");
+    if (btnSalvar) {
+      btnSalvar.onclick = async function() {
+        const numero = quarto.numero;
+        const tipo_id = Number(document.getElementById("edit-tipo-q").value);
+        const status = document.getElementById("edit-status-q").value;
+        const descricao = document.getElementById("edit-desc-q").value;
+        const valor_diaria = document.getElementById("edit-valor-q").value;
+
+        const resp = await fetch(`/api/quartos/${numero}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo_id, descricao, valor_diaria, status })
+        });
+        if (resp.ok) {
+          alert('Quarto atualizado!');
+          // Atualize a interface sem recarregar a página
+          const quartosAtualizados = await buscarQuartos();
+          renderTabs(quartosAtualizados);
+          // Atualize também a tabela, se necessário
+          const tbody = document.getElementById("quartos-tbody");
+          tbody.innerHTML = "";
+          quartosAtualizados.forEach(q => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${q.numero}</td>
+                <td>${q.tipo}</td>
+                <td>${q.descricao || ''}</td>
+                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
+                <td>${q.status}</td>
+                <td></td>
+              </tr>
+            `;
+          });
+        } else {
+          alert('Erro ao atualizar quarto');
+        }
+      };
+    }
+    // Evento Interditar
+    const btnInterditar = document.getElementById("btn-interditar-quarto-info");
+    if (btnInterditar) {
+      btnInterditar.onclick = async function() {
+        const numero = quarto.numero;
+        // Pegue os valores atuais do DOM, não só do objeto quarto!
+        const tipo_id = Number(document.getElementById("edit-tipo-q")?.value || quarto.tipo_id);
+        const descricao = document.getElementById("edit-desc-q")?.value || quarto.descricao;
+        const valor_diaria = document.getElementById("edit-valor-q")?.value || quarto.valor_diaria;
+
+        // Validação extra para garantir que nada está vazio
+        if (!tipo_id || !descricao || !valor_diaria) {
+          alert("Preencha todos os campos antes de interditar.");
+          return;
+        }
+
+        const resp = await fetch(`/api/quartos/${numero}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tipo_id,
+            descricao,
+            valor_diaria,
+            status: 'interditado'
+          })
+        });
+        if (resp.ok) {
+          alert('Quarto interditado!');
+          const quartosAtualizados = await buscarQuartos();
+          renderTabs(quartosAtualizados);
+        } else {
+          const erro = await resp.json();
+          alert(erro.message || 'Erro ao interditar quarto');
+        }
+      };
+    }
+    // Evento Excluir
+    const btnExcluir = document.getElementById("btn-excluir-quarto-info");
+    if (btnExcluir) {
+      btnExcluir.onclick = async function() {
+        const numero = quarto.numero;
+        if (!confirm('Tem certeza que deseja excluir este quarto?')) return;
+        const resp = await fetch(`/api/quartos/${numero}`, { method: 'DELETE' });
+        if (resp.ok) {
+          alert('Quarto excluído!');
+          const quartosAtualizados = await buscarQuartos();
+          renderTabs(quartosAtualizados);
+          const tbody = document.getElementById("quartos-tbody");
+          tbody.innerHTML = "";
+          quartosAtualizados.forEach(q => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${q.numero}</td>
+                <td>${q.tipo}</td>
+                <td>${q.descricao || ''}</td>
+                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
+                <td>${q.status}</td>
+                <td></td>
+              </tr>
+            `;
+          });
+        } else {
+          const erro = await resp.json();
+          alert(erro.message || 'Erro ao excluir quarto');
+        }
+      };
+    }
+  }, 100);
+  mostrarDependenciasQuarto(quarto.numero);
+}
       function abrirModalConsumo(numero) {
         window.quartoSelecionado = numero;
         const modal = document.getElementById("modalConsumo");
@@ -307,24 +442,122 @@
         }
       }
 
+      async function excluirQuarto(numero) {
+        if (!confirm('Tem certeza que deseja excluir este quarto?')) return;
+        const resp = await fetch(`/api/quartos/${numero}`, { method: 'DELETE' });
+        if (resp.ok) {
+          alert('Quarto excluído!');
+          // Atualize a lista de quartos
+          const quartosAtualizados = await buscarQuartos();
+          renderTabs(quartosAtualizados);
+          const tbody = document.getElementById("quartos-tbody");
+          tbody.innerHTML = "";
+          quartosAtualizados.forEach(q => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${q.numero}</td>
+                <td>${q.tipo}</td>
+                <td>${q.descricao || ''}</td>
+                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
+                <td>${q.status}</td>
+                <td></td>
+              </tr>
+            `;
+          });
+        } else {
+          alert('Erro ao excluir quarto');
+        }
+      }
+
       // Inicialização
       document.addEventListener("DOMContentLoaded", async () => {
         const quartos = await buscarQuartos();
-        renderTabs(quartos);
+        renderTabs(quartos); // <-- Isso monta as tabs e a área de informações
+
         const tbody = document.getElementById("quartos-tbody");
+        if (!quartos.length) {
+          tbody.innerHTML = '<tr><td colspan="6">Nenhum quarto cadastrado</td></tr>';
+          return;
+        }
+        tbody.innerHTML = ""; // Limpa antes de preencher
         quartos.forEach(q => {
           tbody.innerHTML += `
             <tr>
               <td>${q.numero}</td>
               <td>${q.tipo}</td>
               <td>${q.descricao || ''}</td>
-              <td>R$ ${q.valor_diaria}</td>
+              <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
               <td>${q.status}</td>
-              <!-- ... -->
+              <td></td>
             </tr>
           `;
         });
       });
+
+      async function mostrarDependenciasQuarto(numero) {
+  // Buscar reservas do quarto
+  const respReservas = await fetch(`/api/reservas?quarto_numero=${numero}`);
+  const reservas = respReservas.ok ? await respReservas.json() : [];
+  let html = "";
+
+  if (reservas.length === 0) {
+    html += "<p><b>Não há reservas ligadas a este quarto.</b></p>";
+  } else {
+    html += "<b>Reservas deste quarto:</b><ul>";
+    for (const reserva of reservas) {
+      html += `<li>
+        Reserva #${reserva.reserva_id} (${reserva.status || '---'}) 
+        <button onclick="excluirReserva(${reserva.reserva_id}, ${numero})">Excluir</button>
+        <button onclick="mostrarConsumosReserva(${reserva.reserva_id})">Ver Consumos</button>
+      </li>`;
+    }
+    html += "</ul>";
+  }
+
+  document.getElementById("dependencias-quarto").innerHTML = html;
+}
+
+window.excluirReserva = async function(reserva_id, numeroQuarto) {
+  if (!confirm("Excluir esta reserva? Isso também excluirá os consumos ligados a ela.")) return;
+  const resp = await fetch(`/api/reservas/${reserva_id}`, { method: "DELETE" });
+  if (resp.ok) {
+    alert("Reserva excluída!");
+    mostrarDependenciasQuarto(numeroQuarto);
+  } else {
+    alert("Erro ao excluir reserva.");
+  }
+};
+
+window.mostrarConsumosReserva = async function(reserva_id) {
+  const resp = await fetch(`/api/consumos?reserva_id=${reserva_id}`);
+  const consumos = resp.ok ? await resp.json() : [];
+  let html = "";
+  if (consumos.length === 0) {
+    html = "<p>Não há consumos nesta reserva.</p>";
+  } else {
+    html = "<b>Consumos:</b><ul>";
+    for (const consumo of consumos) {
+      html += `<li>
+        Produto: ${consumo.descricao || consumo.produto_nome || consumo.produto_id} - Qtd: ${consumo.quantidade || ''} - Valor: R$ ${consumo.valor || consumo.preco_unitario || ''}
+        <button onclick="excluirConsumo(${consumo.id}, ${reserva_id})">Excluir</button>
+      </li>`;
+    }
+    html += "</ul>";
+  }
+  alert(html); // Ou use um modal para exibir
+};
+
+window.excluirConsumo = async function(consumo_id, reserva_id) {
+  if (!confirm("Excluir este consumo?")) return;
+  const resp = await fetch(`/api/consumos/${consumo_id}`, { method: "DELETE" });
+  if (resp.ok) {
+    alert("Consumo excluído!");
+    mostrarConsumosReserva(reserva_id);
+  } else {
+    alert("Erro ao excluir consumo.");
+  }
+};
     </script>
   </body>
+
 </html>

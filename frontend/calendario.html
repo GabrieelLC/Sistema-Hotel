@@ -145,10 +145,10 @@
         const reservasQuarto = getReservasDoQuartoNoMes(quarto, ano, mes);
         reservasQuarto.forEach((r) => {
           const checkin = new Date(r.data_checkin);
-          const checkout = r.data_checkout ? new Date(r.data_checkout) : null;
+          const checkout = new Date(r.data_checkout_prevista || r.data_checkout);
           for (let d = 1; d <= diasNoMes; d++) {
             const diaAtual = new Date(ano, mes - 1, d);
-            if (diaAtual >= checkin && (!checkout || diaAtual <= checkout)) {
+            if (diaAtual >= checkin && diaAtual <= checkout) {
               ocupacao[d - 1] = r.cliente;
             }
           }

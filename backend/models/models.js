@@ -75,15 +75,55 @@ const Quartos = {
       callback
     );
   },
-  update: (numero, data, callback) => {
+  update: (numero, dados, cb) => {
     db.query(
-      'UPDATE Quartos SET tipo_id = ?, status = ? WHERE numero = ?',
-      [data.tipo_id, data.status, numero],
-      callback
+      `UPDATE Quartos SET tipo_id = ?, status = ?, descricao = ?, valor_diaria = ? WHERE numero = ?`,
+      [dados.tipo_id, dados.status, dados.descricao, dados.valor_diaria, numero],
+      cb
     );
   },
   delete: (numero, callback) => {
     db.query('DELETE FROM Quartos WHERE numero = ?', [numero], callback);
+  },
+};
+
+const Reservas = {
+  findAll: (callback) => {
+    db.query('SELECT * FROM Reservas', callback);
+  },
+  findByQuarto: (quarto_numero, cb) => {
+    db.query('SELECT * FROM Reservas WHERE quarto_numero = ?', [quarto_numero], cb);
+  },
+  create: (data, callback) => {
+    db.query('INSERT INTO Reservas (quarto_numero, cliente_cpf, data_inicio, data_fim, valor_total) VALUES (?, ?, ?, ?, ?)', 
+      [data.quarto_numero, data.cliente_cpf, data.data_inicio, data.data_fim, data.valor_total], callback);
+  },
+  update: (id, data, callback) => {
+    db.query('UPDATE Reservas SET quarto_numero = ?, cliente_cpf = ?, data_inicio = ?, data_fim = ?, valor_total = ? WHERE id = ?', 
+      [data.quarto_numero, data.cliente_cpf, data.data_inicio, data.data_fim, data.valor_total, id], callback);
+  },
+  delete: (id, cb) => {
+    db.query('DELETE FROM Reservas WHERE id = ?', [id], cb);
+  },
+};
+
+const Consumos = {
+  findAll: (callback) => {
+    db.query('SELECT * FROM Consumos', callback);
+  },
+  findByReserva: (reserva_id, cb) => {
+    db.query('SELECT * FROM Consumos WHERE reserva_id = ?', [reserva_id], cb);
+  },
+  create: (data, callback) => {
+    db.query('INSERT INTO Consumos (reserva_id, descricao, valor) VALUES (?, ?, ?)', 
+      [data.reserva_id, data.descricao, data.valor], callback);
+  },
+  update: (id, data, callback) => {
+    db.query('UPDATE Consumos SET reserva_id = ?, descricao = ?, valor = ? WHERE id = ?', 
+      [data.reserva_id, data.descricao, data.valor, id], callback);
+  },
+  delete: (id, cb) => {
+    db.query('DELETE FROM Consumos WHERE id = ?', [id], cb);
   },
 };
 
@@ -92,4 +132,6 @@ module.exports = {
   TiposQuarto,
   Clientes,
   Quartos,
+  Reservas,
+  Consumos,
 };

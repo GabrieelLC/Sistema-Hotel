@@ -131,7 +131,11 @@
           <td>${r.hora_entrada || ''}</td>
           <td>${r.data_saida || ''}</td>
           <td>${r.hora_saida || ''}</td>
-          <td>${r.status || ''}</td> <!-- NOVO -->
+          <td>${r.status || ''}</td>
+          <td>
+            ${r.acompanhantes || 0}
+            ${r.cpfs_acompanhantes ? `(${r.cpfs_acompanhantes})` : ''}
+          </td>
         </tr>
       `;
     });

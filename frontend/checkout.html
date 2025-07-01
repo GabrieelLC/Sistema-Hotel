@@ -199,17 +199,6 @@
               />
             </div>
             <div class="checkout_screen_field_group">
-              <label for="desconto" class="checkout_screen_label"
-                >Desconto</label
-              >
-              <input
-                type="text"
-                id="desconto"
-                name="desconto"
-                class="checkout_screen_input"
-              />
-            </div>
-            <div class="checkout_screen_field_group">
               <label for="total" class="checkout_screen_label"
                 >Total a pagar</label
               >
@@ -250,12 +239,7 @@
             </div>
             <div class="checkout_screen_field_group">
               <label for="quarto" class="checkout_screen_label">Quarto</label>
-              <input
-                type="text"
-                id="quarto"
-                name="quarto"
-                class="checkout_screen_input checkout_screen_input--small"
-              />
+              <select id="quarto" class="checkout_screen_input checkout_screen_input--small"></select>
             </div>
             <div class="checkout_screen_field_group">
               <label class="checkout_screen_label">Consumo</label>
@@ -267,13 +251,7 @@
                     <th class="checkout_screen_table_header">Total</th>
                   </tr>
                 </thead>
-                <tbody class="checkout_screen_table_body">
-                  <tr>
-                    <td class="checkout_screen_table_cell">heineken</td>
-                    <td class="checkout_screen_table_cell">2</td>
-                    <td class="checkout_screen_table_cell">16</td>
-                  </tr>
-                </tbody>
+                <tbody class="checkout_screen_table_body"></tbody>
               </table>
             </div>
           </div>
@@ -349,7 +327,6 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
   // Limpa campos antes de buscar
   document.getElementById('valor_diaria').value = '';
   document.getElementById('qtd_dias').value = '';
-  document.getElementById('desconto').value = '';
   document.getElementById('total').value = '';
   document.getElementById('quarto').value = '';
   reservaAtivaId = null;
@@ -361,31 +338,7 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
       return;
     }
     const reserva = await resp.json();
-    reservaAtivaId = reserva.id;
-
-    // Preencha os campos normalmente...
-    document.getElementById('valor_diaria').value = reserva.valor_diaria || '';
-
-    // Calcula quantidade de dias (do check-in até hoje)
-    const dataCheckin = new Date(reserva.data_checkin);
-    const hoje = new Date();
-    const diffTime = hoje - dataCheckin;
-    let dias = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    if (dias < 1) dias = 1;
-    document.getElementById('qtd_dias').value = dias;
-
-    // Preenche desconto
-    document.getElementById('desconto').value = reserva.desconto || 0;
-
-    // Preenche quarto
-    document.getElementById('quarto').value = reserva.quarto || '';
-
-    // Calcula total
-    const valorDiaria = Number(reserva.valor_diaria) || 0;
-    const desconto = Number(reserva.desconto) || 0;
-    const total = (valorDiaria * dias) - desconto;
-    document.getElementById('total').value = total.toFixed(2);
-
+    preencherFormularioCheckout(reserva);
   } catch (error) {
     alert('Erro ao buscar reserva ativa');
   }
@@ -410,12 +363,11 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
 
   const data_checkout = document.getElementById('data_checkout').value;
   const hora_checkout = document.getElementById('hora_checkout').value;
-  const desconto = document.getElementById('desconto').value;
 
   const resp = await fetch(`/api/checkout/${reservaAtivaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data_checkout, hora_checkout, desconto })
+    body: JSON.stringify({ data_checkout, hora_checkout })
   });
 
   if (resp.ok) {
@@ -428,26 +380,43 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
 });
 
 async function preencherFormularioCheckout(reserva) {
-  // ...preenche campos do formulário...
+  reservaAtivaId = reserva.id;
+  document.getElementById('valor_diaria').value = reserva.valor_diaria || '';
+  document.getElementById('quarto').value = reserva.quarto || '';
 
-  // Buscar consumos
+  // Dias de hospedagem
+  const dataCheckin = new Date(reserva.data_checkin);
+  const hoje = new Date();
+  let dias = Math.ceil((hoje - dataCheckin) / (1000 * 60 * 60 * 24));
+  if (dias < 1) dias = 1;
+  document.getElementById('qtd_dias').value = dias;
+
+  // Consumos
   const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
   const consumos = await respConsumos.json();
   const tbody = document.querySelector('.checkout_screen_table_body');
   tbody.innerHTML = '';
+  let totalConsumos = 0;
   if (consumos.length) {
     consumos.forEach(c => {
+      const totalItem = c.quantidade * c.preco_unitario;
+      totalConsumos += totalItem;
       tbody.innerHTML += `
         <tr>
           <td class="checkout_screen_table_cell">${c.produto_nome}</td>
           <td class="checkout_screen_table_cell">${c.quantidade}</td>
-          <td class="checkout_screen_table_cell">${(c.quantidade * c.preco_unitario).toFixed(2)}</td>
+          <td class="checkout_screen_table_cell">${totalItem.toFixed(2)}</td>
         </tr>
       `;
     });
   } else {
     tbody.innerHTML = '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
   }
+
+  // Total
+  const valorDiaria = Number(reserva.valor_diaria) || 0;
+  const total = (valorDiaria * dias) + totalConsumos;
+  document.getElementById('total').value = total.toFixed(2);
 }
     </script>
   </body>

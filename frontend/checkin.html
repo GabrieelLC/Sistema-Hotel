@@ -316,19 +316,6 @@
                 readonly
               />
             </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="acompanhantes"
-                >Acompanhantes</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="number"
-                id="acompanhantes"
-                name="acompanhantes"
-                min="0"
-                value="0"
-              />
-            </div>
             <button class="checkoutscreensubmit_button" type="submit">
               Registrar
             </button>
@@ -443,15 +430,14 @@
             "horacheckoutprevista"
           ).value;
           const valor_diaria = document.getElementById("valor_diaria").value;
-          const desconto = document.getElementById("desconto").value || 0;
           const nome = document.getElementById("nomecliente").value;
           const telefone = document.getElementById("telefonecliente").value;
           const email = document.getElementById("emailcliente").value;
           const cep = document.getElementById("cepcliente").value;
           const endereco = document.getElementById("enderecocliente").value;
-          const motivo_hospedagem =
-            document.getElementById("motivo_hospedagem").value;
-          const acompanhantes = document.getElementById("acompanhantes").value;
+          const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
+          const quantidade_acompanhantes = document.getElementById("quantidade_acompanhantes").value;
+          const cpfs_acompanhantes = document.getElementById("cpfs_acompanhantes").value;
 
           if (
             !cliente_cpf ||
@@ -485,9 +471,9 @@
                 data_checkout_prevista,
                 hora_checkout_prevista,
                 valor_diaria,
-                desconto,
                 motivo_hospedagem,
-                acompanhantes,
+                quantidade_acompanhantes,
+                cpfs_acompanhantes
               }),
             });
             const data = await resp.json();

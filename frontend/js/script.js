@@ -297,7 +297,9 @@ document.addEventListener('DOMContentLoaded', () => {
            DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
            DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
            r.status,
-           r.motivo_hospedagem
+           r.motivo_hospedagem,
+           r.data_checkout_prevista,
+           r.hora_checkout_prevista
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
   `;
@@ -387,4 +389,119 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.getElementById('consumos-quarto').innerHTML = html;
   }
+
+  async function mostrarConsumos(reserva) {
+    const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
+    const consumos = await respConsumos.json();
+    const tbody = document.querySelector('.checkout_screen_table_body');
+    tbody.innerHTML = '';
+    if (consumos.length) {
+      consumos.forEach(c => {
+        tbody.innerHTML += `
+          <tr>
+            <td class="checkout_screen_table_cell">${c.produto_nome}</td>
+            <td class="checkout_screen_table_cell">${c.quantidade}</td>
+            <td class="checkout_screen_table_cell">${(c.quantidade * c.preco_unitario).toFixed(2)}</td>
+          </tr>
+        `;
+      });
+    } else {
+      tbody.innerHTML = '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
+    }
+  }
+
+  async function carregarReserva() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const reservaId = urlParams.get('id');
+    if (!reservaId) {
+      alert('ID da reserva não encontrado');
+      return;
+    }
+
+    try {
+      const resp = await fetch(`/api/reservas/${reservaId}`);
+      const reserva = await resp.json();
+      if (!reserva) {
+        alert('Reserva não encontrada');
+        return;
+      }
+
+      // Preencher formulário com dados da reserva
+      document.getElementById('nome').value = reserva.nome_cliente || '';
+      document.getElementById('cpf').value = reserva.cpf_cliente || '';
+      document.getElementById('telefone').value = reserva.telefone_cliente || '';
+      document.getElementById('email').value = reserva.email_cliente || '';
+      document.getElementById('endereco').value = reserva.endereco_cliente || '';
+      document.getElementById('cep').value = reserva.cep_cliente || '';
+      document.getElementById('data_checkin').value = reserva.data_checkin || '';
+      document.getElementById('hora_checkin').value = reserva.hora_checkin || '';
+      document.getElementById('data_checkout').value = reserva.data_checkout || '';
+      document.getElementById('hora_checkout').value = reserva.hora_checkout || '';
+      document.getElementById('status').value = reserva.status || '';
+      document.getElementById('motivo_hospedagem').value = reserva.motivo_hospedagem || '';
+      document.getElementById('data_checkout_prevista').value = reserva.data_checkout_prevista || '';
+      document.getElementById('hora_checkout_prevista').value = reserva.hora_checkout_prevista || '';
+
+      // Carregar consumos da reserva
+      mostrarConsumos(reserva);
+    } catch (error) {
+      alert('Erro ao carregar reserva');
+    }
+  }
+
+  if (window.location.pathname.includes('reservas.html') && window.location.search.includes('id=')) {
+    carregarReserva();
+  }
+
+  function editarQuarto(numero) {
+    // Mostre inputs para editar e botões para salvar/excluir/interditar
+    // Exemplo:
+    // <button onclick="salvarEdicaoQuarto(${numero})">Salvar</button>
+    // <button onclick="excluirQuarto(${numero})">Excluir</button>
+    // <button onclick="interditarQuarto(${numero})">Interditar</button>
+  }
+
+  async function excluirQuarto(numero) {
+    if (!confirm('Tem certeza que deseja excluir este quarto?')) return;
+    const resp = await fetch(`/api/quartos/${numero}`, { method: 'DELETE' });
+    if (resp.ok) {
+      alert('Quarto excluído!');
+      // Atualize a lista de quartos
+    } else {
+      alert('Erro ao excluir quarto');
+    }
+  }
+
+  async function interditarQuarto(numero) {
+    const resp = await fetch(`/api/quartos/${numero}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'interditado' })
+    });
+    if (resp.ok) {
+      alert('Quarto interditado!');
+      // Atualize a lista de quartos
+    } else {
+      alert('Erro ao interditar quarto');
+    }
+  }
+
+  async function carregarQuartosParaCheckout() {
+    const resp = await fetch('/api/quartos');
+    const quartos = await resp.json();
+    const select = document.getElementById('quarto');
+    if (!select) return;
+    select.innerHTML = quartos.map(q =>
+      `<option value="${q.numero}">Quarto ${q.numero}</option>`
+    ).join('');
+  }
+  document.addEventListener('DOMContentLoaded', carregarQuartosParaCheckout);
+
+  const selectEditar = document.getElementById("quarto-editar-select");
+  selectEditar.innerHTML = quartos.map(q =>
+    `<option value="${q.numero}">Quarto ${q.numero} - ${q.tipo}</option>`
+  ).join('');
+
+  setTimeout(() => {
+  }, 100);
 });

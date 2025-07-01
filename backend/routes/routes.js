@@ -128,11 +128,11 @@ router.post('/quartos', (req, res) => {
 // Atualizar quarto por número
 router.put('/quartos/:numero', (req, res) => {
   const { numero } = req.params;
-  const { tipo_id, status } = req.body;
-  if (!tipo_id || !status) {
+  const { tipo_id, status, descricao, valor_diaria } = req.body;
+  if (!tipo_id || !status || !descricao || !valor_diaria) {
     return res.status(400).json({ message: 'Preencha todos os campos obrigatórios!' });
   }
-  Quartos.update(numero, { tipo_id, status }, (err, result) => {
+  Quartos.update(numero, { tipo_id, status, descricao, valor_diaria }, (err, result) => {
     if (err) {
       return res.status(500).json({ message: 'Erro ao atualizar quarto', error: err });
     }
@@ -145,9 +145,13 @@ router.delete('/quartos/:numero', (req, res) => {
   const { numero } = req.params;
   Quartos.delete(numero, (err, result) => {
     if (err) {
-      return res.status(500).json({ message: 'Erro ao deletar quarto', error: err });
+      // Erro de integridade referencial (MySQL/MariaDB)
+      if (err.code === 'ER_ROW_IS_REFERENCED_2' || err.errno === 1451) {
+        return res.status(400).json({ message: 'Não é possível excluir: existem reservas ou consumos ligados a este quarto.' });
+      }
+      return res.status(500).json({ message: 'Erro ao excluir quarto', error: err });
     }
-    res.status(200).json({ message: 'Quarto deletado com sucesso', result });
+    res.status(200).json({ message: 'Quarto excluído com sucesso', result });
   });
 });
 
@@ -215,22 +219,19 @@ router.post('/checkin', (req, res) => {
     quarto_numero,
     data_checkin,
     hora_checkin,
-    data_checkout_prevista,
-    hora_checkout_prevista,
     valor_diaria,
-    desconto,
     motivo_hospedagem, // <-- NOVO
     acompanhantes
   } = req.body;
 
-  if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
+  if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !valor_diaria) {
     return res.status(400).json({ message: 'Preencha todos os campos obrigatórios!' });
   }
 
   db.query(
     `INSERT INTO Reservas 
       (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status, motivo_hospedagem, acompanhantes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?)`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?, ?, ?)`,
     [
       cliente_cpf,
       quarto_numero,
@@ -241,7 +242,7 @@ router.post('/checkin', (req, res) => {
       valor_diaria,
       desconto || 0,
       motivo_hospedagem || null,
-      acompanhantes
+      acompanhantes,
     ],
     (err, result) => {
       if (err) {
@@ -441,6 +442,42 @@ router.get('/reserva-ativa-quarto/:numero', (req, res) => {
       res.json(results[0]);
     }
   );
+});
+
+// Listar reservas de um quarto
+router.get('/reservas', (req, res) => {
+  const { quarto_numero } = req.query;
+  if (!quarto_numero) return res.status(400).json({ message: 'Informe o número do quarto' });
+  Reservas.findByQuarto(quarto_numero, (err, reservas) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar reservas', error: err });
+    res.json(reservas);
+  });
+});
+
+// Excluir reserva
+router.delete('/reservas/:id', (req, res) => {
+  Reservas.delete(req.params.id, (err, result) => {
+    if (err) return res.status(500).json({ message: 'Erro ao excluir reserva', error: err });
+    res.json({ message: 'Reserva excluída com sucesso' });
+  });
+});
+
+// Listar consumos de uma reserva
+router.get('/consumos', (req, res) => {
+  const { reserva_id } = req.query;
+  if (!reserva_id) return res.status(400).json({ message: 'Informe o id da reserva' });
+  Consumos.findByReserva(reserva_id, (err, consumos) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar consumos', error: err });
+    res.json(consumos);
+  });
+});
+
+// Excluir consumo
+router.delete('/consumos/:id', (req, res) => {
+  Consumos.delete(req.params.id, (err, result) => {
+    if (err) return res.status(500).json({ message: 'Erro ao excluir consumo', error: err });
+    res.json({ message: 'Consumo excluído com sucesso' });
+  });
 });
 
 module.exports = router;
