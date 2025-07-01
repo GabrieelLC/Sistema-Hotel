@@ -33,16 +33,15 @@ router.get('/clientes', (req, res) => {
 });
 
 router.post('/clientes', (req, res) => {
-  const { nome, cpf, telefone, email, endereco, cep } = req.body;
-  if (!nome || !cpf || !telefone || !email || !endereco || !cep) {
-    return res.status(400).json({ message: 'Preencha todos os campos!' });
-  }
-  Clientes.create({ nome, cpf, telefone, email, endereco, cep }, (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: 'Erro ao cadastrar cliente', error: err });
+  const { nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade } = req.body;
+  db.query(
+    'INSERT INTO Clientes (nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+    [nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade],
+    (err, result) => {
+      if (err) return res.status(500).json({ message: 'Erro ao cadastrar cliente', error: err.sqlMessage || err.message });
+      res.status(201).json({ message: 'Cliente cadastrado com sucesso', result });
     }
-    res.status(201).json({ message: 'Cliente cadastrado com sucesso', result });
-  });
+  );
 });
 
 router.get('/clientes/:cpf', (req, res) => {
@@ -220,7 +219,8 @@ router.post('/checkin', (req, res) => {
     hora_checkout_prevista,
     valor_diaria,
     desconto,
-    motivo_hospedagem // <-- NOVO
+    motivo_hospedagem, // <-- NOVO
+    acompanhantes
   } = req.body;
 
   if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
@@ -229,8 +229,8 @@ router.post('/checkin', (req, res) => {
 
   db.query(
     `INSERT INTO Reservas 
-      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status, motivo_hospedagem)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)`,
+      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status, motivo_hospedagem, acompanhantes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?)`,
     [
       cliente_cpf,
       quarto_numero,
@@ -240,7 +240,8 @@ router.post('/checkin', (req, res) => {
       null,
       valor_diaria,
       desconto || 0,
-      motivo_hospedagem || null
+      motivo_hospedagem || null,
+      acompanhantes
     ],
     (err, result) => {
       if (err) {

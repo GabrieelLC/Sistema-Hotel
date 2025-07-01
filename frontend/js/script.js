@@ -37,12 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const endereco = document.getElementById('endereco').value;
       const cep = document.getElementById('cep').value;
       const passaporte = document.getElementById('passaporte').value; // Novo campo
+      const data_nascimento = document.getElementById('data_nascimento').value;
+      const nacionalidade = document.getElementById('nacionalidade').value;
 
       try {
         const response = await fetch('http://localhost:3000/api/clientes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome, cpf, telefone, email, endereco, cep, passaporte }),
+          body: JSON.stringify({ nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade }),
         });
         const data = await response.json();
         if (response.ok) {

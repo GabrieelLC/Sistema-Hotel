@@ -154,11 +154,14 @@
               <th>Endereço</th>
               <th>Telefone</th>
               <th>Email</th>
+              <th>Passaporte</th>
+              <th>Data Nasc.</th>
+              <th>Nacionalidade</th>
               <th style="width: 200px">Ações</th>
             </tr>
           </thead>
           <tbody id="clientes-tbody">
-            <!-- espaço para os clientes registradosd -->
+            <!-- espaço para os clientes registrados -->
           </tbody>
         </table>
       </div>
@@ -193,19 +196,22 @@
           tbody.innerHTML = "";
           clientes.forEach((cliente) => {
             tbody.innerHTML += `
-        <tr id="linha-${cliente.cpf}">
-          <td>${cliente.cpf}</td>
-          <td><span class="span-nome">${cliente.nome}</span></td>
-          <td><span class="span-cep">${cliente.cep}</span></td>
-          <td><span class="span-endereco">${cliente.endereco}</span></td>
-          <td><span class="span-telefone">${cliente.telefone}</span></td>
-          <td><span class="span-email">${cliente.email}</span></td>
-          <td class="acoes-cell">
-            <button class="btn-acao" onclick="editarCliente('${cliente.cpf}')">Editar</button>
-            <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
-          </td>
-        </tr>
-      `;
+    <tr id="linha-${cliente.cpf}">
+      <td>${cliente.cpf}</td>
+      <td><span class="span-nome">${cliente.nome}</span></td>
+      <td><span class="span-cep">${cliente.cep || ''}</span></td>
+      <td><span class="span-endereco">${cliente.endereco || ''}</span></td>
+      <td><span class="span-telefone">${cliente.telefone || ''}</span></td>
+      <td><span class="span-email">${cliente.email || ''}</span></td>
+      <td><span class="span-passaporte">${cliente.passaporte || ''}</span></td>
+      <td><span class="span-data_nascimento">${cliente.data_nascimento ? new Date(cliente.data_nascimento).toLocaleDateString() : ''}</span></td>
+      <td><span class="span-nacionalidade">${cliente.nacionalidade || ''}</span></td>
+      <td class="acoes-cell">
+        <button class="btn-acao" onclick="editarCliente('${cliente.cpf}')">Editar</button>
+        <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
+      </td>
+    </tr>
+  `;
           });
         } catch (error) {
           tbody.innerHTML =
@@ -241,6 +247,9 @@
     <td><span class="span-endereco">${cliente.endereco}</span></td>
     <td><span class="span-telefone">${cliente.telefone}</span></td>
     <td><span class="span-email">${cliente.email}</span></td>
+    <td><span class="span-passaporte">${cliente.passaporte}</span></td>
+    <td><span class="span-data-nasc">${cliente.data_nascimento}</span></td>
+    <td><span class="span-nacionalidade">${cliente.nacionalidade}</span></td>
     <td class="acoes-cell">
       <button class="btn-acao" onclick="editarCliente('${cliente.cpf}')">Editar</button>
       <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
@@ -255,11 +264,14 @@
         const endereco = linha.querySelector(".edit-endereco").value;
         const telefone = linha.querySelector(".edit-telefone").value;
         const email = linha.querySelector(".edit-email").value;
+        const passaporte = linha.querySelector(".edit-passaporte").value;
+        const data_nascimento = linha.querySelector(".edit-data-nasc").value;
+        const nacionalidade = linha.querySelector(".edit-nacionalidade").value;
 
         const resp = await fetch(`/api/clientes/${cpf}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nome, telefone, email, endereco, cep }),
+          body: JSON.stringify({ nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade }),
         });
         if (resp.ok) {
           alert("Cliente atualizado!");
