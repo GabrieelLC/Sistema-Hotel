@@ -36,12 +36,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const email = document.getElementById('email').value;
       const endereco = document.getElementById('endereco').value;
       const cep = document.getElementById('cep').value;
+      const passaporte = document.getElementById('passaporte').value; // Novo campo
 
       try {
         const response = await fetch('http://localhost:3000/api/clientes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome, cpf, telefone, email, endereco, cep }),
+          body: JSON.stringify({ nome, cpf, telefone, email, endereco, cep, passaporte }),
         });
         const data = await response.json();
         if (response.ok) {

@@ -290,6 +290,19 @@
                 readonly
               />
             </div>
+            <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="acompanhantes"
+                >Acompanhantes</label
+              >
+              <input
+                class="checkoutscreeninput"
+                type="number"
+                id="acompanhantes"
+                name="acompanhantes"
+                min="0"
+                value="0"
+              />
+            </div>
             <button class="checkoutscreensubmit_button" type="submit">
               Registrar
             </button>
@@ -411,6 +424,7 @@
           const cep = document.getElementById("cepcliente").value;
           const endereco = document.getElementById("enderecocliente").value;
           const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
+          const acompanhantes = document.getElementById("acompanhantes").value;
 
           if (
             !cliente_cpf ||
@@ -446,6 +460,7 @@
                 valor_diaria,
                 desconto,
                 motivo_hospedagem,
+                acompanhantes,
               }),
             });
             const data = await resp.json();
