@@ -1,5 +1,5 @@
 const express = require('express');
-const { Usuarios, Clientes, Quartos, TiposQuarto } = require('../models/models');
+const { Usuarios, Clientes, Quartos, TiposQuarto, Reservas, Consumos } = require('../models/models');
 const db = require('../config/database'); // Certifique-se de que o caminho para o seu arquivo de configuração do banco de dados está correto
 
 const router = express.Router();
@@ -36,7 +36,17 @@ router.post('/clientes', (req, res) => {
   const { nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade } = req.body;
   db.query(
     'INSERT INTO Clientes (nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-    [nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade],
+    [
+      nome,
+      cpf,
+      telefone,
+      email,
+      endereco,
+      cep,
+      passaporte && passaporte.trim() !== '' ? passaporte : null, // <-- Torna opcional
+      data_nascimento,
+      nacionalidade
+    ],
     (err, result) => {
       if (err) return res.status(500).json({ message: 'Erro ao cadastrar cliente', error: err.sqlMessage || err.message });
       res.status(201).json({ message: 'Cliente cadastrado com sucesso', result });
@@ -230,8 +240,8 @@ router.post('/checkin', (req, res) => {
 
   db.query(
     `INSERT INTO Reservas 
-      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status, motivo_hospedagem, acompanhantes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?, ?, ?)`,
+      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, status, motivo_hospedagem, acompanhantes)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?)`,
     [
       cliente_cpf,
       quarto_numero,
@@ -240,9 +250,8 @@ router.post('/checkin', (req, res) => {
       null,
       null,
       valor_diaria,
-      desconto || 0,
       motivo_hospedagem || null,
-      acompanhantes,
+      acompanhantes
     ],
     (err, result) => {
       if (err) {
@@ -256,15 +265,15 @@ router.post('/checkin', (req, res) => {
 // PUT /api/checkout/:id - Registrar check-out
 router.put('/checkout/:id', (req, res) => {
   const { id } = req.params;
-  const { data_checkout, hora_checkout, desconto } = req.body;
+  const { data_checkout, hora_checkout} = req.body;
 
   if (!data_checkout || !hora_checkout) {
     return res.status(400).json({ message: 'Preencha data e hora do check-out!' });
   }
 
   db.query(
-    `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, desconto = ?, status = 'finalizado' WHERE id = ?`,
-    [data_checkout, hora_checkout, desconto || 0, id],
+    `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, status = 'finalizado' WHERE id = ?`,
+    [data_checkout, hora_checkout, id],
     (err, result) => {
       if (err) {
         return res.status(500).json({ message: 'Erro ao registrar check-out', error: err });
@@ -293,7 +302,8 @@ router.get('/reservas', (req, res) => {
            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
            DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
            DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
-           r.status
+           r.status,
+           r.acompanhantes
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
   `;
@@ -312,7 +322,7 @@ router.get('/reservas', (req, res) => {
 router.get('/reserva-ativa/:cpf', (req, res) => {
   const cpf = req.params.cpf;
   db.query(
-    `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria, r.desconto
+    `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
@@ -385,11 +395,11 @@ router.delete('/produtos/:id', (req, res) => {
   });
 });
 
-async function realizarCheckout(reservaId, data_checkout, hora_checkout, desconto) {
+async function realizarCheckout(reservaId, data_checkout, hora_checkout) {
   const resp = await fetch(`/api/checkout/${reservaId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data_checkout, hora_checkout, desconto })
+    body: JSON.stringify({ data_checkout, hora_checkout })
   });
   if (resp.ok) {
     alert('Checkout realizado com sucesso!');
@@ -445,7 +455,7 @@ router.get('/reserva-ativa-quarto/:numero', (req, res) => {
 });
 
 // Listar reservas de um quarto
-router.get('/reservas', (req, res) => {
+router.get('/reservas-por-quarto', (req, res) => {
   const { quarto_numero } = req.query;
   if (!quarto_numero) return res.status(400).json({ message: 'Informe o número do quarto' });
   Reservas.findByQuarto(quarto_numero, (err, reservas) => {

@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // CADASTRO DE QUARTO DINÂMICO
-  // Supondo que você já tem um array de tipos de quarto carregado do backend
   let tiposQuarto = [];
 
   async function carregarTiposQuarto() {
@@ -88,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Chame carregarTiposQuarto ao carregar a página de cadastro
   if (document.getElementById('cadastroQuartoForm')) {
     carregarTiposQuarto();
   }

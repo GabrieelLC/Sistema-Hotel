@@ -418,6 +418,12 @@ async function preencherFormularioCheckout(reserva) {
   const total = (valorDiaria * dias) + totalConsumos;
   document.getElementById('total').value = total.toFixed(2);
 }
+
+// Após finalizar a reserva (check-out)
+db.query(
+  `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
+  [id]
+);
     </script>
   </body>
 </html>
