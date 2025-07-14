@@ -71,6 +71,8 @@
         </div>
         <div>
           <div class="section-title">RESERVAS</div>
+          <button onclick="carregarReservas(false)">Todas as reservas</button>
+          <button onclick="carregarReservas(true)">Reservas futuras</button>
           <table>
             <thead>
               <tr>
@@ -80,8 +82,9 @@
                 <th>Hora</th>
                 <th>Data de Saida</th>
                 <th>Hora</th>
-                <th>Status</th> <!-- NOVO -->
+                <th>Status</th>
                 <th>Acompanhantes</th>
+                <th>Motivo</th> <!-- NOVO -->
               </tr>
             </thead>
             <tbody id="checkin-tbody"></tbody>
@@ -132,9 +135,8 @@
           <td>${r.data_saida || ''}</td>
           <td>${r.hora_saida || ''}</td>
           <td>${r.status || ''}</td>
-          <td>
-            ${r.acompanhantes || 0}
-          </td>
+          <td>${r.acompanhantes || 0}</td>
+          <td>${r.motivo_hospedagem || ''}</td> <!-- NOVO -->
         </tr>
       `;
     });
@@ -144,8 +146,7 @@
 }
 
 // Chame assim ao carregar a página:
-document.addEventListener('DOMContentLoaded', () => carregarReservas(true));
-
+document.addEventListener('DOMContentLoaded', () => carregarReservas(false));
     </script>
   </body>
 </html>

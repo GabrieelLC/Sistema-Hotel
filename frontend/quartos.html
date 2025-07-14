@@ -346,7 +346,7 @@
       };
     }
   }, 100);
-  mostrarDependenciasQuarto(quarto.numero);
+  mostrarConsumosHospedeAtual(quarto.numero);
 }
       function abrirModalConsumo(numero) {
         window.quartoSelecionado = numero;
@@ -504,22 +504,45 @@ async function excluirTudoDoQuarto(numero) {
   }
 }
 
-async function mostrarDependenciasQuarto(numero) {
-  // Buscar reservas do quarto
-  const respReservas = await fetch(`/api/reservas-por-quarto?quarto_numero=${numero}`);
-  const reservas = respReservas.ok ? await respReservas.json() : [];
-  let html = "";
 
-  if (reservas.length > 0) {
-    html += "<b>Reservas deste quarto:</b><ul>";
-    for (const reserva of reservas) {
-      html += `<li>
-        Reserva #${reserva.id || reserva.reserva_id} (${reserva.status || '---'}) 
-      </li>`;
-    }
-    html += "</ul>";
+async function mostrarConsumosHospedeAtual(numeroQuarto) {
+  // Buscar reserva ativa do quarto
+  const respReserva = await fetch(`/api/reserva-ativa-quarto/${numeroQuarto}`);
+  if (!respReserva.ok) {
+    document.getElementById("dependencias-quarto").innerHTML = "<b>Não há hóspede atual neste quarto.</b>";
+    return;
   }
+  const reserva = await respReserva.json();
+  // Buscar consumos da reserva ativa
+  const respConsumos = await fetch(`/api/consumos?reserva_id=${reserva.id}`);
+  const consumos = respConsumos.ok ? await respConsumos.json() : [];
+  // Buscar produtos para mapear nomes
+  const respProdutos = await fetch("/api/produtos");
+  const produtos = respProdutos.ok ? await respProdutos.json() : [];
+  const mapaProdutos = {};
+  produtos.forEach(p => { mapaProdutos[p.id] = p.nome; });
 
+  let html = "<b>Consumos do hóspede atual:</b>";
+  if (!consumos.length) {
+    html += "<p>Nenhum consumo registrado.</p>";
+  } else {
+    html += `<table style="width:100%;margin-top:8px;border-collapse:collapse;">
+      <tr>
+        <th style="border:1px solid #ccc;padding:4px;">Produto</th>
+        <th style="border:1px solid #ccc;padding:4px;">Quantidade</th>
+        <th style="border:1px solid #ccc;padding:4px;">Valor Unitário</th>
+        <th style="border:1px solid #ccc;padding:4px;">Total</th>
+      </tr>`;
+    consumos.forEach(c => {
+      html += `<tr>
+        <td style="border:1px solid #ccc;padding:4px;">${mapaProdutos[c.produto_id] || c.produto_id}</td>
+        <td style="border:1px solid #ccc;padding:4px;">${c.quantidade}</td>
+        <td style="border:1px solid #ccc;padding:4px;">R$ ${Number(c.preco_unitario).toFixed(2)}</td>
+        <td style="border:1px solid #ccc;padding:4px;">R$ ${(c.quantidade * c.preco_unitario).toFixed(2)}</td>
+      </tr>`;
+    });
+    html += "</table>";
+  }
   document.getElementById("dependencias-quarto").innerHTML = html;
 }
     </script>

@@ -335,17 +335,23 @@ router.get('/reservas', (req, res) => {
     SELECT c.nome, r.quarto_numero as quarto, 
            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
-           DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
-           DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
+           DATE_FORMAT(
+             IFNULL(r.data_checkout, r.data_checkout_prevista), '%d/%m/%Y'
+           ) as data_saida,
+           DATE_FORMAT(
+             IFNULL(r.hora_checkout, r.hora_checkout_prevista), '%H:%i'
+           ) as hora_saida,
            r.status,
-           r.acompanhantes
+           r.acompanhantes,
+           r.motivo_hospedagem,
+           r.id
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
   `;
   const params = [];
   const where = [];
   if (futuras === '1') {
-    where.push('r.data_checkin >= CURDATE()');
+    where.push("(r.status = 'ativo' AND IFNULL(r.data_checkout, r.data_checkout_prevista) >= CURDATE())");
   }
   if (quarto_numero) {
     where.push('r.quarto_numero = ?');
@@ -530,6 +536,23 @@ router.delete('/consumos/:id', (req, res) => {
   Consumos.delete(req.params.id, (err, result) => {
     if (err) return res.status(500).json({ message: 'Erro ao excluir consumo', error: err });
     res.json({ message: 'Consumo excluído com sucesso' });
+  });
+});
+
+// Novo: Listar hóspedes ativos
+router.get('/hospedes-ativos', (req, res) => {
+  const sql = `
+    SELECT c.cpf, c.nome, r.quarto_numero as quarto, q.tipo as tipo_quarto,
+           r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, r.motivo_hospedagem
+    FROM Reservas r
+    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Quartos q ON r.quarto_numero = q.numero
+    WHERE r.status = 'ativo'
+    ORDER BY r.data_checkin DESC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar hóspedes ativos', error: err });
+    res.json(results);
   });
 });
 

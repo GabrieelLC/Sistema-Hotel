@@ -104,6 +104,23 @@
             </thead>
             <tbody id="checkout-tbody"></tbody>
           </table>
+          <div class="section-title">HÓSPEDES ATIVOS</div>
+          <table>
+            <thead>
+              <tr>
+                <th>CPF</th>
+                <th>Nome</th>
+                <th>Quarto</th>
+                <th>Tipo de Quarto</th>
+                <th>Hora</th>
+                <th>Telefone</th>
+                <th>Email</th>
+                <th>Valor da diária</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="ativos-tbody"></tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -188,9 +205,37 @@
         });
       }
 
+      async function carregarHospedesAtivos() {
+        const tbody = document.getElementById("ativos-tbody");
+        tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
+        const resp = await fetch("/api/hospedes-ativos");
+        const dados = await resp.json();
+        if (dados.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9">Nenhum hóspede ativo</td></tr>';
+          return;
+        }
+        tbody.innerHTML = "";
+        dados.forEach((item) => {
+          tbody.innerHTML += `
+            <tr>
+              <td>${item.cpf}</td>
+              <td>${item.nome}</td>
+              <td>${item.quarto}</td>
+              <td>${item.tipo_quarto}</td>
+              <td>${item.hora}</td>
+              <td>${item.telefone}</td>
+              <td>${item.email}</td>
+              <td>R$${item.valor_diaria}</td>
+              <td>${item.motivo_hospedagem || ''}</td>
+            </tr>
+          `;
+        });
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         carregarCheckins();
         carregarCheckouts();
+        carregarHospedesAtivos();
       });
     </script>
   </body>
