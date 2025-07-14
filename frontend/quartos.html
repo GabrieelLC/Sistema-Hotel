@@ -259,41 +259,47 @@
     const btnSalvar = document.getElementById("btn-salvar-quarto");
     if (btnSalvar) {
       btnSalvar.onclick = async function() {
-        const numero = quarto.numero;
-        const tipo_id = Number(document.getElementById("edit-tipo-q").value);
-        const status = document.getElementById("edit-status-q").value;
-        const descricao = document.getElementById("edit-desc-q").value;
-        const valor_diaria = document.getElementById("edit-valor-q").value;
+  const numero = quarto.numero;
+  const tipo_id = Number(document.getElementById("edit-tipo-q").value);
+  const status = document.getElementById("edit-status-q").value;
+  const descricao = document.getElementById("edit-desc-q").value;
+  const valor_diaria = Number(document.getElementById("edit-valor-q").value);
 
-        const resp = await fetch(`/api/quartos/${numero}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tipo_id, descricao, valor_diaria, status })
-        });
-        if (resp.ok) {
-          alert('Quarto atualizado!');
-          // Atualize a interface sem recarregar a página
-          const quartosAtualizados = await buscarQuartos();
-          renderTabs(quartosAtualizados);
-          // Atualize também a tabela, se necessário
-          const tbody = document.getElementById("quartos-tbody");
-          tbody.innerHTML = "";
-          quartosAtualizados.forEach(q => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${q.numero}</td>
-                <td>${q.tipo}</td>
-                <td>${q.descricao || ''}</td>
-                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
-                <td>${q.status}</td>
-                <td></td>
-              </tr>
-            `;
-          });
-        } else {
-          alert('Erro ao atualizar quarto');
-        }
-      };
+  if (!tipo_id || !descricao || !valor_diaria || !status) {
+    alert("Preencha todos os campos antes de salvar.");
+    return;
+  }
+
+  const resp = await fetch(`/api/quartos/${numero}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tipo_id, descricao, valor_diaria, status })
+  });
+  if (resp.ok) {
+    alert('Quarto atualizado!');
+    // Atualize a interface sem recarregar a página
+    const quartosAtualizados = await buscarQuartos();
+    renderTabs(quartosAtualizados);
+    // Atualize também a tabela, se necessário
+    const tbody = document.getElementById("quartos-tbody");
+    tbody.innerHTML = "";
+    quartosAtualizados.forEach(q => {
+      tbody.innerHTML += `
+        <tr>
+          <td>${q.numero}</td>
+          <td>${q.tipo}</td>
+          <td>${q.descricao || ''}</td>
+          <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
+          <td>${q.status}</td>
+          <td></td>
+        </tr>
+      `;
+    });
+  } else {
+    const erro = await resp.json();
+    alert(erro.message || 'Erro ao atualizar quarto');
+  }
+};
     }
     // Evento Interditar
     const btnInterditar = document.getElementById("btn-interditar-quarto-info");
@@ -335,31 +341,8 @@
     const btnExcluir = document.getElementById("btn-excluir-quarto-info");
     if (btnExcluir) {
       btnExcluir.onclick = async function() {
-        const numero = quarto.numero;
-        if (!confirm('Tem certeza que deseja excluir este quarto?')) return;
-        const resp = await fetch(`/api/quartos/${numero}`, { method: 'DELETE' });
-        if (resp.ok) {
-          alert('Quarto excluído!');
-          const quartosAtualizados = await buscarQuartos();
-          renderTabs(quartosAtualizados);
-          const tbody = document.getElementById("quartos-tbody");
-          tbody.innerHTML = "";
-          quartosAtualizados.forEach(q => {
-            tbody.innerHTML += `
-              <tr>
-                <td>${q.numero}</td>
-                <td>${q.tipo}</td>
-                <td>${q.descricao || ''}</td>
-                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
-                <td>${q.status}</td>
-                <td></td>
-              </tr>
-            `;
-          });
-        } else {
-          const erro = await resp.json();
-          alert(erro.message || 'Erro ao excluir quarto');
-        }
+        if (!confirm('Tem certeza que deseja excluir este quarto e todas as reservas/consumos ligados a ele?')) return;
+        await excluirTudoDoQuarto(quarto.numero);
       };
     }
   }, 100);
@@ -494,21 +477,44 @@
         });
       });
 
-      async function mostrarDependenciasQuarto(numero) {
+async function excluirTudoDoQuarto(numero) {
+  // 1. Buscar reservas do quarto
+  const respReservas = await fetch(`/api/reservas-por-quarto?quarto_numero=${numero}`);
+  const reservas = respReservas.ok ? await respReservas.json() : [];
+  for (const reserva of reservas) {
+    // 2. Buscar consumos da reserva
+    const respConsumos = await fetch(`/api/consumos?reserva_id=${reserva.id || reserva.reserva_id}`);
+    const consumos = respConsumos.ok ? await respConsumos.json() : [];
+    // 3. Excluir todos os consumos
+    for (const consumo of consumos) {
+      await fetch(`/api/consumos/${consumo.id}`, { method: "DELETE" });
+    }
+    // 4. Excluir a reserva
+    await fetch(`/api/reservas/${reserva.id || reserva.reserva_id}`, { method: "DELETE" });
+  }
+  // 5. Excluir o quarto
+  const respQuarto = await fetch(`/api/quartos/${numero}`, { method: "DELETE" });
+  if (respQuarto.ok) {
+    alert("Quarto e todas as dependências excluídos!");
+    // Atualize a interface
+    const quartosAtualizados = await buscarQuartos();
+    renderTabs(quartosAtualizados);
+  } else {
+    alert("Erro ao excluir quarto.");
+  }
+}
+
+async function mostrarDependenciasQuarto(numero) {
   // Buscar reservas do quarto
-  const respReservas = await fetch(`/api/reservas?quarto_numero=${numero}`);
+  const respReservas = await fetch(`/api/reservas-por-quarto?quarto_numero=${numero}`);
   const reservas = respReservas.ok ? await respReservas.json() : [];
   let html = "";
 
-  if (reservas.length === 0) {
-    html += "<p><b>Não há reservas ligadas a este quarto.</b></p>";
-  } else {
+  if (reservas.length > 0) {
     html += "<b>Reservas deste quarto:</b><ul>";
     for (const reserva of reservas) {
       html += `<li>
-        Reserva #${reserva.reserva_id} (${reserva.status || '---'}) 
-        <button onclick="excluirReserva(${reserva.reserva_id}, ${numero})">Excluir</button>
-        <button onclick="mostrarConsumosReserva(${reserva.reserva_id})">Ver Consumos</button>
+        Reserva #${reserva.id || reserva.reserva_id} (${reserva.status || '---'}) 
       </li>`;
     }
     html += "</ul>";
@@ -516,47 +522,6 @@
 
   document.getElementById("dependencias-quarto").innerHTML = html;
 }
-
-window.excluirReserva = async function(reserva_id, numeroQuarto) {
-  if (!confirm("Excluir esta reserva? Isso também excluirá os consumos ligados a ela.")) return;
-  const resp = await fetch(`/api/reservas/${reserva_id}`, { method: "DELETE" });
-  if (resp.ok) {
-    alert("Reserva excluída!");
-    mostrarDependenciasQuarto(numeroQuarto);
-  } else {
-    alert("Erro ao excluir reserva.");
-  }
-};
-
-window.mostrarConsumosReserva = async function(reserva_id) {
-  const resp = await fetch(`/api/consumos?reserva_id=${reserva_id}`);
-  const consumos = resp.ok ? await resp.json() : [];
-  let html = "";
-  if (consumos.length === 0) {
-    html = "<p>Não há consumos nesta reserva.</p>";
-  } else {
-    html = "<b>Consumos:</b><ul>";
-    for (const consumo of consumos) {
-      html += `<li>
-        Produto: ${consumo.descricao || consumo.produto_nome || consumo.produto_id} - Qtd: ${consumo.quantidade || ''} - Valor: R$ ${consumo.valor || consumo.preco_unitario || ''}
-        <button onclick="excluirConsumo(${consumo.id}, ${reserva_id})">Excluir</button>
-      </li>`;
-    }
-    html += "</ul>";
-  }
-  alert(html); // Ou use um modal para exibir
-};
-
-window.excluirConsumo = async function(consumo_id, reserva_id) {
-  if (!confirm("Excluir este consumo?")) return;
-  const resp = await fetch(`/api/consumos/${consumo_id}`, { method: "DELETE" });
-  if (resp.ok) {
-    alert("Consumo excluído!");
-    mostrarConsumosReserva(reserva_id);
-  } else {
-    alert("Erro ao excluir consumo.");
-  }
-};
     </script>
   </body>
 

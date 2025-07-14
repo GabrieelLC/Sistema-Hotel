@@ -109,6 +109,12 @@
       .clientes-filter-btn:hover {
         background: #1d968e;
       }
+
+      .clientes-container {
+        max-width: 1500px; /* ou o valor desejado */
+        margin: 0 auto;
+        width: 100%;
+      }
     </style>
   </head>
   <body>
@@ -199,16 +205,26 @@
     <tr id="linha-${cliente.cpf}">
       <td>${cliente.cpf}</td>
       <td><span class="span-nome">${cliente.nome}</span></td>
-      <td><span class="span-cep">${cliente.cep || ''}</span></td>
-      <td><span class="span-endereco">${cliente.endereco || ''}</span></td>
-      <td><span class="span-telefone">${cliente.telefone || ''}</span></td>
-      <td><span class="span-email">${cliente.email || ''}</span></td>
-      <td><span class="span-passaporte">${cliente.passaporte || ''}</span></td>
-      <td><span class="span-data_nascimento">${cliente.data_nascimento ? new Date(cliente.data_nascimento).toLocaleDateString() : ''}</span></td>
-      <td><span class="span-nacionalidade">${cliente.nacionalidade || ''}</span></td>
+      <td><span class="span-cep">${cliente.cep || ""}</span></td>
+      <td><span class="span-endereco">${cliente.endereco || ""}</span></td>
+      <td><span class="span-telefone">${cliente.telefone || ""}</span></td>
+      <td><span class="span-email">${cliente.email || ""}</span></td>
+      <td><span class="span-passaporte">${cliente.passaporte || ""}</span></td>
+      <td><span class="span-data_nascimento">${
+        cliente.data_nascimento
+          ? new Date(cliente.data_nascimento).toLocaleDateString()
+          : ""
+      }</span></td>
+      <td><span class="span-nacionalidade">${
+        cliente.nacionalidade || ""
+      }</span></td>
       <td class="acoes-cell">
-        <button class="btn-acao" onclick="editarCliente('${cliente.cpf}')">Editar</button>
-        <button class="btn-acao" onclick="excluirCliente('${cliente.cpf}')">Excluir</button>
+        <button class="btn-acao" onclick="editarCliente('${
+          cliente.cpf
+        }')">Editar</button>
+        <button class="btn-acao" onclick="excluirCliente('${
+          cliente.cpf
+        }')">Excluir</button>
       </td>
     </tr>
   `;
@@ -271,7 +287,17 @@
         const resp = await fetch(`/api/clientes/${cpf}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade }),
+          body: JSON.stringify({
+            nome,
+            cpf,
+            telefone,
+            email,
+            endereco,
+            cep,
+            passaporte,
+            data_nascimento,
+            nacionalidade,
+          }),
         });
         if (resp.ok) {
           alert("Cliente atualizado!");
