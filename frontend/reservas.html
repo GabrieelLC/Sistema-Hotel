@@ -113,12 +113,12 @@
       async function carregarReservas(futuras = true) {
   const tbody = document.getElementById('checkin-tbody');
   if (!tbody) return;
-  tbody.innerHTML = '<tr><td colspan="6">Carregando...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
   try {
     const resp = await fetch(`/api/reservas${futuras ? '?futuras=1' : ''}`);
     const reservas = await resp.json();
     if (!reservas.length) {
-      tbody.innerHTML = '<tr><td colspan="6">Nenhuma reserva encontrada</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8">Nenhuma reserva encontrada</td></tr>';
       return;
     }
     tbody.innerHTML = '';
@@ -134,13 +134,12 @@
           <td>${r.status || ''}</td>
           <td>
             ${r.acompanhantes || 0}
-            ${r.cpfs_acompanhantes ? `(${r.cpfs_acompanhantes})` : ''}
           </td>
         </tr>
       `;
     });
   } catch (error) {
-    tbody.innerHTML = '<tr><td colspan="6">Erro ao carregar reservas</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8">Erro ao carregar reservas</td></tr>';
   }
 }
 

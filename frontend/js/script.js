@@ -294,12 +294,12 @@ document.addEventListener('DOMContentLoaded', () => {
     SELECT c.nome, r.quarto_numero as quarto, 
            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
-           DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
-           DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
+           DATE_FORMAT(COALESCE(r.data_checkout, r.data_checkout_prevista), '%d/%m/%Y') as data_saida,
+           DATE_FORMAT(COALESCE(r.hora_checkout, r.hora_checkout_prevista), '%H:%i') as hora_saida,
            r.status,
+           r.acompanhantes,
            r.motivo_hospedagem,
-           r.data_checkout_prevista,
-           r.hora_checkout_prevista
+           r.id
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
   `;

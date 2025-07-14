@@ -239,7 +239,7 @@
             </div>
             <div class="checkout_screen_field_group">
               <label for="quarto" class="checkout_screen_label">Quarto</label>
-              <select id="quarto" class="checkout_screen_input checkout_screen_input--small"></select>
+              <input type="text" id="quarto" class="checkout_screen_input checkout_screen_input--small" readonly />
             </div>
             <div class="checkout_screen_field_group">
               <label class="checkout_screen_label">Consumo</label>
@@ -268,27 +268,34 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-        var horaInput = document.getElementById("hora_checkout");
-        var maskOptions = {
-          mask: "00:00", // Define a máscara para horas e minutos
-          blocks: {
-            "00": {
-              mask: IMask.MaskedRange,
-              from: 0,
-              to: 23, // Limita o campo de hora de 00 a 23
-              maxLength: 2,
-            },
-            "00": {
-              mask: IMask.MaskedRange,
-              from: 0,
-              to: 59, // Limita o campo de minutos de 00 a 59
-              maxLength: 2,
-            },
-          },
-        };
-        var mask = IMask(horaInput, maskOptions);
-      });
-      
+  var horaInput = document.getElementById("hora_checkout");
+  var maskOptions = {
+    mask: "00:00",
+    blocks: {
+      "00": {
+        mask: IMask.MaskedRange,
+        from: 0,
+        to: 23,
+        maxLength: 2,
+      },
+      "00": {
+        mask: IMask.MaskedRange,
+        from: 0,
+        to: 59,
+        maxLength: 2,
+      },
+    },
+  };
+  var mask = IMask(horaInput, maskOptions);
+
+  // Preencher data/hora automaticamente ao abrir a tela (mas permite editar)
+  const dataInput = document.getElementById('data_checkout');
+  const horaInput2 = document.getElementById('hora_checkout');
+  const now = new Date();
+  dataInput.value = now.toISOString().slice(0,10);
+  horaInput2.value = now.toTimeString().slice(0,5);
+});
+
         function VoltarPagina(){
             window.history.back();
         }
@@ -343,15 +350,6 @@ document.getElementById('cpf_cliente').addEventListener('blur', async function()
     alert('Erro ao buscar reserva ativa');
   }
 });
-
-        // Preencher data/hora automaticamente ao abrir a tela (mas permite editar)
-        document.addEventListener('DOMContentLoaded', function() {
-          const dataInput = document.getElementById('data_checkout');
-          const horaInput = document.getElementById('hora_checkout');
-          const now = new Date();
-          dataInput.value = now.toISOString().slice(0,10);
-          horaInput.value = now.toTimeString().slice(0,5);
-        });
 
         document.querySelector('.checkout_screen_form').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -416,6 +414,7 @@ async function preencherFormularioCheckout(reserva) {
   // Total
   const valorDiaria = Number(reserva.valor_diaria) || 0;
   const total = (valorDiaria * dias) + totalConsumos;
+  dias = Number(document.getElementById('qtd_dias').value) || 1;
   document.getElementById('total').value = total.toFixed(2);
 }
     </script>

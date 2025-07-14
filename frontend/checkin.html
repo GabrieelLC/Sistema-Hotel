@@ -481,6 +481,35 @@
               alert("Check-in registrado com sucesso!");
               this.reset();
               carregarQuartosDisponiveis();
+            } else if (resp.status === 409 && data.precisa_confirmar) {
+              if (confirm(data.message)) {
+                // Envia novamente, agora com ignorar_reserva_ativa: true
+                const resp2 = await fetch("/api/checkin", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    cliente_cpf,
+                    quarto_numero,
+                    data_checkin,
+                    hora_checkin,
+                    data_checkout_prevista,
+                    hora_checkout_prevista,
+                    valor_diaria,
+                    motivo_hospedagem,
+                    quantidade_acompanhantes,
+                    cpfs_acompanhantes,
+                    ignorar_reserva_ativa: true
+                  }),
+                });
+                const data2 = await resp2.json();
+                if (resp2.ok) {
+                  alert("Check-in registrado com sucesso!");
+                  this.reset();
+                  carregarQuartosDisponiveis();
+                } else {
+                  alert(data2.message || "Erro ao registrar check-in");
+                }
+              }
             } else {
               alert(data.message || "Erro ao registrar check-in");
             }

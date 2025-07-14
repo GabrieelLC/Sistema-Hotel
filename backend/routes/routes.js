@@ -220,35 +220,69 @@ router.post('/checkin', (req, res) => {
     data_checkin,
     hora_checkin,
     valor_diaria,
-    motivo_hospedagem, // <-- NOVO
-    acompanhantes
+    motivo_hospedagem,
+    acompanhantes,
+    cpfs_acompanhantes,
+    data_checkout_prevista,
+    hora_checkout_prevista,
+    ignorar_reserva_ativa // NOVO: parâmetro opcional
   } = req.body;
 
   if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !valor_diaria) {
     return res.status(400).json({ message: 'Preencha todos os campos obrigatórios!' });
   }
 
+  // Verifica se já existe reserva ativa para o quarto
   db.query(
-    `INSERT INTO Reservas 
-      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, data_checkout, hora_checkout, valor_diaria, desconto, status, motivo_hospedagem, acompanhantes)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?, ?, ?, ?)`,
-    [
-      cliente_cpf,
-      quarto_numero,
-      data_checkin,
-      hora_checkin,
-      null,
-      null,
-      valor_diaria,
-      desconto || 0,
-      motivo_hospedagem || null,
-      acompanhantes,
-    ],
-    (err, result) => {
-      if (err) {
-        return res.status(500).json({ message: 'Erro ao registrar check-in', error: err });
+    `SELECT id FROM Reservas WHERE quarto_numero = ? AND status = 'ativo'`,
+    [quarto_numero],
+    (err, results) => {
+      if (err) return res.status(500).json({ message: 'Erro ao verificar reservas', error: err });
+      if (results.length > 0) {
+        return res.status(400).json({ message: 'Já existe uma reserva ativa para este quarto.' });
       }
-      res.status(201).json({ message: 'Check-in registrado com sucesso', result });
+
+      // Verifica se já existe reserva ativa para o CPF (cliente)
+      db.query(
+        `SELECT id FROM Reservas WHERE cliente_cpf = ? AND status = 'ativo'`,
+        [cliente_cpf],
+        (err2, results2) => {
+          if (err2) return res.status(500).json({ message: 'Erro ao verificar reservas do cliente', error: err2 });
+          if (results2.length > 0 && !ignorar_reserva_ativa) {
+            // Cliente já tem reserva ativa, pede confirmação
+            return res.status(409).json({ 
+              message: 'Este cliente já possui uma reserva ativa. Deseja realizar outra mesmo assim?',
+              precisa_confirmar: true
+            });
+          }
+
+          // Faz o INSERT normalmente
+          db.query(
+            `INSERT INTO Reservas 
+              (cliente_cpf, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, acompanhantes, data_checkout_prevista, hora_checkout_prevista, status)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+            [
+              cliente_cpf,
+              quarto_numero,
+              data_checkin,
+              hora_checkin,
+              valor_diaria,
+              motivo_hospedagem || null,
+              acompanhantes || 0,
+              data_checkout_prevista || null,
+              hora_checkout_prevista || null
+            ],
+            (err, result) => {
+              if (err) return res.status(500).json({ message: 'Erro ao registrar check-in', error: err });
+              db.query(
+                `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
+                [quarto_numero]
+              );
+              res.status(201).json({ message: 'Check-in registrado com sucesso', result });
+            }
+          );
+        }
+      );
     }
   );
 });
@@ -256,15 +290,15 @@ router.post('/checkin', (req, res) => {
 // PUT /api/checkout/:id - Registrar check-out
 router.put('/checkout/:id', (req, res) => {
   const { id } = req.params;
-  const { data_checkout, hora_checkout, desconto } = req.body;
+  const { data_checkout, hora_checkout } = req.body;
 
   if (!data_checkout || !hora_checkout) {
     return res.status(400).json({ message: 'Preencha data e hora do check-out!' });
   }
 
   db.query(
-    `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, desconto = ?, status = 'finalizado' WHERE id = ?`,
-    [data_checkout, hora_checkout, desconto || 0, id],
+    `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, status = 'finalizado' WHERE id = ?`,
+    [data_checkout, hora_checkout, id],
     (err, result) => {
       if (err) {
         return res.status(500).json({ message: 'Erro ao registrar check-out', error: err });
@@ -284,22 +318,33 @@ router.put('/checkout/:id', (req, res) => {
   );
 });
 
-// GET /api/reservas?futuras=1
+// GET /api/reservas?futuras=1&quarto_numero=...
 router.get('/reservas', (req, res) => {
-  const { futuras } = req.query;
+  const { futuras, quarto_numero } = req.query;
   let sql = `
     SELECT c.nome, r.quarto_numero as quarto, 
            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
-           DATE_FORMAT(r.data_checkout, '%d/%m/%Y') as data_saida,
-           DATE_FORMAT(r.hora_checkout, '%H:%i') as hora_saida,
-           r.status
+           DATE_FORMAT(COALESCE(r.data_checkout, r.data_checkout_prevista), '%d/%m/%Y') as data_saida,
+           DATE_FORMAT(COALESCE(r.hora_checkout, r.hora_checkout_prevista), '%H:%i') as hora_saida,
+           r.status,
+           r.acompanhantes,
+           r.motivo_hospedagem,
+           r.id
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
   `;
   const params = [];
+  const where = [];
   if (futuras === '1') {
-    sql += ' WHERE r.data_checkin >= CURDATE()';
+    where.push('r.data_checkin >= CURDATE()');
+  }
+  if (quarto_numero) {
+    where.push('r.quarto_numero = ?');
+    params.push(quarto_numero);
+  }
+  if (where.length) {
+    sql += ' WHERE ' + where.join(' AND ');
   }
   sql += ' ORDER BY r.data_checkin DESC, r.hora_checkin DESC';
   db.query(sql, params, (err, results) => {
@@ -444,15 +489,6 @@ router.get('/reserva-ativa-quarto/:numero', (req, res) => {
   );
 });
 
-// Listar reservas de um quarto
-router.get('/reservas', (req, res) => {
-  const { quarto_numero } = req.query;
-  if (!quarto_numero) return res.status(400).json({ message: 'Informe o número do quarto' });
-  Reservas.findByQuarto(quarto_numero, (err, reservas) => {
-    if (err) return res.status(500).json({ message: 'Erro ao buscar reservas', error: err });
-    res.json(reservas);
-  });
-});
 
 // Excluir reserva
 router.delete('/reservas/:id', (req, res) => {
