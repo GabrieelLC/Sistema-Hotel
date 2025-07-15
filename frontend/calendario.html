@@ -146,14 +146,42 @@
         reservasQuarto.forEach((r) => {
           const checkin = new Date(r.data_checkin);
           const checkout = new Date(r.data_checkout_prevista || r.data_checkout);
+          // Adicione +1 dia para considerar o dia do checkout como ocupado
+          checkout.setHours(23, 59, 59, 999);
           for (let d = 1; d <= diasNoMes; d++) {
             const diaAtual = new Date(ano, mes - 1, d);
             if (diaAtual >= checkin && diaAtual <= checkout) {
-              ocupacao[d - 1] = r.cliente;
+              ocupacao[d - 1] = {
+                cliente: r.cliente,
+                data_checkin: r.data_checkin,
+                data_saida: r.data_checkout_prevista || r.data_checkout
+              };
             }
           }
         });
         return ocupacao;
+      }
+
+      function renderCelula(dia, reservasDoDia) {
+        if (reservasDoDia.length) {
+          // Se houver mais de uma reserva no mesmo dia, pode mostrar todos os nomes
+          return reservasDoDia
+            .map(
+              (reserva) => `
+          <div style="font-size:12px;">
+            <b>${reserva.cliente}</b><br />
+            <span style="font-size:11px;">
+              ${formatarData(reserva.data_checkin)} - ${formatarData(
+                reserva.data_saida
+              )}
+            </span>
+          </div>
+        `
+            )
+            .join("");
+        } else {
+          return dia; // Dia livre
+        }
       }
 
       function montarCalendario(quarto, ano, mes) {
@@ -180,7 +208,14 @@
           }">`;
           html += `<div>${dia}</div>`;
           if (ocupado) {
-            html += `<div class="calendar-tooltip">Ocupado por:<br>${ocupado}</div>`;
+            html += `
+      <div style="font-size:12px;">
+        <b>${ocupado.cliente}</b><br>
+        <span style="font-size:11px;">
+          ${formatarData(ocupado.data_checkin)} - ${formatarData(ocupado.data_saida)}
+        </span>
+      </div>
+    `;
           }
           html += "</td>";
           // Quebra de linha no sábado
@@ -212,6 +247,14 @@
         const quarto = select.value || quartos[0];
         const calendarioDiv = document.getElementById("calendario");
         calendarioDiv.innerHTML = montarCalendario(quarto, ano, mes);
+      }
+
+      function formatarData(dataStr) {
+        if (!dataStr) return '';
+        // Aceita tanto 'YYYY-MM-DD' quanto 'YYYY-MM-DDTHH:mm:ss.sssZ'
+        const partes = dataStr.split('T')[0].split('-');
+        const [ano, mes, dia] = partes;
+        return `${dia}/${mes}`;
       }
 
       document.addEventListener("DOMContentLoaded", async () => {

@@ -542,11 +542,14 @@ router.delete('/consumos/:id', (req, res) => {
 // Novo: Listar hóspedes ativos
 router.get('/hospedes-ativos', (req, res) => {
   const sql = `
-    SELECT c.cpf, c.nome, r.quarto_numero as quarto, q.tipo as tipo_quarto,
-           r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, r.motivo_hospedagem
+    SELECT c.cpf, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
+           r.hora_checkin as hora, c.telefone, c.email, 
+           COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
+           r.motivo_hospedagem
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
     JOIN Quartos q ON r.quarto_numero = q.numero
+    JOIN TiposQuarto tq ON q.tipo_id = tq.id
     WHERE r.status = 'ativo'
     ORDER BY r.data_checkin DESC
   `;
