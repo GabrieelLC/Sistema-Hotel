@@ -171,7 +171,7 @@
               <td>${item.telefone}</td>
               <td>${item.email}</td>
               <td>R$${item.valor_diaria}</td>
-              <td>${item.motivo_hospedagem || ''}</td>
+              <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
             </tr>
           `;
         });
@@ -199,7 +199,7 @@
               <td>${item.telefone}</td>
               <td>${item.email}</td>
               <td>R$${item.valor_diaria}</td>
-              <td>${item.motivo_hospedagem || ''}</td>
+              <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
             </tr>
           `;
         });
@@ -210,7 +210,7 @@
         tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
         const resp = await fetch("/api/hospedes-ativos");
         const dados = await resp.json();
-        if (dados.length === 0) {
+        if (!Array.isArray(dados) || dados.length === 0) {
           tbody.innerHTML = '<tr><td colspan="9">Nenhum hóspede ativo</td></tr>';
           return;
         }
@@ -226,7 +226,7 @@
               <td>${item.telefone}</td>
               <td>${item.email}</td>
               <td>R$${item.valor_diaria}</td>
-              <td>${item.motivo_hospedagem || ''}</td>
+              <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
             </tr>
           `;
         });

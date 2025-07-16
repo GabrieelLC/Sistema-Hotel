@@ -135,3 +135,30 @@ module.exports = {
   Reservas,
   Consumos,
 };
+
+async function carregarHospedesAtivos() {
+  const tbody = document.getElementById("ativos-tbody");
+  tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
+  const resp = await fetch("/api/hospedes-ativos");
+  const dados = await resp.json();
+  if (!Array.isArray(dados) || dados.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="9">Nenhum hóspede ativo</td></tr>';
+    return;
+  }
+  tbody.innerHTML = "";
+  dados.forEach((item) => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${item.cpf}</td>
+        <td>${item.nome}</td>
+        <td>${item.quarto}</td>
+        <td>${item.tipo_quarto}</td>
+        <td>${item.hora}</td>
+        <td>${item.telefone}</td>
+        <td>${item.email}</td>
+        <td>R$${item.valor_diaria}</td>
+        <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
+      </tr>
+    `;
+  });
+}

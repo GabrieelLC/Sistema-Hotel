@@ -543,18 +543,37 @@ router.delete('/consumos/:id', (req, res) => {
 router.get('/hospedes-ativos', (req, res) => {
   const sql = `
     SELECT c.cpf, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
-           r.hora_checkin as hora, c.telefone, c.email, 
-           COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
+           r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, 
            r.motivo_hospedagem
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
     JOIN Quartos q ON r.quarto_numero = q.numero
-    JOIN TiposQuarto tq ON q.tipo_id = tq.id
+    JOIN TiposQuarto tq ON q.tipo_id = tq.id 
     WHERE r.status = 'ativo'
     ORDER BY r.data_checkin DESC
   `;
   db.query(sql, (err, results) => {
-    if (err) return res.status(500).json({ message: 'Erro ao buscar hóspedes ativos', error: err });
+    if (err) {
+      console.error('Erro ao buscar hóspedes ativos:', err);
+      return res.status(500).json({ message: 'Erro ao buscar hóspedes ativos', error: err });
+    }
+    res.json(results);
+  });
+});
+
+router.get('/api/checkouts-hoje', (req, res) => {
+  const sql = `
+    SELECT c.cpf, c.nome, r.quarto_numero as quarto, q.tipo as tipo_quarto,
+           r.hora_checkout as hora, c.telefone, c.email, r.valor_diaria, 
+           r.motivo_hospedagem
+    FROM Reservas r
+    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Quartos q ON r.quarto_numero = q.numero
+    WHERE r.status = 'finalizado' AND r.data_checkout = CURDATE()
+    ORDER BY r.hora_checkout ASC
+  `;
+  db.query(sql, (err, results) => {
+    if (err) return res.status(500).json({ message: 'Erro ao buscar checkouts', error: err });
     res.json(results);
   });
 });
