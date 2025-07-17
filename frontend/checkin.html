@@ -235,18 +235,7 @@
                 placeholder="0"
               />
             </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="cpfs_acompanhantes"
-                >CPF dos acompanhantes (um por linha)</label
-              >
-              <textarea
-                class="checkoutscreeninput"
-                id="cpfs_acompanhantes"
-                name="cpfs_acompanhantes"
-                rows="3"
-                placeholder="Digite um CPF por linha"
-              ></textarea>
-            </div>
+            <div id="acompanhantes-container"></div>
             <div class="checkoutscreenfield_group">
               <label class="checkoutscreenlabel" for="datacheckin"
                 >Data Check-In:</label
@@ -437,7 +426,6 @@
           const endereco = document.getElementById("enderecocliente").value;
           const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
           const acompanhantes = document.getElementById("quantidade_acompanhantes").value;
-          const cpfs_acompanhantes = document.getElementById("cpfs_acompanhantes").value;
 
           if (
             !cliente_cpf ||
@@ -473,7 +461,6 @@
                 valor_diaria,
                 motivo_hospedagem,
                 acompanhantes, // <-- nome correto
-                cpfs_acompanhantes
               }),
             });
             const data = await resp.json();
@@ -497,7 +484,6 @@
                     valor_diaria,
                     motivo_hospedagem,
                     quantidade_acompanhantes,
-                    cpfs_acompanhantes,
                     ignorar_reserva_ativa: true
                   }),
                 });
@@ -518,7 +504,23 @@
           }
         });
 
-      // Após inserir a reserva (check-in)
+      document.getElementById("quantidade_acompanhantes").addEventListener("change", function () {
+        const quantidade = parseInt(this.value, 10);
+        const container = document.getElementById("acompanhantes-container");
+        container.innerHTML = ""; // Limpa os campos existentes
+
+        for (let i = 1; i <= quantidade; i++) {
+  const div = document.createElement("div");
+  div.className = "acompanhante-field-group";
+  div.innerHTML = `
+    <label>Nome do acompanhante ${i}:</label>
+    <input type="text" class="checkoutscreeninput nome-acompanhante" name="nome_acompanhante_${i}" required />
+  `;
+  container.appendChild(div);
+}
+
+      });
+      
       db.query(
         `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
         [quarto_numero]
