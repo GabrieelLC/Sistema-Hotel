@@ -403,42 +403,40 @@
           }
         });
 
-      // Envio do formulário de check-in
-      document
-        .getElementById("checkinForm")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const cliente_cpf = document.getElementById("cpfcliente").value;
-          const quarto_numero = document.getElementById("quarto").value;
-          const data_checkin = document.getElementById("datacheckin").value;
-          const hora_checkin = document.getElementById("horacheckin").value;
-          const data_checkout_prevista = document.getElementById(
-            "datacheckoutprrevista"
-          ).value;
-          const hora_checkout_prevista = document.getElementById(
-            "horacheckoutprevista"
-          ).value;
-          const valor_diaria = document.getElementById("valor_diaria").value;
-          const nome = document.getElementById("nomecliente").value;
-          const telefone = document.getElementById("telefonecliente").value;
-          const email = document.getElementById("emailcliente").value;
-          const cep = document.getElementById("cepcliente").value;
-          const endereco = document.getElementById("enderecocliente").value;
-          const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
-          const acompanhantes = document.getElementById("quantidade_acompanhantes").value;
+document
+  .getElementById("checkinForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+    const cliente_cpf = document.getElementById("cpfcliente").value;
+    const quarto_numero = document.getElementById("quarto").value;
+    const data_checkin = document.getElementById("datacheckin").value;
+    const hora_checkin = document.getElementById("horacheckin").value;
+    const data_checkout_prevista = document.getElementById("datacheckoutprrevista").value;
+    const hora_checkout_prevista = document.getElementById("horacheckoutprevista").value;
+    const valor_diaria = document.getElementById("valor_diaria").value;
+    const nome = document.getElementById("nomecliente").value;
+    const telefone = document.getElementById("telefonecliente").value;
+    const email = document.getElementById("emailcliente").value;
+    const cep = document.getElementById("cepcliente").value;
+    const endereco = document.getElementById("enderecocliente").value;
+    const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
+const acompanhantes = document.getElementById("quantidade_acompanhantes").value;
 
-          if (
-            !cliente_cpf ||
-            !quarto_numero ||
-            !data_checkin ||
-            !hora_checkin ||
-            !data_checkout_prevista ||
-            !hora_checkout_prevista ||
-            !valor_diaria
-          ) {
-            alert("Preencha todos os campos obrigatórios!");
-            return;
-          }
+    // NOVO: Coleta os nomes dos acompanhantes de todos os campos gerados dinamicamente
+    const nomes_acompanhantes = Array.from(document.querySelectorAll('.nome-acompanhante')).map(input => input.value);
+
+    if (
+      !cliente_cpf ||
+      !quarto_numero ||
+      !data_checkin ||
+      !hora_checkin ||
+      !data_checkout_prevista ||
+      !hora_checkout_prevista ||
+      !valor_diaria
+    ) {
+      alert("Preencha todos os campos obrigatórios!");
+      return;
+    }
 
           try {
             // Atualiza cliente antes do check-in
@@ -449,56 +447,58 @@
             });
 
             const resp = await fetch("/api/checkin", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                cliente_cpf,
-                quarto_numero,
-                data_checkin,
-                hora_checkin,
-                data_checkout_prevista,
-                hora_checkout_prevista,
-                valor_diaria,
-                motivo_hospedagem,
-                acompanhantes, // <-- nome correto
-              }),
-            });
-            const data = await resp.json();
-            if (resp.ok) {
-              alert("Check-in registrado com sucesso!");
-              this.reset();
-              carregarQuartosDisponiveis();
-            } else if (resp.status === 409 && data.precisa_confirmar) {
-              if (confirm(data.message)) {
-                // Envia novamente, agora com ignorar_reserva_ativa: true
-                const resp2 = await fetch("/api/checkin", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    cliente_cpf,
-                    quarto_numero,
-                    data_checkin,
-                    hora_checkin,
-                    data_checkout_prevista,
-                    hora_checkout_prevista,
-                    valor_diaria,
-                    motivo_hospedagem,
-                    quantidade_acompanhantes,
-                    ignorar_reserva_ativa: true
-                  }),
-                });
-                const data2 = await resp2.json();
-                if (resp2.ok) {
-                  alert("Check-in registrado com sucesso!");
-                  this.reset();
-                  carregarQuartosDisponiveis();
-                } else {
-                  alert(data2.message || "Erro ao registrar check-in");
-                }
-              }
-            } else {
-              alert(data.message || "Erro ao registrar check-in");
-            }
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        cliente_cpf,
+        quarto_numero,
+        data_checkin,
+        hora_checkin,
+        data_checkout_prevista,
+        hora_checkout_prevista,
+        valor_diaria,
+        motivo_hospedagem,
+        acompanhantes,
+        nomes_acompanhantes, // NOVO: Adiciona o array de nomes
+      }),
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      alert("Check-in registrado com sucesso!");
+      this.reset();
+      carregarQuartosDisponiveis();
+    } else if (resp.status === 409 && data.precisa_confirmar) {
+      if (confirm(data.message)) {
+        // Envia novamente, agora com ignorar_reserva_ativa: true
+        const resp2 = await fetch("/api/checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cliente_cpf,
+            quarto_numero,
+            data_checkin,
+            hora_checkin,
+            data_checkout_prevista,
+            hora_checkout_prevista,
+            valor_diaria,
+            motivo_hospedagem,
+            acompanhantes, // Use a variável 'acompanhantes' (quantidade)
+            nomes_acompanhantes, // NOVO: Adiciona o array de nomes
+            ignorar_reserva_ativa: true
+          }),
+        });
+        const data2 = await resp2.json();
+        if (resp2.ok) {
+          alert("Check-in registrado com sucesso!");
+          this.reset();
+          carregarQuartosDisponiveis();
+        } else {
+          alert(data2.message || "Erro ao registrar check-in");
+        }
+      }
+    } else {
+      alert(data.message || "Erro ao registrar check-in");
+    }
           } catch (error) {
             alert("Erro ao conectar ao servidor");
           }
@@ -520,11 +520,6 @@
 }
 
       });
-      
-      db.query(
-        `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
-        [quarto_numero]
-      );
     </script>
   </body>
 </html>

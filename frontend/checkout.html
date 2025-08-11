@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tela de Check-out Específica</title>
-    <link rel="stylesheet" href="seu_arquivo_css.css" />
+    <link rel="stylesheet" href="css/style.css" />
     <style>
       /*
  * ===============================================
@@ -301,7 +301,7 @@
         }
 
         async function buscarReservaAtivaPorCpf(cpf) {
-          const resp = await fetch(`/api/reservas?cpf=${cpf}&status=ativo`);
+          const resp = await fetch(`/api/reserva-ativa/${cpf}`);
           if (resp.ok) {
             const reservas = await resp.json();
             if (reservas.length > 0) {
@@ -384,10 +384,11 @@ async function preencherFormularioCheckout(reserva) {
 
   // Dias de hospedagem
   const dataCheckin = new Date(reserva.data_checkin);
-  const hoje = new Date();
-  let dias = Math.ceil((hoje - dataCheckin) / (1000 * 60 * 60 * 24));
-  if (dias < 1) dias = 1;
-  document.getElementById('qtd_dias').value = dias;
+  const dataCheckout = new Date(document.getElementById('data_checkout').value);
+  const diffTime = Math.abs(dataCheckout - dataCheckin);
+  let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) diffDays = 1; // Garante no mínimo 1 dia
+  document.getElementById('qtd_dias').value = diffDays;
 
   // Consumos
   const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
@@ -410,14 +411,24 @@ async function preencherFormularioCheckout(reserva) {
   } else {
     tbody.innerHTML = '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
   }
+  
+  // Função para calcular o total dinamicamente
+  function calcularTotal() {
+    const dias = Number(document.getElementById('qtd_dias').value) || 1;
+    const valorDiaria = Number(document.getElementById('valor_diaria').value) || 0;
+    const total = (valorDiaria * dias) + totalConsumos;
+    document.getElementById('total').value = total.toFixed(2);
+  }
 
-  // Total
-  const valorDiaria = Number(reserva.valor_diaria) || 0;
-  const total = (valorDiaria * dias) + totalConsumos;
-  dias = Number(document.getElementById('qtd_dias').value) || 1;
-  document.getElementById('total').value = total.toFixed(2);
+  // Adiciona eventos para recalcular o total quando a qtd de dias ou a diária for alterada
+  document.getElementById('qtd_dias').addEventListener('input', calcularTotal);
+  document.getElementById('valor_diaria').addEventListener('input', calcularTotal);
+
+  // Chama a função para o primeiro cálculo
+  calcularTotal();
 }
 
+  calcularTotal(reserva.valor_diaria, totalConsumos);
 // Após finalizar a reserva (check-out)
 db.query(
   `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,

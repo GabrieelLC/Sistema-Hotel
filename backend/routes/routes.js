@@ -69,12 +69,10 @@ router.post("/clientes", (req, res) => {
     ],
     (err, result) => {
       if (err)
-        return res
-          .status(500)
-          .json({
-            message: "Erro ao cadastrar cliente",
-            error: err.sqlMessage || err.message,
-          });
+        return res.status(500).json({
+          message: "Erro ao cadastrar cliente",
+          error: err.sqlMessage || err.message,
+        });
       res
         .status(201)
         .json({ message: "Cliente cadastrado com sucesso", result });
@@ -221,12 +219,10 @@ router.delete("/quartos/:numero", (req, res) => {
     if (err) {
       // Erro de integridade referencial (MySQL/MariaDB)
       if (err.code === "ER_ROW_IS_REFERENCED_2" || err.errno === 1451) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Não é possível excluir: existem reservas ou consumos ligados a este quarto.",
-          });
+        return res.status(400).json({
+          message:
+            "Não é possível excluir: existem reservas ou consumos ligados a este quarto.",
+        });
       }
       return res
         .status(500)
@@ -315,8 +311,7 @@ router.post("/checkin", (req, res) => {
     valor_diaria,
     motivo_hospedagem,
     acompanhantes,
-    cpfs_acompanhantes,
-    nomes_acompanhantes,
+    nomes_acompanhantes, // Alterado para receber apenas o array de nomes
     data_checkout_prevista,
     hora_checkout_prevista,
     ignorar_reserva_ativa,
@@ -355,12 +350,10 @@ router.post("/checkin", (req, res) => {
         [cliente_cpf],
         (err2, results2) => {
           if (err2)
-            return res
-              .status(500)
-              .json({
-                message: "Erro ao verificar reservas do cliente",
-                error: err2,
-              });
+            return res.status(500).json({
+              message: "Erro ao verificar reservas do cliente",
+              error: err2,
+            });
           if (results2.length > 0 && !ignorar_reserva_ativa) {
             // Cliente já tem reserva ativa, pede confirmação
             return res.status(409).json({
@@ -373,8 +366,8 @@ router.post("/checkin", (req, res) => {
           // Faz o INSERT normalmente
           db.query(
             `INSERT INTO Reservas 
-      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, acompanhantes, data_checkout_prevista, hora_checkout_prevista, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+     (cliente_cpf, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
             [
               cliente_cpf,
               quarto_numero,
@@ -382,7 +375,6 @@ router.post("/checkin", (req, res) => {
               hora_checkin,
               valor_diaria,
               motivo_hospedagem || null,
-              acompanhantes || 0,
               data_checkout_prevista || null,
               hora_checkout_prevista || null,
             ],
@@ -394,29 +386,43 @@ router.post("/checkin", (req, res) => {
 
               const reservaId = result.insertId;
 
-              // Insere os acompanhantes na tabela Acompanhantes
-              const acompanhantesData = cpfs_acompanhantes.map((cpf, index) => [
-                reservaId,
-                cpf,
-                nomes_acompanhantes[index],
-              ]);
+              // Atualiza o status do quarto
               db.query(
-                `INSERT INTO Acompanhantes (reserva_id, cpf, nome) VALUES ?`,
-                [acompanhantesData],
+                `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
+                [quarto_numero],
                 (err2) => {
                   if (err2)
-                    return res
-                      .status(500)
-                      .json({
-                        message: "Erro ao registrar acompanhantes",
-                        error: err2,
-                      });
-                  res
-                    .status(201)
-                    .json({
+                    return res.status(500).json({
+                      message: "Erro ao atualizar status do quarto",
+                      error: err2,
+                    });
+
+                  // Insere os acompanhantes na nova tabela Acompanhantes
+                  if (nomes_acompanhantes && nomes_acompanhantes.length > 0) {
+                    const acompanhantesData = nomes_acompanhantes.map(
+                      (nome) => [reservaId, nome]
+                    );
+                    db.query(
+                      `INSERT INTO Acompanhantes (reserva_id, nome) VALUES ?`,
+                      [acompanhantesData],
+                      (err3) => {
+                        if (err3)
+                          return res.status(500).json({
+                            message: "Erro ao registrar acompanhantes",
+                            error: err3,
+                          });
+                        res.status(201).json({
+                          message: "Check-in registrado com sucesso",
+                          result,
+                        });
+                      }
+                    );
+                  } else {
+                    res.status(201).json({
                       message: "Check-in registrado com sucesso",
                       result,
                     });
+                  }
                 }
               );
             }
@@ -453,12 +459,10 @@ router.put("/checkout/:id", (req, res) => {
         [id],
         (err2) => {
           if (err2) {
-            return res
-              .status(500)
-              .json({
-                message: "Erro ao atualizar status do quarto",
-                error: err2,
-              });
+            return res.status(500).json({
+              message: "Erro ao atualizar status do quarto",
+              error: err2,
+            });
           }
           res
             .status(200)
@@ -473,42 +477,39 @@ router.put("/checkout/:id", (req, res) => {
 router.get("/reservas", (req, res) => {
   const { futuras, quarto_numero } = req.query;
   let sql = `
-    SELECT c.nome, r.quarto_numero as quarto, 
+    SELECT c.nome, 
+           r.quarto_numero as quarto, 
            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
-           DATE_FORMAT(
-             IFNULL(r.data_checkout, r.data_checkout_prevista), '%d/%m/%Y'
-           ) as data_saida,
-           DATE_FORMAT(
-             IFNULL(r.hora_checkout, r.hora_checkout_prevista), '%H:%i'
-           ) as hora_saida,
+           DATE_FORMAT(IFNULL(r.data_checkout, r.data_checkout_prevista), '%d/%m/%Y') as data_saida,
+           DATE_FORMAT(IFNULL(r.hora_checkout, r.hora_checkout_prevista), '%H:%i') as hora_saida,
            r.status,
-           r.acompanhantes,
+           COUNT(a.id) AS num_acompanhantes,
+           COALESCE(GROUP_CONCAT(a.nome SEPARATOR ', '), '') AS nomes_acompanhantes,
            r.motivo_hospedagem,
            r.id
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
+    LEFT JOIN Acompanhantes a ON r.id = a.reserva_id
   `;
-  const params = [];
-  const where = [];
-  if (futuras === "1") {
-    where.push(
-      "(r.status = 'ativo' AND IFNULL(r.data_checkout, r.data_checkout_prevista) >= CURDATE())"
-    );
+  let params = [];
+  
+  if (futuras) {
+    sql += ` WHERE r.data_checkout_prevista >= CURDATE() AND r.status = 'ativo'`;
   }
+
   if (quarto_numero) {
-    where.push("r.quarto_numero = ?");
+    sql += (futuras ? ' AND ' : ' WHERE ') + 'r.quarto_numero = ?';
     params.push(quarto_numero);
   }
-  if (where.length) {
-    sql += " WHERE " + where.join(" AND ");
-  }
-  sql += " ORDER BY r.data_checkin DESC, r.hora_checkin DESC";
+  
+  sql += ' GROUP BY r.id ORDER BY r.data_checkin DESC';
+
   db.query(sql, params, (err, results) => {
-    if (err)
-      return res
-        .status(500)
-        .json({ message: "Erro ao buscar reservas", error: err });
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "Erro ao buscar reservas", error: err });
+    }
     res.json(results);
   });
 });

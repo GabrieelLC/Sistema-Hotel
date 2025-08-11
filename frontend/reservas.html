@@ -74,21 +74,21 @@
           <button onclick="carregarReservas(false)">Todas as reservas</button>
           <button onclick="carregarReservas(true)">Reservas futuras</button>
           <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>Quarto</th>
-                <th>Data de Entrada</th>
-                <th>Hora</th>
-                <th>Data de Saida</th>
-                <th>Hora</th>
-                <th>Status</th>
-                <th>Acompanhantes</th>
-                <th>Motivo</th> <!-- NOVO -->
-              </tr>
-            </thead>
-            <tbody id="checkin-tbody"></tbody>
-          </table>
+  <thead>
+    <tr>
+      <th>Nome</th>
+      <th>Quarto</th>
+      <th>Data de Entrada</th>
+      <th>Hora</th>
+      <th>Data de Saida</th>
+      <th>Hora</th>
+      <th>Status</th>
+      <th>Acompanhantes</th>
+      <th>Motivo</th>
+    </tr>
+  </thead>
+  <tbody id="checkin-tbody"></tbody>
+</table>
       </div>
     </div>
     <script>
@@ -135,13 +135,22 @@
           <td>${r.data_saida || ''}</td>
           <td>${r.hora_saida || ''}</td>
           <td>${r.status || ''}</td>
-          <td>${r.acompanhantes || 0}</td>
-          <td>${r.motivo_hospedagem || ''}</td> <!-- NOVO -->
+          <td>
+            ${r.num_acompanhantes}
+            ${r.num_acompanhantes > 0 && r.nomes_acompanhantes ? `<span style="cursor: pointer; color: blue; text-decoration: underline;" onclick="mostrarAcompanhantes(\`${r.nomes_acompanhantes}\`)">(Ver)</span>` : ''}
+          </td>
+          <td>${r.motivo_hospedagem || ''}</td>
         </tr>
       `;
     });
   } catch (error) {
     tbody.innerHTML = '<tr><td colspan="8">Erro ao carregar reservas</td></tr>';
+  }
+}
+
+function mostrarAcompanhantes(nomes) {
+  if (nomes) {
+    alert(`Acompanhantes:\n${nomes.replace(/, /g, '\n')}`);
   }
 }
 
