@@ -209,29 +209,37 @@
 
       // Função para mostrar as informações do quarto selecionado
 // Função para mostrar as informações do quarto selecionado
-      function selecionarTab(idx, quartos) {
-        document.querySelectorAll(".tab").forEach((tab, i) => {
-          tab.classList.toggle("active", i === idx);
-        });
-        const quarto = quartos[idx];
-        const contentDiv = document.getElementById("tabContent");
-        contentDiv.innerHTML = `
+function selecionarTab(idx, quartos) {
+  document.querySelectorAll(".tab").forEach((tab, i) => {
+    tab.classList.toggle("active", i === idx);
+  });
+  const quarto = quartos[idx];
+  const contentDiv = document.getElementById("tabContent");
+
+  // --- NOVA LÓGICA AQUI ---
+  // Cria uma variável para ações extras. Se o quarto estiver interditado,
+  // adiciona o botão "Liberar" nela.
+  let acoesExtras = '';
+  if (quarto.status === 'interditado') {
+    acoesExtras = `<button id="btn-liberar-quarto" style="background-color: #28a745; color: white; margin-left: 10px;">Liberar Quarto</button>`;
+  }
+  // --- FIM DA NOVA LÓGICA ---
+
+  contentDiv.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
       <div>
         <h3>Quarto ${quarto.numero}</h3>
         <p><strong>Descrição:</strong> <span id="desc-q">${quarto.descricao || "---"}</span></p>
         <p><strong>Tipo:</strong> <span id="tipo-q">${quarto.tipo || "---"}</span></p>
         <p><strong>Valor da diária:</strong> R$ <span id="valor-q">${Number(quarto.valor_diaria || 0).toFixed(2)}</span></p>
-        <p><strong>Status:</strong> <span id="status-q">${quarto.status || "---"}</span></p>
+        <p><strong>Status:</strong> <span id="status-q" style="font-weight: bold; color: ${quarto.status === 'interditado' ? 'red' : 'inherit'};">${quarto.status || "---"}</span></p>
         <button onclick="abrirModalConsumo(${quarto.numero})">Adicionar Consumo</button>
       </div>
       <div>
         <button id="btn-editar-quarto-info">Editar</button>
-        <span id="acoes-quarto-info" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
+        ${acoesExtras} <span id="acoes-quarto-info" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
           <button id="btn-salvar-quarto" style="margin-bottom:4px;">Salvar</button>
-          
           <button id="btn-cancelar-edicao" style="margin-bottom:4px; background-color: #aaa;">Cancelar</button>
-
           <button id="btn-interditar-quarto-info" style="margin-bottom:4px;">Interditar</button>
           <button id="btn-excluir-quarto-info">Excluir</button>
         </span>
@@ -242,6 +250,7 @@
 
   // Evento do botão Editar
   document.getElementById("btn-editar-quarto-info").onclick = async function() {
+    // ... (o restante do código do botão editar continua o mesmo)
     const tipos = await buscarTiposQuarto();
     const tipoOptions = tipos.map(t =>
       `<option value="${t.id}"${t.tipo === quarto.tipo ? " selected" : ""}>${t.tipo}</option>`
@@ -253,13 +262,50 @@
       <option value="disponivel"${quarto.status === "disponivel" ? " selected" : ""}>disponível</option>
       <option value="ocupado"${quarto.status === "ocupado" ? " selected" : ""}>ocupado</option>
       <option value="interditado"${quarto.status === "interditado" ? " selected" : ""}>interditado</option>
+      <option value="manutencao"${quarto.status === "manutencao" ? " selected" : ""}>manutencao</option>
     </select>`;
     document.getElementById("acoes-quarto-info").style.display = "flex";
     this.style.display = "none";
   };
 
-  // Evento do botão Salvar
-  setTimeout(() => { // Garante que o DOM já tem os elementos
+  // Eventos dos botões Salvar, Cancelar, Interditar, Excluir
+  setTimeout(() => {
+    // ... (o código dos outros botões continua o mesmo)
+
+    // --- NOVA LÓGICA AQUI ---
+    // Adiciona o evento de clique para o novo botão "Liberar"
+    const btnLiberar = document.getElementById("btn-liberar-quarto");
+    if (btnLiberar) {
+      btnLiberar.onclick = async function() {
+        if (!confirm('Tem certeza que deseja liberar este quarto? Ele voltará ao status "disponível".')) return;
+        
+        // Mantém os dados atuais do quarto, apenas muda o status
+        const dadosParaEnviar = {
+          tipo_id: quarto.tipo_id,
+          descricao: quarto.descricao,
+          valor_diaria: quarto.valor_diaria,
+          status: 'disponivel' // Ação principal é definir o status como disponível
+        };
+
+        const resp = await fetch(`/api/quartos/${quarto.numero}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(dadosParaEnviar)
+        });
+
+        if (resp.ok) {
+          alert('Quarto liberado com sucesso!');
+          // Atualiza toda a visualização
+          const quartosAtualizados = await buscarQuartos();
+          renderTabs(quartosAtualizados);
+        } else {
+          const erro = await resp.json();
+          alert(erro.message || 'Erro ao liberar o quarto.');
+        }
+      };
+    }
+    // --- FIM DA NOVA LÓGICA ---
+
     const btnSalvar = document.getElementById("btn-salvar-quarto");
     if (btnSalvar) {
       btnSalvar.onclick = async function() {
@@ -304,50 +350,45 @@
       };
     }
 
-    // LÓGICA DO BOTÃO CANCELAR ADICIONADA AQUI
     const btnCancelar = document.getElementById("btn-cancelar-edicao");
     if (btnCancelar) {
       btnCancelar.onclick = function() {
-        // Apenas redesenha a aba atual, restaurando o estado original.
         selecionarTab(idx, quartos);
       };
     }
 
-    // Evento Interditar
     const btnInterditar = document.getElementById("btn-interditar-quarto-info");
     if (btnInterditar) {
       btnInterditar.onclick = async function() {
-        const numero = quarto.numero;
-        const tipo_id = Number(document.getElementById("edit-tipo-q")?.value || quarto.tipo_id);
-        const descricao = document.getElementById("edit-desc-q")?.value || quarto.descricao;
-        const valor_diaria = document.getElementById("edit-valor-q")?.value || quarto.valor_diaria;
+        const dadosParaEnviar = {
+          tipo_id: Number(document.getElementById("edit-tipo-q").value),
+          descricao: document.getElementById("edit-desc-q").value,
+          valor_diaria: Number(document.getElementById("edit-valor-q").value),
+          status: 'interditado'
+        };
 
-        if (!tipo_id || !descricao || !valor_diaria) {
-          alert("Preencha todos os campos antes de interditar.");
+        if (!dadosParaEnviar.tipo_id || !dadosParaEnviar.descricao || !dadosParaEnviar.valor_diaria) {
+          alert("Os campos de tipo, descrição e valor devem estar preenchidos para interditar.");
           return;
         }
 
-        const resp = await fetch(`/api/quartos/${numero}`, {
+        const numeroDoQuarto = quarto.numero;
+        const resp = await fetch(`/api/quartos/${numeroDoQuarto}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            tipo_id,
-            descricao,
-            valor_diaria,
-            status: 'interditado'
-          })
+          body: JSON.stringify(dadosParaEnviar)
         });
+
         if (resp.ok) {
-          alert('Quarto interditado!');
+          alert('Quarto interditado com sucesso!');
           const quartosAtualizados = await buscarQuartos();
           renderTabs(quartosAtualizados);
         } else {
           const erro = await resp.json();
-          alert(erro.message || 'Erro ao interditar quarto');
+          alert(erro.message || 'Erro ao interditar o quarto.');
         }
       };
     }
-    // Evento Excluir
     const btnExcluir = document.getElementById("btn-excluir-quarto-info");
     if (btnExcluir) {
       btnExcluir.onclick = async function() {

@@ -134,11 +134,11 @@ router.delete("/clientes/:cpf", (req, res) => {
 // Listar todos os quartos
 router.get("/quartos", (req, res) => {
   db.query(
-    `SELECT q.numero, tq.tipo, q.descricao, 
+    `SELECT q.numero, tq.tipo, q.tipo_id, q.descricao, 
             COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria, 
             q.status
      FROM Quartos q
-     JOIN TiposQuarto tq ON q.tipo_id = tq.id`,
+     JOIN TiposQuarto tq ON q.tipo_id = tq.id`, // Adicionado q.tipo_id aqui
     (err, results) => {
       if (err)
         return res
