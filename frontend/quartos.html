@@ -207,7 +207,6 @@
         selecionarTab(0, quartos);
       }
 
-      // Função para mostrar as informações do quarto selecionado
 // Função para mostrar as informações do quarto selecionado
 function selecionarTab(idx, quartos) {
   document.querySelectorAll(".tab").forEach((tab, i) => {
@@ -216,14 +215,10 @@ function selecionarTab(idx, quartos) {
   const quarto = quartos[idx];
   const contentDiv = document.getElementById("tabContent");
 
-  // --- NOVA LÓGICA AQUI ---
-  // Cria uma variável para ações extras. Se o quarto estiver interditado,
-  // adiciona o botão "Liberar" nela.
   let acoesExtras = '';
   if (quarto.status === 'interditado') {
     acoesExtras = `<button id="btn-liberar-quarto" style="background-color: #28a745; color: white; margin-left: 10px;">Liberar Quarto</button>`;
   }
-  // --- FIM DA NOVA LÓGICA ---
 
   contentDiv.innerHTML = `
     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
@@ -237,7 +232,8 @@ function selecionarTab(idx, quartos) {
       </div>
       <div>
         <button id="btn-editar-quarto-info">Editar</button>
-        ${acoesExtras} <span id="acoes-quarto-info" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
+        ${acoesExtras}
+        <span id="acoes-quarto-info" style="display:none; flex-direction: column; gap: 8px; margin-top: 12px;">
           <button id="btn-salvar-quarto" style="margin-bottom:4px;">Salvar</button>
           <button id="btn-cancelar-edicao" style="margin-bottom:4px; background-color: #aaa;">Cancelar</button>
           <button id="btn-interditar-quarto-info" style="margin-bottom:4px;">Interditar</button>
@@ -248,9 +244,7 @@ function selecionarTab(idx, quartos) {
     <div id="dependencias-quarto" style="margin-top:24px; background:#f6f6f6; padding:12px; border-radius:8px;"></div>
   `;
 
-  // Evento do botão Editar
   document.getElementById("btn-editar-quarto-info").onclick = async function() {
-    // ... (o restante do código do botão editar continua o mesmo)
     const tipos = await buscarTiposQuarto();
     const tipoOptions = tipos.map(t =>
       `<option value="${t.id}"${t.tipo === quarto.tipo ? " selected" : ""}>${t.tipo}</option>`
@@ -268,23 +262,18 @@ function selecionarTab(idx, quartos) {
     this.style.display = "none";
   };
 
-  // Eventos dos botões Salvar, Cancelar, Interditar, Excluir
   setTimeout(() => {
-    // ... (o código dos outros botões continua o mesmo)
-
-    // --- NOVA LÓGICA AQUI ---
     // Adiciona o evento de clique para o novo botão "Liberar"
     const btnLiberar = document.getElementById("btn-liberar-quarto");
     if (btnLiberar) {
       btnLiberar.onclick = async function() {
         if (!confirm('Tem certeza que deseja liberar este quarto? Ele voltará ao status "disponível".')) return;
         
-        // Mantém os dados atuais do quarto, apenas muda o status
         const dadosParaEnviar = {
           tipo_id: quarto.tipo_id,
           descricao: quarto.descricao,
           valor_diaria: quarto.valor_diaria,
-          status: 'disponivel' // Ação principal é definir o status como disponível
+          status: 'disponivel'
         };
 
         const resp = await fetch(`/api/quartos/${quarto.numero}`, {
@@ -295,16 +284,24 @@ function selecionarTab(idx, quartos) {
 
         if (resp.ok) {
           alert('Quarto liberado com sucesso!');
-          // Atualiza toda a visualização
           const quartosAtualizados = await buscarQuartos();
           renderTabs(quartosAtualizados);
+          // --- MELHORIA ADICIONADA AQUI ---
+          const tbody = document.getElementById("quartos-tbody");
+          tbody.innerHTML = "";
+          quartosAtualizados.forEach(q => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${q.numero}</td><td>${q.tipo}</td><td>${q.descricao || ''}</td>
+                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td><td>${q.status}</td><td></td>
+              </tr>`;
+          });
         } else {
           const erro = await resp.json();
           alert(erro.message || 'Erro ao liberar o quarto.');
         }
       };
     }
-    // --- FIM DA NOVA LÓGICA ---
 
     const btnSalvar = document.getElementById("btn-salvar-quarto");
     if (btnSalvar) {
@@ -334,14 +331,9 @@ function selecionarTab(idx, quartos) {
           quartosAtualizados.forEach(q => {
             tbody.innerHTML += `
               <tr>
-                <td>${q.numero}</td>
-                <td>${q.tipo}</td>
-                <td>${q.descricao || ''}</td>
-                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td>
-                <td>${q.status}</td>
-                <td></td>
-              </tr>
-            `;
+                <td>${q.numero}</td><td>${q.tipo}</td><td>${q.descricao || ''}</td>
+                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td><td>${q.status}</td><td></td>
+              </tr>`;
           });
         } else {
           const erro = await resp.json();
@@ -383,6 +375,16 @@ function selecionarTab(idx, quartos) {
           alert('Quarto interditado com sucesso!');
           const quartosAtualizados = await buscarQuartos();
           renderTabs(quartosAtualizados);
+          // --- MELHORIA ADICIONADA AQUI ---
+          const tbody = document.getElementById("quartos-tbody");
+          tbody.innerHTML = "";
+          quartosAtualizados.forEach(q => {
+            tbody.innerHTML += `
+              <tr>
+                <td>${q.numero}</td><td>${q.tipo}</td><td>${q.descricao || ''}</td>
+                <td>R$ ${Number(q.valor_diaria).toFixed(2)}</td><td>${q.status}</td><td></td>
+              </tr>`;
+          });
         } else {
           const erro = await resp.json();
           alert(erro.message || 'Erro ao interditar o quarto.');
