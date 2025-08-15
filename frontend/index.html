@@ -1,242 +1,479 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-  <head>
+
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sistema Hotel</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <title>Sistema Hotel - Dashboard Moderno</title>
+    <!-- Importando a fonte Inter do Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
-      .cadastro-dropdown {
-        position: relative;
-        display: inline-block;
-      }
-      .cadastro-dropdown-content {
-        display: none;
-        position: absolute;
-        background: #fff;
-        min-width: 160px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
-        border-radius: 8px;
-        z-index: 10;
-        right: 0;
-        top: 38px;
-      }
-      .cadastro-dropdown-content a {
-        color: #222;
-        padding: 12px 18px;
-        text-decoration: none;
-        display: block;
-        border-bottom: 1px solid #eee;
-        font-size: 1rem;
-        transition: background 0.2s;
-      }
-      .cadastro-dropdown-content a:last-child {
-        border-bottom: none;
-      }
-      .cadastro-dropdown-content a:hover {
-        background: #f2f2f2;
-      }
-      .cadastro-dropdown.show .cadastro-dropdown-content {
-        display: block;
-      }
-      .tab {
-        cursor: pointer;
-      }
+        /* Reset básico e configurações globais */
+        :root {
+            --background-color: #f4f7fa;
+            --sidebar-bg: #ffffff;
+            --card-bg: #ffffff;
+            --text-color: #4a5568;
+            --heading-color: #1a202c;
+            --primary-color: #4a90e2;
+            --border-color: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            display: flex;
+        }
+
+        /* Estrutura principal com Flexbox */
+        .container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* Barra Lateral (Sidebar) */
+        .sidebar {
+            width: 240px;
+            background-color: var(--sidebar-bg);
+            padding: 2rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            transition: width 0.3s;
+        }
+
+        .sidebar-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--heading-color);
+            text-align: center;
+        }
+
+        .date-time {
+            text-align: center;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .nav-menu {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .menu-btn {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            color: var(--text-color);
+            font-weight: 500;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .menu-btn:hover, .menu-btn.active {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        /* Conteúdo Principal */
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--heading-color);
+        }
+
+        /* Estilo do Dropdown de Cadastro */
+        .cadastro-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .cadastro-btn {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        .cadastro-btn:hover {
+            background-color: #357abd;
+        }
+
+        .cadastro-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--card-bg);
+            min-width: 180px;
+            box-shadow: var(--shadow);
+            border-radius: 8px;
+            z-index: 10;
+            right: 0;
+            top: calc(100% + 10px);
+            overflow: hidden;
+        }
+
+        .cadastro-dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 18px;
+            text-decoration: none;
+            display: block;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+
+        .cadastro-dropdown-content a:hover {
+            background-color: #f8f9fa;
+        }
+
+        .cadastro-dropdown.show .cadastro-dropdown-content {
+            display: block;
+        }
+
+        /* Cards para as seções */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--heading-color);
+            margin-bottom: 1.5rem;
+        }
+
+        /* Estilo das Tabelas */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        thead th {
+            font-weight: 600;
+            color: var(--heading-color);
+            background-color: #f8f9fa;
+        }
+        
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* Responsividade para telas menores */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .main-content {
+                padding: 1.5rem;
+            }
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div class="main-flex">
-      <div class="sidebar">
-        <div class="calendar">
-          <div class="calendar-icon">📅</div>
-          <div class="date-time" id="dateTime"></div>
-        </div>
-        <a href="checkin.html" class="menu-btn">Check-in</a>
-        <a href="checkout.html" class="menu-btn">Check-out</a>
-        <a href="clientes.html" class="menu-btn">Clientes</a>
-        <a href="quartos.html" class="menu-btn">Quartos</a>
-        <a href="reservas.html" class="menu-btn">Reservas</a>
-        <a href="produtos.html" class="menu-btn">Produtos</a>
-        <a href="calendario.html" class="menu-btn">Calendário de Ocupação</a>
-      </div>
-      <div class="main-content">
-        <div class="tab-header">
-          <div class="cadastro-dropdown" id="cadastroDropdown">
-            <div class="tab" id="cadastroTab">+ Cadastro</div>
-            <div class="cadastro-dropdown-content" id="cadastroDropdownContent">
-              <a href="cadastro_cliente.html">Cliente</a>
-              <a href="cadastro_quarto.html">Quarto</a>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Barra Lateral -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">HotelSys</div>
+                <div class="date-time" id="dateTime"></div>
             </div>
-          </div>
-        </div>
-        <div>
-          <div class="section-title">CHEGADAS DO DIA (CHECK IN)</div>
-          <table>
-            <thead>
-              <tr>
-                <th>CPF</th>
-                <th>Nome</th>
-                <th>Quarto</th>
-                <th>Tipo de Quarto</th>
-                <th>Hora</th>
-                <th>Telefone</th>
-                <th>Email</th>
-                <th>Valor da diária</th>
-                <th>Motivo</th>
-              </tr>
-            </thead>
-            <tbody id="checkin-tbody"></tbody>
-          </table>
-          <div class="section-title">SAÍDAS DO DIA (CHECK OUT)</div>
-          <table>
-            <thead>
-              <tr>
-                <th>CPF</th>
-                <th>Nome</th>
-                <th>Quarto</th>
-                <th>Tipo de Quarto</th>
-                <th>Hora</th>
-                <th>Telefone</th>
-                <th>Email</th>
-                <th>Valor da diária</th>
-                <th>Motivo</th>
-              </tr>
-            </thead>
-            <tbody id="checkout-tbody"></tbody>
-          </table>
-          <div class="section-title">HÓSPEDES ATIVOS</div>
-          <table>
-            <thead>
-              <tr>
-                <th>CPF</th>
-                <th>Nome</th>
-                <th>Quarto</th>
-                <th>Tipo de Quarto</th>
-                <th>Hora</th>
-                <th>Telefone</th>
-                <th>Email</th>
-                <th>Valor da diária</th>
-                <th>Motivo</th>
-              </tr>
-            </thead>
-            <tbody id="ativos-tbody"></tbody>
-          </table>
-        </div>
-      </div>
+            <nav class="nav-menu">
+                <a href="checkin.html" class="menu-btn">Check-in</a>
+                <a href="checkout.html" class="menu-btn">Check-out</a>
+                <a href="clientes.html" class="menu-btn">Clientes</a>
+                <a href="quartos.html" class="menu-btn">Quartos</a>
+                <a href="reservas.html" class="menu-btn">Reservas</a>
+                <a href="produtos.html" class="menu-btn">Produtos</a>
+                <a href="calendario.html" class="menu-btn">Calendário</a>
+            </nav>
+        </aside>
+
+        <!-- Conteúdo Principal -->
+        <main class="main-content">
+            <header class="header">
+                <h1>Dashboard</h1>
+                <div class="cadastro-dropdown" id="cadastroDropdown">
+                    <button class="cadastro-btn" id="cadastroTab">+ Novo Cadastro</button>
+                    <div class="cadastro-dropdown-content" id="cadastroDropdownContent">
+                        <a href="cadastro_cliente.html">Cliente</a>
+                        <a href="cadastro_quarto.html">Quarto</a>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Seção de Check-ins -->
+            <section class="card">
+                <h2 class="card-title">Chegadas do Dia (Check-in)</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>Quarto</th>
+                                <th>Tipo</th>
+                                <th>Hora</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Valor</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checkin-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Seção de Check-outs -->
+            <section class="card">
+                <h2 class="card-title">Saídas do Dia (Check-out)</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>Quarto</th>
+                                <th>Tipo</th>
+                                <th>Hora</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Valor</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="checkout-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Seção de Hóspedes Ativos -->
+            <section class="card">
+                <h2 class="card-title">Hóspedes Ativos</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>Quarto</th>
+                                <th>Tipo</th>
+                                <th>Hora</th>
+                                <th>Telefone</th>
+                                <th>Email</th>
+                                <th>Valor</th>
+                                <th>Motivo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ativos-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
     </div>
+
     <script>
-      // Atualiza data e hora em tempo real
-      function updateDateTime() {
-        const now = new Date();
-        const date = now.toLocaleDateString("pt-BR");
-        const time = now.toLocaleTimeString("pt-BR", {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        document.getElementById("dateTime").textContent = `${date}\n${time}`;
-      }
-      updateDateTime();
-      setInterval(updateDateTime, 1000);
-
-      // Dropdown de cadastro
-      const cadastroTab = document.getElementById("cadastroTab");
-      const cadastroDropdown = document.getElementById("cadastroDropdown");
-      document.addEventListener("click", function (e) {
-        if (cadastroDropdown.contains(e.target)) {
-          cadastroDropdown.classList.toggle("show");
-        } else {
-          cadastroDropdown.classList.remove("show");
+        // Atualiza data e hora em tempo real
+        function updateDateTime() {
+            const now = new Date();
+            const date = now.toLocaleDateString("pt-BR", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const time = now.toLocaleTimeString("pt-BR", {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+            document.getElementById("dateTime").innerHTML = `${date}<br>${time}`;
         }
-      });
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
 
-      async function carregarCheckins() {
-        const tbody = document.getElementById("checkin-tbody");
-        tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
-        const resp = await fetch("/api/checkins-hoje");
-        const dados = await resp.json();
-        if (dados.length === 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="9">Nenhum check-in hoje</td></tr>';
-          return;
-        }
-        tbody.innerHTML = "";
-        dados.forEach((item) => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${item.cpf}</td>
-              <td>${item.nome}</td>
-              <td>${item.quarto}</td>
-              <td>${item.tipo_quarto}</td>
-              <td>${item.hora}</td>
-              <td>${item.telefone}</td>
-              <td>${item.email}</td>
-              <td>R$${item.valor_diaria}</td>
-              <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
-            </tr>
-          `;
+        // Lógica para o Dropdown de cadastro
+        const cadastroBtn = document.getElementById("cadastroTab");
+        const cadastroDropdown = document.getElementById("cadastroDropdown");
+        cadastroBtn.addEventListener("click", function (e) {
+            e.stopPropagation(); // Impede que o clique se propague para o document
+            cadastroDropdown.classList.toggle("show");
         });
-      }
 
-      async function carregarCheckouts() {
-        const tbody = document.getElementById("checkout-tbody");
-        tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
-        const resp = await fetch("/api/checkouts-hoje");
-        const dados = await resp.json();
-        if (dados.length === 0) {
-          tbody.innerHTML =
-            '<tr><td colspan="9">Nenhum check-out hoje</td></tr>';
-          return;
-        }
-        tbody.innerHTML = "";
-        dados.forEach((item) => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${item.cpf}</td>
-              <td>${item.nome}</td>
-              <td>${item.quarto}</td>
-              <td>${item.tipo_quarto}</td>
-              <td>${item.hora}</td>
-              <td>${item.telefone}</td>
-              <td>${item.email}</td>
-              <td>R$${item.valor_diaria}</td>
-              <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
-            </tr>
-          `;
+        // Fecha o dropdown se clicar fora dele
+        document.addEventListener("click", function (e) {
+            if (!cadastroDropdown.contains(e.target)) {
+                cadastroDropdown.classList.remove("show");
+            }
         });
-      }
+        
+        // --- FUNÇÕES DE CARREGAMENTO DE DADOS (com todas as colunas) ---
 
-      async function carregarHospedesAtivos() {
-        const tbody = document.getElementById("ativos-tbody");
-        tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
-        const resp = await fetch("/api/hospedes-ativos");
-        const dados = await resp.json();
-        if (!Array.isArray(dados) || dados.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="9">Nenhum hóspede ativo</td></tr>';
-          return;
+        async function carregarCheckins() {
+            const tbody = document.getElementById("checkin-tbody");
+            tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
+            try {
+                const resp = await fetch("/api/checkins-hoje");
+                const dados = await resp.json();
+                if (dados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9">Nenhum check-in hoje</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                dados.forEach((item) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.cpf || 'N/A'}</td>
+                            <td>${item.nome || 'N/A'}</td>
+                            <td>${item.quarto || 'N/A'}</td>
+                            <td>${item.tipo_quarto || 'N/A'}</td>
+                            <td>${item.hora || 'N/A'}</td>
+                            <td>${item.telefone || 'N/A'}</td>
+                            <td>${item.email || 'N/A'}</td>
+                            <td>R$${item.valor_diaria || '0.00'}</td>
+                            <td>${item.motivo_hospedagem || 'Não informado'}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar dados.</td></tr>';
+                console.error("Erro em carregarCheckins:", error);
+            }
         }
-        tbody.innerHTML = "";
-        dados.forEach((item) => {
-          tbody.innerHTML += `
-            <tr>
-              <td>${item.cpf}</td>
-              <td>${item.nome}</td>
-              <td>${item.quarto}</td>
-              <td>${item.tipo_quarto}</td>
-              <td>${item.hora}</td>
-              <td>${item.telefone}</td>
-              <td>${item.email}</td>
-              <td>R$${item.valor_diaria}</td>
-              <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
-            </tr>
-          `;
-        });
-      }
 
-      document.addEventListener("DOMContentLoaded", () => {
-        carregarCheckins();
-        carregarCheckouts();
-        carregarHospedesAtivos();
-      });
+        async function carregarCheckouts() {
+            const tbody = document.getElementById("checkout-tbody");
+            tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
+             try {
+                const resp = await fetch("/api/checkouts-hoje");
+                const dados = await resp.json();
+                if (dados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9">Nenhum check-out hoje</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                dados.forEach((item) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.cpf || 'N/A'}</td>
+                            <td>${item.nome || 'N/A'}</td>
+                            <td>${item.quarto || 'N/A'}</td>
+                            <td>${item.tipo_quarto || 'N/A'}</td>
+                            <td>${item.hora || 'N/A'}</td>
+                            <td>${item.telefone || 'N/A'}</td>
+                            <td>${item.email || 'N/A'}</td>
+                            <td>R$${item.valor_diaria || '0.00'}</td>
+                            <td>${item.motivo_hospedagem || 'Não informado'}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar dados.</td></tr>';
+                console.error("Erro em carregarCheckouts:", error);
+            }
+        }
+
+        async function carregarHospedesAtivos() {
+            const tbody = document.getElementById("ativos-tbody");
+            tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
+            try {
+                const resp = await fetch("/api/hospedes-ativos");
+                const dados = await resp.json();
+                if (!Array.isArray(dados) || dados.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9">Nenhum hóspede ativo</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = "";
+                dados.forEach((item) => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${item.cpf || 'N/A'}</td>
+                            <td>${item.nome || 'N/A'}</td>
+                            <td>${item.quarto || 'N/A'}</td>
+                            <td>${item.tipo_quarto || 'N/A'}</td>
+                            <td>${item.hora || 'N/A'}</td>
+                            <td>${item.telefone || 'N/A'}</td>
+                            <td>${item.email || 'N/A'}</td>
+                            <td>R$${item.valor_diaria || '0.00'}</td>
+                            <td>${item.motivo_hospedagem || 'Não informado'}</td>
+                        </tr>
+                    `;
+                });
+            } catch (error) {
+                tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar dados.</td></tr>';
+                console.error("Erro em carregarHospedesAtivos:", error);
+            }
+        }
+
+        // Carrega os dados quando a página estiver pronta
+        document.addEventListener("DOMContentLoaded", () => {
+            carregarCheckins();
+            carregarCheckouts();
+            carregarHospedesAtivos();
+        });
     </script>
-  </body>
+</body>
+
 </html>
