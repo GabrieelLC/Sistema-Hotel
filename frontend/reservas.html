@@ -162,6 +162,10 @@
         }
 
         /* Estilo das Tabelas */
+        .table-wrapper {
+            overflow-x: auto; /* ESSA LINHA CRIA A BARRA DE ROLAGEM */
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -261,23 +265,26 @@
 
             <div class="card">
                 <div class="section-title" id="table-title">Todas as Reservas</div>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Quarto</th>
-                            <th>Data Entrada</th>
-                            <th>Hora</th>
-                            <th>Data Saída</th>
-                            <th>Hora</th>
-                            <th>Status</th>
-                            <th>Acompanhantes</th>
-                            <th>Motivo</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="reservas-tbody"></tbody>
-                </table>
+                <!-- DIV ADICIONADA PARA A BARRA DE ROLAGEM -->
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Quarto</th>
+                                <th>Data Entrada</th>
+                                <th>Hora</th>
+                                <th>Data Saída</th>
+                                <th>Hora</th>
+                                <th>Status</th>
+                                <th>Acompanhantes</th>
+                                <th>Motivo</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reservas-tbody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -313,7 +320,6 @@
                 return;
             }
             reservas.forEach(reserva => {
-                // Prepara os dados dos acompanhantes para passar para a função onclick
                 const nomesAcompanhantes = JSON.stringify(reserva.nomes_acompanhantes || '');
 
                 tbody.innerHTML += `
@@ -340,7 +346,6 @@
             const todasTab = document.getElementById('todas-reservas-tab');
             const futurasTab = document.getElementById('reservas-futuras-tab');
             
-            // CORREÇÃO: Adiciona o prefixo /api/ à URL
             const endpoint = futuras ? '/api/reservas?futuras=1' : '/api/reservas';
             
             tableTitle.textContent = futuras ? 'Reservas Futuras' : 'Todas as Reservas';
@@ -354,7 +359,7 @@
 
             try {
                 const response = await fetch(endpoint);
-                if (!response.ok) { // Verifica se a resposta da API foi bem-sucedida
+                if (!response.ok) {
                     throw new Error(`Erro na API: ${response.statusText}`);
                 }
                 const data = await response.json();
