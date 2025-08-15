@@ -51,10 +51,13 @@ const Clientes = {
     db.query('INSERT INTO Clientes (cpf, nome, telefone, email, endereco, cep) VALUES (?, ?, ?, ?, ?, ?)', 
       [data.cpf, data.nome, data.telefone, data.email, data.endereco, data.cep], callback);
   },
-  update: (cpf, data, callback) => {
-    db.query('UPDATE Clientes SET nome = ?, telefone = ?, email = ?, endereco = ?, cep = ? WHERE cpf = ?', 
-      [data.nome, data.telefone, data.email, data.endereco, data.cep, cpf], callback);
-  },
+update: (cpf, data, callback) => {
+    db.query(
+    'UPDATE Clientes SET nome = ?, telefone = ?, email = ?, endereco = ?, cep = ?, data_nascimento = ?, nacionalidade = ? WHERE cpf = ?', 
+    [data.nome, data.telefone, data.email, data.endereco, data.cep, data.data_nascimento, data.nacionalidade, cpf], 
+    callback
+    );
+},
   delete: (cpf, callback) => {
     db.query('DELETE FROM Clientes WHERE cpf = ?', [cpf], callback);
   },
