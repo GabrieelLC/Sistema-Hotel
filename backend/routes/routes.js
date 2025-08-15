@@ -540,6 +540,25 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
   );
 });
 
+/*rota antiga para buscar reservas ativas de um cliente
+// Rota para calendário de ocupação dos quartos
+router.get("/ocupacao-quartos", (req, res) => {
+  db.query(
+    `SELECT r.quarto_numero, r.data_checkin, r.data_checkout, c.nome as cliente
+     FROM Reservas r
+     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     WHERE r.status IN ('ativo', 'reservado', 'finalizado')`,
+    (err, results) => {
+      if (err)
+        return res
+          .status(500)
+          .json({ message: "Erro ao buscar ocupação", error: err });
+      res.json(results);
+    }
+  );
+});
+*/
+
 // Rota para calendário de ocupação dos quartos
 router.get("/ocupacao-quartos", (req, res) => {
   const { inicio, fim } = req.query;
