@@ -403,6 +403,64 @@
           }
         });
 
+        // Função dedicada para buscar e preencher o valor da diária
+      async function atualizarPrecoQuarto() {
+        const selectQuarto = document.getElementById("quarto");
+        const numeroQuarto = selectQuarto.value;
+        const valorDiariaInput = document.getElementById("valor_diaria");
+
+        if (!numeroQuarto) {
+          valorDiariaInput.value = "";
+          return;
+        }
+        try {
+          const resp = await fetch(`/api/quartos/${numeroQuarto}`);
+          if (resp.ok) {
+            const quarto = await resp.json();
+            // O backend já nos dá o valor correto, seja do quarto ou do tipo.
+            valorDiariaInput.value = quarto.valor_diaria || "";
+          } else {
+            valorDiariaInput.value = "Erro";
+          }
+        } catch (error) {
+          valorDiariaInput.value = "Erro de conexão";
+        }
+      }
+
+      // Preencher select de quartos e já buscar o preço do primeiro
+      async function carregarQuartosDisponiveis() {
+        const select = document.getElementById("quarto");
+        select.innerHTML = '<option value="">Carregando...</option>';
+        try {
+          const resp = await fetch("/api/quartos");
+          const quartos = await resp.json();
+          const disponiveis = quartos.filter((q) => q.status === "disponivel");
+
+          if (!disponiveis.length) {
+            select.innerHTML = '<option value="">Nenhum quarto disponível</option>';
+            return;
+          }
+          select.innerHTML = disponiveis
+            .map(
+              (q) => `<option value="${q.numero}">Quarto ${q.numero}</option>`
+            )
+            .join("");
+          
+          // --- ESTA É A CORREÇÃO PRINCIPAL ---
+          // Após carregar os quartos, chama a função para preencher o preço do primeiro da lista.
+          await atualizarPrecoQuarto(); 
+
+        } catch (error) {
+          select.innerHTML = '<option value="">Erro ao carregar quartos</option>';
+        }
+      }
+      
+      // Evento de mudança agora só precisa chamar a função
+      document.getElementById("quarto").addEventListener("change", atualizarPrecoQuarto);
+
+      // Inicia o processo quando a página carrega
+      carregarQuartosDisponiveis();
+
 document
   .getElementById("checkinForm")
   .addEventListener("submit", async function (e) {

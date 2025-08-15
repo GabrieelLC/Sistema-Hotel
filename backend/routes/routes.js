@@ -236,7 +236,6 @@ router.delete("/quartos/:numero", (req, res) => {
 
 // Chegadas do dia (check-in)
 router.get("/checkins-hoje", (req, res) => {
-  const hoje = new Date().toISOString().slice(0, 10);
   db.query(
     `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkin as hora, c.telefone, c.email, 
@@ -246,8 +245,7 @@ router.get("/checkins-hoje", (req, res) => {
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
-     WHERE DATE(r.data_checkin) = ?`,
-    [hoje],
+     WHERE DATE(r.data_checkin) = CURDATE()`,
     (err, results) => {
       if (err)
         return res
@@ -544,19 +542,34 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
 
 // Rota para calendário de ocupação dos quartos
 router.get("/ocupacao-quartos", (req, res) => {
-  db.query(
-    `SELECT r.quarto_numero, r.data_checkin, r.data_checkout, c.nome as cliente
-     FROM Reservas r
-     JOIN Clientes c ON r.cliente_cpf = c.cpf
-     WHERE r.status IN ('ativo', 'reservado', 'finalizado')`,
-    (err, results) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ message: "Erro ao buscar ocupação", error: err });
-      res.json(results);
+  const { inicio, fim } = req.query;
+  if (!inicio || !fim) {
+    return res.status(400).json({ message: "É necessário fornecer data de início e fim." });
+  }
+
+  const sql = `
+    SELECT 
+      r.quarto_numero, 
+      r.data_checkin, 
+      IFNULL(r.data_checkout, r.data_checkout_prevista) as data_saida,
+      c.nome as cliente
+    FROM Reservas r
+    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    WHERE 
+      r.status IN ('ativo', 'finalizado') AND
+      -- Lógica para encontrar reservas que se sobrepõem ao período solicitado:
+      -- A reserva começa antes do fim do período E a reserva termina depois do início do período
+      r.data_checkin <= ? AND 
+      IFNULL(r.data_checkout, r.data_checkout_prevista) >= ?
+  `;
+
+  db.query(sql, [fim, inicio], (err, results) => {
+    if (err) {
+      console.error("Erro na busca de ocupação:", err);
+      return res.status(500).json({ message: "Erro ao buscar ocupação", error: err });
     }
-  );
+    res.json(results);
+  });
 });
 
 // Modelo básico para produtos (adicione em models/models.js)
