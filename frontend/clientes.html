@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
         /* Reset básico e configurações globais */
@@ -61,12 +61,12 @@
             text-align: center;
             margin-bottom: 2.5rem;
         }
-        
+
         .sidebar .calendar-icon {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .sidebar #dateTime {
             font-size: 0.9rem;
             line-height: 1.4;
@@ -108,7 +108,7 @@
             font-size: 1.8rem;
             color: var(--heading-color);
         }
-        
+
         /* Cards para as seções */
         .card {
             background-color: var(--card-bg);
@@ -178,7 +178,7 @@
         tbody tr:hover {
             background-color: #f8f9fa;
         }
-        
+
         td.actions-cell {
             display: flex;
             gap: 0.5rem;
@@ -193,17 +193,19 @@
             transition: background-color 0.2s;
             color: white;
         }
-        
+
         .btn-edit {
             background-color: var(--warning-color);
         }
+
         .btn-edit:hover {
             background-color: #dd6b20;
         }
-        
+
         .btn-delete {
             background-color: var(--danger-color);
         }
+
         .btn-delete:hover {
             background-color: #c53030;
         }
@@ -211,17 +213,19 @@
         .btn-save {
             background-color: #38a169;
         }
+
         .btn-save:hover {
             background-color: #2f855a;
         }
-        
+
         .btn-cancel {
             background-color: #718096;
         }
+
         .btn-cancel:hover {
             background-color: #4a5568;
         }
-        
+
         input.editable {
             width: 100%;
             min-width: 120px;
@@ -230,12 +234,12 @@
             border-radius: 6px;
             font-size: 0.9rem;
         }
+
         input.editable:focus {
             outline: none;
             border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
         }
-
     </style>
 </head>
 
@@ -264,7 +268,7 @@
             <section class="card">
                 <h2 class="card-title">Buscar Cliente</h2>
                 <form class="search-form">
-                    <input type="text" id="searchInput" placeholder="Digite para buscar por nome ou CPF...">
+                    <input type="text" id="searchInput" placeholder="Digite para buscar por nome, CPF ou passaporte...">
                 </form>
             </section>
 
@@ -329,7 +333,7 @@
                 tbody.appendChild(row);
             });
         }
-        
+
         // Gera o HTML de uma linha da tabela
         function getRowHtml(cliente) {
             const dataNascimentoFormatada = cliente.data_nascimento ? new Date(cliente.data_nascimento).toLocaleDateString('pt-BR') : 'N/A';
@@ -368,7 +372,11 @@
         function filterClientes() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const clientesFiltrados = todosClientes.filter(cliente => {
-                return cliente.nome.toLowerCase().includes(searchTerm) || cliente.cpf.includes(searchTerm);
+                const passaporte = cliente.passaporte || '';
+
+                return cliente.nome.toLowerCase().includes(searchTerm) ||
+                    cliente.cpf.includes(searchTerm) ||
+                    passaporte.toLowerCase().includes(searchTerm);
             });
             renderClientes(clientesFiltrados);
         }

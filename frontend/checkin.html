@@ -293,13 +293,18 @@
               />
             </div>
             <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="quarto">Quarto</label>
-              <select
-                class="checkoutscreeninput"
-                id="quarto"
-                name="quarto"
-                required
-              ></select>
+              <div class="checkoutscreenfield_group">
+                <label class="checkoutscreenlabel" for="quarto">Quarto</label>
+                <select
+                  class="checkoutscreeninput"
+                  id="quarto"
+                  name="quarto"
+                  required
+                ></select>
+                <div id="quarto-detalhes" style="margin-top: 8px; padding: 10px; background-color: #f4f7fa; border-radius: 5px; color: #555;">
+                    Selecione um quarto para ver os detalhes.
+                </div>
+              </div>
             </div>
             <div class="checkoutscreenfield_group">
               <label class="checkoutscreenlabel" for="valor_diaria"
@@ -325,10 +330,74 @@
         window.location.href = "index.html";
       }
 
-      // Preencher dados do cliente ao digitar o CPF
-      document
-        .getElementById("cpfcliente")
-        .addEventListener("blur", async function () {
+      // Variável para guardar os dados de todos os quartos e evitar chamadas repetidas à API
+      let todosOsQuartos = [];
+
+      // Função para buscar e preencher os detalhes do quarto selecionado
+      function atualizarDetalhesQuarto() {
+        const selectQuarto = document.getElementById("quarto");
+        const numeroQuarto = selectQuarto.value;
+        const valorDiariaInput = document.getElementById("valor_diaria");
+        const detalhesDiv = document.getElementById("quarto-detalhes");
+
+        if (!numeroQuarto) {
+          valorDiariaInput.value = "";
+          detalhesDiv.innerHTML = "Selecione um quarto para ver os detalhes.";
+          return;
+        }
+
+        // Encontra o quarto selecionado nos dados que já carregamos
+        const quarto = todosOsQuartos.find(q => q.numero == numeroQuarto);
+
+        if (quarto) {
+          valorDiariaInput.value = quarto.valor_diaria || "";
+          detalhesDiv.innerHTML = `<strong>${quarto.descricao}</strong><br>Valor: R$ ${Number(quarto.valor_diaria).toFixed(2)}`;
+        } else {
+            valorDiariaInput.value = "";
+            detalhesDiv.innerHTML = "Não foi possível carregar os detalhes.";
+        }
+      }
+
+      // Função para carregar a lista de quartos disponíveis no dropdown
+      async function carregarQuartosDisponiveis() {
+        const select = document.getElementById("quarto");
+        const detalhesDiv = document.getElementById("quarto-detalhes");
+        select.innerHTML = '<option value="">Carregando...</option>';
+        try {
+          const resp = await fetch("/api/quartos");
+          const quartos = await resp.json();
+          todosOsQuartos = quartos; // Salva os quartos na variável
+          const disponiveis = quartos.filter((q) => q.status === "disponivel");
+
+          if (!disponiveis.length) {
+            select.innerHTML = '<option value="">Nenhum quarto disponível</option>';
+            detalhesDiv.innerHTML = ""; // Limpa os detalhes
+            return;
+          }
+
+          select.innerHTML = '<option value="">Selecione um quarto</option>'; // Adiciona uma opção padrão
+          select.innerHTML += disponiveis
+            .map(
+              (q) => `<option value="${q.numero}">Quarto ${q.numero}</option>`
+            )
+            .join("");
+          
+          atualizarDetalhesQuarto(); 
+
+        } catch (error) {
+          select.innerHTML = '<option value="">Erro ao carregar quartos</option>';
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Carrega os quartos assim que a página é aberta
+        carregarQuartosDisponiveis();
+
+        // Adiciona o listener para quando o usuário muda a seleção do quarto
+        document.getElementById("quarto").addEventListener("change", atualizarDetalhesQuarto);
+
+        // Preencher dados do cliente ao digitar o CPF
+        document.getElementById("cpfcliente").addEventListener("blur", async function () {
           const cpf = this.value;
           if (!cpf) return;
           try {
@@ -336,13 +405,10 @@
             if (resp.ok) {
               const cliente = await resp.json();
               document.getElementById("nomecliente").value = cliente.nome || "";
-              document.getElementById("telefonecliente").value =
-                cliente.telefone || "";
-              document.getElementById("emailcliente").value =
-                cliente.email || "";
+              document.getElementById("telefonecliente").value = cliente.telefone || "";
+              document.getElementById("emailcliente").value = cliente.email || "";
               document.getElementById("cepcliente").value = cliente.cep || "";
-              document.getElementById("enderecocliente").value =
-                cliente.endereco || "";
+              document.getElementById("enderecocliente").value = cliente.endereco || "";
             } else {
               document.getElementById("nomecliente").value = "";
               document.getElementById("telefonecliente").value = "";
@@ -351,183 +417,120 @@
               document.getElementById("enderecocliente").value = "";
             }
           } catch (error) {
-            document.getElementById("nomecliente").value = "";
-            document.getElementById("telefonecliente").value = "";
-            document.getElementById("emailcliente").value = "";
-            document.getElementById("cepcliente").value = "";
-            document.getElementById("enderecocliente").value = "";
+            console.error("Erro ao buscar cliente:", error);
           }
         });
 
-      // Função dedicada para buscar e preencher o valor da diária
-      async function atualizarPrecoQuarto() {
-        const selectQuarto = document.getElementById("quarto");
-        const numeroQuarto = selectQuarto.value;
-        const valorDiariaInput = document.getElementById("valor_diaria");
+        // Gerar campos de acompanhantes dinamicamente
+        document.getElementById("quantidade_acompanhantes").addEventListener("input", function () {
+          const quantidade = parseInt(this.value, 10) || 0;
+          const container = document.getElementById("acompanhantes-container");
+          container.innerHTML = ""; 
 
-        if (!numeroQuarto) {
-          valorDiariaInput.value = "";
-          return;
-        }
-        try {
-          const resp = await fetch(`/api/quartos/${numeroQuarto}`);
-          if (resp.ok) {
-            const quarto = await resp.json();
-            valorDiariaInput.value = quarto.valor_diaria || "";
-          } else {
-            valorDiariaInput.value = "Erro";
+          for (let i = 1; i <= quantidade; i++) {
+              const div = document.createElement("div");
+              div.className = "acompanhante-field-group";
+              div.innerHTML = `
+                  <div class="checkoutscreenfield_group">
+                      <label class="checkoutscreenlabel">Nome do acompanhante ${i}:</label>
+                      <input type="text" class="checkoutscreeninput nome-acompanhante" name="nome_acompanhante_${i}" />
+                  </div>
+                  <div class="checkoutscreenfield_group">
+                      <label class="checkoutscreenlabel">CPF do acompanhante ${i}:</label>
+                      <input type="text" class="checkoutscreeninput cpf-acompanhante" name="cpf_acompanhante_${i}" />
+                  </div>
+                  <div class="checkoutscreenfield_group">
+                      <label class="checkoutscreenlabel">Data de Nascimento do acompanhante ${i}:</label>
+                      <input type="date" class="checkoutscreeninput nascimento-acompanhante" name="nascimento_acompanhante_${i}" />
+                  </div>
+              `;
+              container.appendChild(div);
           }
-        } catch (error) {
-          valorDiariaInput.value = "Erro de conexão";
-        }
-      }
+        });
 
-      // Preencher select de quartos e já buscar o preço do primeiro
-      async function carregarQuartosDisponiveis() {
-        const select = document.getElementById("quarto");
-        select.innerHTML = '<option value="">Carregando...</option>';
-        try {
-          const resp = await fetch("/api/quartos");
-          const quartos = await resp.json();
-          const disponiveis = quartos.filter((q) => q.status === "disponivel");
+        // Enviar o formulário de check-in
+        document.getElementById("checkinForm").addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const cliente_cpf = document.getElementById("cpfcliente").value;
+          const quarto_numero = document.getElementById("quarto").value;
+          const data_checkin = document.getElementById("datacheckin").value;
+          const hora_checkin = document.getElementById("horacheckin").value;
+          const data_checkout_prevista = document.getElementById("datacheckoutprrevista").value;
+          const hora_checkout_prevista = document.getElementById("horacheckoutprevista").value;
+          const valor_diaria = document.getElementById("valor_diaria").value;
+          const nome = document.getElementById("nomecliente").value;
+          const telefone = document.getElementById("telefonecliente").value;
+          const email = document.getElementById("emailcliente").value;
+          const cep = document.getElementById("cepcliente").value;
+          const endereco = document.getElementById("enderecocliente").value;
+          const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
+          
+          const nomes_acompanhantes = Array.from(document.querySelectorAll('.nome-acompanhante')).map(input => input.value);
+          const cpfs_acompanhantes = Array.from(document.querySelectorAll('.cpf-acompanhante')).map(input => input.value);
+          const nascimentos_acompanhantes = Array.from(document.querySelectorAll('.nascimento-acompanhante')).map(input => input.value);
 
-          if (!disponiveis.length) {
-            select.innerHTML = '<option value="">Nenhum quarto disponível</option>';
+          if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
+            alert("Preencha todos os campos obrigatórios!");
             return;
           }
-          select.innerHTML = disponiveis
-            .map(
-              (q) => `<option value="${q.numero}">Quarto ${q.numero}</option>`
-            )
-            .join("");
-          
-          await atualizarPrecoQuarto(); 
 
-        } catch (error) {
-          select.innerHTML = '<option value="">Erro ao carregar quartos</option>';
-        }
-      }
-      
-      document.getElementById("quarto").addEventListener("change", atualizarPrecoQuarto);
-
-      carregarQuartosDisponiveis();
-
-      // *** INÍCIO DA ALTERAÇÃO ***
-      document.getElementById("quantidade_acompanhantes").addEventListener("input", function () {
-        const quantidade = parseInt(this.value, 10);
-        const container = document.getElementById("acompanhantes-container");
-        container.innerHTML = ""; // Limpa os campos existentes
-
-        for (let i = 1; i <= quantidade; i++) {
-            const div = document.createElement("div");
-            div.className = "acompanhante-field-group";
-            div.innerHTML = `
-                <div class="checkoutscreenfield_group">
-                    <label class="checkoutscreenlabel">Nome do acompanhante ${i}:</label>
-                    <input type="text" class="checkoutscreeninput nome-acompanhante" name="nome_acompanhante_${i}" required />
-                </div>
-                <div class="checkoutscreenfield_group">
-                    <label class="checkoutscreenlabel">CPF do acompanhante ${i}:</label>
-                    <input type="text" class="checkoutscreeninput cpf-acompanhante" name="cpf_acompanhante_${i}" required />
-                </div>
-                <div class="checkoutscreenfield_group">
-                    <label class="checkoutscreenlabel">Data de Nascimento do acompanhante ${i}:</label>
-                    <input type="date" class="checkoutscreeninput nascimento-acompanhante" name="nascimento_acompanhante_${i}" required />
-                </div>
-            `;
-            container.appendChild(div);
-        }
-      });
-      // *** FIM DA ALTERAÇÃO ***
-
-      document.getElementById("checkinForm").addEventListener("submit", async function (e) {
-        e.preventDefault();
-        const cliente_cpf = document.getElementById("cpfcliente").value;
-        const quarto_numero = document.getElementById("quarto").value;
-        const data_checkin = document.getElementById("datacheckin").value;
-        const hora_checkin = document.getElementById("horacheckin").value;
-        const data_checkout_prevista = document.getElementById("datacheckoutprrevista").value;
-        const hora_checkout_prevista = document.getElementById("horacheckoutprevista").value;
-        const valor_diaria = document.getElementById("valor_diaria").value;
-        const nome = document.getElementById("nomecliente").value;
-        const telefone = document.getElementById("telefonecliente").value;
-        const email = document.getElementById("emailcliente").value;
-        const cep = document.getElementById("cepcliente").value;
-        const endereco = document.getElementById("enderecocliente").value;
-        const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
-        const acompanhantes = document.getElementById("quantidade_acompanhantes").value;
-
-        // *** ALTERAÇÃO PARA COLETAR DADOS DOS ACOMPANHANTES ***
-        const nomes_acompanhantes = Array.from(document.querySelectorAll('.nome-acompanhante')).map(input => input.value);
-        const cpfs_acompanhantes = Array.from(document.querySelectorAll('.cpf-acompanhante')).map(input => input.value);
-        const nascimentos_acompanhantes = Array.from(document.querySelectorAll('.nascimento-acompanhante')).map(input => input.value);
-
-        if (
-          !cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin ||
-          !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria
-        ) {
-          alert("Preencha todos os campos obrigatórios!");
-          return;
-        }
-
-        try {
-            await fetch(`/api/clientes/${cliente_cpf}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ nome, telefone, email, endereco, cep }),
-            });
-
-            // O backend precisa ser ajustado para receber esses novos arrays
-            const checkinData = {
-                cliente_cpf,
-                quarto_numero,
-                data_checkin,
-                hora_checkin,
-                data_checkout_prevista,
-                hora_checkout_prevista,
-                valor_diaria,
-                motivo_hospedagem,
-                acompanhantes,
-                nomes_acompanhantes,
-                cpfs_acompanhantes, 
-                nascimentos_acompanhantes
-            };
-
-            const resp = await fetch("/api/checkin", {
-                method: "POST",
+          try {
+              await fetch(`/api/clientes/${cliente_cpf}`, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(checkinData),
-            });
-            const data = await resp.json();
-            if (resp.ok) {
-              alert("Check-in registrado com sucesso!");
-              this.reset();
-              document.getElementById("acompanhantes-container").innerHTML = "";
-              carregarQuartosDisponiveis();
-            } else if (resp.status === 409 && data.precisa_confirmar) {
-              if (confirm(data.message)) {
-                checkinData.ignorar_reserva_ativa = true; // Adiciona flag para confirmar
-                const resp2 = await fetch("/api/checkin", {
+                body: JSON.stringify({ nome, telefone, email, endereco, cep }),
+              });
+
+              const checkinData = {
+                  cliente_cpf,
+                  quarto_numero,
+                  data_checkin,
+                  hora_checkin,
+                  data_checkout_prevista,
+                  hora_checkout_prevista,
+                  valor_diaria,
+                  motivo_hospedagem,
+                  nomes_acompanhantes,
+                  cpfs_acompanhantes, 
+                  nascimentos_acompanhantes
+              };
+
+              const resp = await fetch("/api/checkin", {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify(checkinData),
-                });
-                const data2 = await resp2.json();
-                if (resp2.ok) {
-                  alert("Check-in registrado com sucesso!");
-                  this.reset();
-                  document.getElementById("acompanhantes-container").innerHTML = "";
-                  carregarQuartosDisponiveis();
-                } else {
-                  alert(data2.message || "Erro ao registrar check-in");
+              });
+              const data = await resp.json();
+              if (resp.ok) {
+                alert("Check-in registrado com sucesso!");
+                this.reset();
+                document.getElementById("acompanhantes-container").innerHTML = "";
+                carregarQuartosDisponiveis();
+              } else if (resp.status === 409 && data.precisa_confirmar) {
+                if (confirm(data.message)) {
+                  checkinData.ignorar_reserva_ativa = true;
+                  const resp2 = await fetch("/api/checkin", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(checkinData),
+                  });
+                  const data2 = await resp2.json();
+                  if (resp2.ok) {
+                    alert("Check-in registrado com sucesso!");
+                    this.reset();
+                    document.getElementById("acompanhantes-container").innerHTML = "";
+                    carregarQuartosDisponiveis();
+                  } else {
+                    alert(data2.message || "Erro ao registrar check-in");
+                  }
                 }
+              } else {
+                alert(data.message || "Erro ao registrar check-in");
               }
-            } else {
-              alert(data.message || "Erro ao registrar check-in");
-            }
-        } catch (error) {
-            alert("Erro ao conectar ao servidor");
-        }
+          } catch (error) {
+              alert("Erro ao conectar ao servidor");
+          }
+        });
       });
     </script>
   </body>

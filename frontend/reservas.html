@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
         /* Reset básico e configurações globais */
@@ -55,17 +55,17 @@
             border-right: 1px solid var(--border-color);
             flex-shrink: 0;
         }
-        
+
         .sidebar .calendar {
             text-align: center;
             margin-bottom: 2.5rem;
         }
-        
+
         .sidebar .calendar-icon {
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
         }
-        
+
         .sidebar #dateTime {
             font-size: 0.9rem;
             line-height: 1.4;
@@ -104,7 +104,7 @@
             flex-wrap: wrap;
             gap: 1rem;
         }
-        
+
         .tab-header h1 {
             font-size: 1.8rem;
             color: var(--heading-color);
@@ -131,20 +131,21 @@
             background-color: var(--primary-color);
             color: white;
         }
-        
+
         .btn-view {
-             background-color: #6c757d;
-             color: white;
-             padding: 0.5rem 1rem;
-             font-size: 0.8rem;
-             border: none;
-             border-radius: 6px;
-             cursor: pointer;
+            background-color: #6c757d;
+            color: white;
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
         }
+
         .btn-view:hover {
             background-color: #5a6268;
         }
-        
+
         /* Card para a tabela */
         .card {
             background-color: var(--card-bg);
@@ -163,7 +164,7 @@
 
         /* Estilo das Tabelas */
         .table-wrapper {
-            overflow-x: auto; 
+            overflow-x: auto;
         }
 
         table {
@@ -207,14 +208,16 @@
             align-items: center;
             z-index: 1000;
         }
+
         .modal-content {
             background-color: white;
             padding: 2rem;
             border-radius: 12px;
             width: 90%;
             max-width: 500px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -223,10 +226,12 @@
             padding-bottom: 1rem;
             margin-bottom: 1rem;
         }
+
         .modal-title {
             font-size: 1.25rem;
             color: var(--heading-color);
         }
+
         .close-btn {
             background: none;
             border: none;
@@ -261,6 +266,36 @@
             border-color: var(--primary-color);
             box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
         }
+
+        .status-ativo-text {
+            color: #2f855a;
+            display: flex;
+            align-items: center;
+        }
+
+        .status-ativo-bolinha {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #2f855a;
+            margin-right: 6px;
+            animation: piscar 1.5s infinite alternate;
+        }
+
+        .status-finalizado-text {
+            color: #c53030;
+        }
+
+        @keyframes piscar {
+            from {
+                opacity: 0.8;
+            }
+
+            to {
+                opacity: 0.8;
+            }
+        }
     </style>
 </head>
 
@@ -292,10 +327,11 @@
 
             <div class="card">
                 <div class="section-title" id="table-title">Todas as Reservas</div>
-                
+
                 <!-- Filtro de busca adicionado aqui -->
                 <div class="search-container">
-                    <input type="text" id="searchInput" onkeyup="filtrarReservas()" placeholder="Buscar por nome, CPF ou quarto...">
+                    <input type="text" id="searchInput" onkeyup="filtrarReservas()"
+                        placeholder="Buscar por nome, CPF ou quarto...">
                 </div>
 
                 <div class="table-wrapper">
@@ -355,22 +391,31 @@
             reservas.forEach(reserva => {
                 const acompanhantesData = JSON.stringify(reserva.acompanhantes || []);
 
+                let statusHTML = '';
+                if (reserva.status === 'ativo') {
+                    statusHTML = `<div class="status-ativo-text"><span class="status-ativo-bolinha"></span>ativo</div>`;
+                } else if (reserva.status === 'finalizado') {
+                    statusHTML = `<span class="status-finalizado-text">finalizado</span>`;
+                } else {
+                    statusHTML = reserva.status || 'N/A';
+                }
+
                 tbody.innerHTML += `
-                    <tr>
-                        <td>${reserva.nome || 'N/A'}</td>
-                        <td>${reserva.quarto || 'N/A'}</td>
-                        <td>${reserva.data_entrada || 'N/A'}</td>
-                        <td>${reserva.hora_entrada || 'N/A'}</td>
-                        <td>${reserva.data_saida || 'N/A'}</td>
-                        <td>${reserva.hora_saida || 'N/A'}</td>
-                        <td>${reserva.status || 'N/A'}</td>
-                        <td class="acompanhantes-cell">
-                            <span>${reserva.num_acompanhantes || 0}</span>
-                            <button class="btn-view" onclick='mostrarAcompanhantes(${acompanhantesData})'>Ver</button>
-                        </td>
-                        <td>${reserva.motivo_hospedagem || 'Não informado'}</td>
-                    </tr>
-                `;
+           <tr>
+               <td>${reserva.nome || 'N/A'}</td>
+               <td>${reserva.quarto || 'N/A'}</td>
+               <td>${reserva.data_entrada || 'N/A'}</td>
+               <td>${reserva.hora_entrada || 'N/A'}</td>
+               <td>${reserva.data_saida || 'N/A'}</td>
+               <td>${reserva.hora_saida || 'N/A'}</td>
+               <td>${statusHTML}</td>
+               <td class="acompanhantes-cell">
+                   <span>${reserva.num_acompanhantes || 0}</span>
+                   <button class="btn-view" onclick='mostrarAcompanhantes(${acompanhantesData})'>Ver</button>
+               </td>
+               <td>${reserva.motivo_hospedagem || 'Não informado'}</td>
+           </tr>
+       `;
             });
         }
 
@@ -383,8 +428,8 @@
                 const quarto = reserva.quarto ? reserva.quarto.toString() : '';
 
                 return nome.toLowerCase().includes(searchTerm) ||
-                       cpf.includes(searchTerm) ||
-                       quarto.includes(searchTerm);
+                    cpf.includes(searchTerm) ||
+                    quarto.includes(searchTerm);
             });
             renderizarTabela(reservasFiltradas);
         }
@@ -393,9 +438,9 @@
             const tableTitle = document.getElementById("table-title");
             const todasTab = document.getElementById('todas-reservas-tab');
             const futurasTab = document.getElementById('reservas-futuras-tab');
-            
+
             const endpoint = futuras ? '/api/reservas?futuras=1' : '/api/reservas';
-            
+
             tableTitle.textContent = futuras ? 'Reservas Futuras' : 'Todas as Reservas';
             if (futuras) {
                 futurasTab.classList.add('active');
@@ -430,10 +475,10 @@
                 const validAcompanhantes = acompanhantes.filter(ac => ac && ac.nome);
 
                 if (validAcompanhantes.length > 0) {
-                     validAcompanhantes.forEach(ac => {
+                    validAcompanhantes.forEach(ac => {
                         // Formata a data de nascimento
-                        const dataNasc = ac.data_nascimento ? new Date(ac.data_nascimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'N/A';
-                        
+                        const dataNasc = ac.data_nascimento ? new Date(ac.data_nascimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'N/A';
+
                         list.innerHTML += `
                             <li style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee; list-style: none;">
                                 <strong>Nome:</strong> ${ac.nome || 'N/A'}<br>
@@ -447,7 +492,7 @@
             } else {
                 list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
             }
-            
+
             modal.style.display = 'flex';
         }
 

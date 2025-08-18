@@ -125,6 +125,7 @@
       #modalConsumo button:hover {
         background-color: #3caea3;
       }
+      
     </style>
   </head>
   <body>
@@ -575,7 +576,7 @@ async function mostrarConsumosHospedeAtual(numeroQuarto) {
   const mapaProdutos = {};
   produtos.forEach(p => { mapaProdutos[p.id] = p.nome; });
 
-  let html = "<b>Consumos do hóspede atual:</b>";
+  let html = `<b>Consumos do(a) ${reserva.nome_cliente}:</b>`; // <-- LINHA ALTERADA
   if (!consumos.length) {
     html += "<p>Nenhum consumo registrado.</p>";
   } else {

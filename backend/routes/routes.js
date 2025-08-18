@@ -717,7 +717,11 @@ router.post("/consumos", (req, res) => {
 router.get("/reserva-ativa-quarto/:numero", (req, res) => {
   const { numero } = req.params;
   db.query(
-    `SELECT * FROM Reservas WHERE quarto_numero = ? AND status = 'ativo' ORDER BY id DESC LIMIT 1`,
+    `SELECT r.*, c.nome as nome_cliente 
+     FROM Reservas r
+     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     WHERE r.quarto_numero = ? AND r.status = 'ativo' 
+     ORDER BY r.id DESC LIMIT 1`,
     [numero],
     (err, results) => {
       if (err || !results.length)
