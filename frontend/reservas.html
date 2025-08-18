@@ -353,7 +353,7 @@
                 return;
             }
             reservas.forEach(reserva => {
-                const nomesAcompanhantes = JSON.stringify(reserva.nomes_acompanhantes || '');
+                const acompanhantesData = JSON.stringify(reserva.acompanhantes || []);
 
                 tbody.innerHTML += `
                     <tr>
@@ -366,7 +366,7 @@
                         <td>${reserva.status || 'N/A'}</td>
                         <td class="acompanhantes-cell">
                             <span>${reserva.num_acompanhantes || 0}</span>
-                            <button class="btn-view" onclick='mostrarAcompanhantes(${nomesAcompanhantes})'>Ver</button>
+                            <button class="btn-view" onclick='mostrarAcompanhantes(${acompanhantesData})'>Ver</button>
                         </td>
                         <td>${reserva.motivo_hospedagem || 'Não informado'}</td>
                     </tr>
@@ -420,16 +420,30 @@
             }
         }
 
-        function mostrarAcompanhantes(nomes) {
+        function mostrarAcompanhantes(acompanhantes) {
             const modal = document.getElementById('acompanhantes-modal');
             const list = document.getElementById('acompanhantes-list');
-            
-            if (nomes && nomes.length > 0) {
-                list.innerHTML = '';
-                const nomesArray = typeof nomes === 'string' ? nomes.split(',') : nomes;
-                nomesArray.forEach(nome => {
-                    list.innerHTML += `<li>${nome.trim()}</li>`;
-                });
+            list.innerHTML = ''; // Limpa o conteúdo anterior
+
+            if (acompanhantes && acompanhantes.length > 0) {
+                // Filtra para garantir que não há objetos vazios
+                const validAcompanhantes = acompanhantes.filter(ac => ac && ac.nome);
+
+                if (validAcompanhantes.length > 0) {
+                     validAcompanhantes.forEach(ac => {
+                        // Formata a data de nascimento
+                        const dataNasc = ac.data_nascimento ? new Date(ac.data_nascimento).toLocaleDateString('pt-BR', {timeZone: 'UTC'}) : 'N/A';
+                        
+                        list.innerHTML += `
+                            <li style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee; list-style: none;">
+                                <strong>Nome:</strong> ${ac.nome || 'N/A'}<br>
+                                <strong>CPF:</strong> ${ac.cpf || 'N/A'}<br>
+                                <strong>Nascimento:</strong> ${dataNasc}
+                            </li>`;
+                    });
+                } else {
+                    list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
+                }
             } else {
                 list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
             }

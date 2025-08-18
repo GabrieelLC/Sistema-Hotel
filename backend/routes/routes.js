@@ -490,23 +490,29 @@ router.get("/reservas", (req, res) => {
            DATE_FORMAT(IFNULL(r.data_checkout, r.data_checkout_prevista), '%d/%m/%Y') as data_saida,
            DATE_FORMAT(IFNULL(r.hora_checkout, r.hora_checkout_prevista), '%H:%i') as hora_saida,
            r.status,
-           COUNT(a.id) AS num_acompanhantes,
-           COALESCE(GROUP_CONCAT(a.nome SEPARATOR ', '), '') AS nomes_acompanhantes,
            r.motivo_hospedagem,
-           r.id
+           r.id,
+           (SELECT COUNT(*) FROM Acompanhantes WHERE reserva_id = r.id) AS num_acompanhantes,
+           (SELECT COALESCE(JSON_ARRAYAGG(
+             JSON_OBJECT('nome', nome, 'cpf', cpf, 'data_nascimento', data_nascimento)
+           ), '[]') FROM Acompanhantes WHERE reserva_id = r.id) AS acompanhantes
     FROM Reservas r
     JOIN Clientes c ON r.cliente_cpf = c.cpf
-    LEFT JOIN Acompanhantes a ON r.id = a.reserva_id
   `;
   let params = [];
-  
+  let conditions = [];
+
   if (futuras) {
-    sql += ` WHERE r.data_checkout_prevista >= CURDATE() AND r.status = 'ativo'`;
+    conditions.push(`r.data_checkout_prevista >= CURDATE() AND r.status = 'ativo'`);
   }
 
   if (quarto_numero) {
-    sql += (futuras ? ' AND ' : ' WHERE ') + 'r.quarto_numero = ?';
+    conditions.push(`r.quarto_numero = ?`);
     params.push(quarto_numero);
+  }
+  
+  if (conditions.length > 0) {
+    sql += ' WHERE ' + conditions.join(' AND ');
   }
   
   sql += ' GROUP BY r.id ORDER BY r.data_checkin DESC';
@@ -516,7 +522,12 @@ router.get("/reservas", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "Erro ao buscar reservas", error: err });
     }
-    res.json(results);
+    // O MySQL retorna o campo JSON como uma string, então precisamos convertê-lo
+    const parsedResults = results.map(row => ({
+        ...row,
+        acompanhantes: JSON.parse(row.acompanhantes)
+    }));
+    res.json(parsedResults);
   });
 });
 
