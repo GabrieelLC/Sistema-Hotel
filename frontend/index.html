@@ -247,6 +247,11 @@
             /* Cor do texto escura */
             font-weight: bold;
         }
+
+        .hospede-ativo td {
+            background-color: #e6ffed !important;
+            color: #2f855a;
+        }
     </style>
 </head>
 
@@ -481,7 +486,7 @@
                 tbody.innerHTML = "";
                 dados.forEach((item) => {
                     tbody.innerHTML += `
-                        <tr>
+                        <tr class="hospede-ativo">
                             <td>${item.cpf || 'N/A'}</td>
                             <td>${item.nome || 'N/A'}</td>
                             <td>${item.quarto || 'N/A'}</td>
