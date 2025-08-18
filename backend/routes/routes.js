@@ -97,15 +97,14 @@ router.get("/clientes/:cpf", (req, res) => {
 
 router.put("/clientes/:cpf", (req, res) => {
   const { cpf } = req.params;
-  // 👇 Capture os novos campos aqui
-  const { nome, telefone, email, endereco, cep, data_nascimento, nacionalidade } = req.body;
+  // 👇 Capture os novos campos aqui, incluindo o passaporte
+  const { nome, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade } = req.body;
   if (!nome || !telefone || !email || !endereco || !cep) {
     return res.status(400).json({ message: "Preencha todos os campos!" });
   }
   Clientes.update(
     cpf,
-    // 👇 E passe-os para a função de atualização
-    { nome, telefone, email, endereco, cep, data_nascimento, nacionalidade },
+    { nome, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade },
     (err, result) => {
       if (err) {
         return res

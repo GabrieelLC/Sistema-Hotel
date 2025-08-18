@@ -53,8 +53,8 @@ const Clientes = {
   },
 update: (cpf, data, callback) => {
     db.query(
-    'UPDATE Clientes SET nome = ?, telefone = ?, email = ?, endereco = ?, cep = ?, data_nascimento = ?, nacionalidade = ? WHERE cpf = ?', 
-    [data.nome, data.telefone, data.email, data.endereco, data.cep, data.data_nascimento, data.nacionalidade, cpf], 
+    'UPDATE Clientes SET nome = ?, telefone = ?, email = ?, endereco = ?, cep = ?, passaporte = ?, data_nascimento = ?, nacionalidade = ? WHERE cpf = ?', 
+    [data.nome, data.telefone, data.email, data.endereco, data.cep, data.passaporte, data.data_nascimento, data.nacionalidade, cpf], 
     callback
     );
 },
