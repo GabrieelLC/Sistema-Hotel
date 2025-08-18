@@ -314,8 +314,9 @@ router.post("/checkin", (req, res) => {
     hora_checkin,
     valor_diaria,
     motivo_hospedagem,
-    acompanhantes,
-    nomes_acompanhantes, // Alterado para receber apenas o array de nomes
+    nomes_acompanhantes,
+    cpfs_acompanhantes,
+    nascimentos_acompanhantes,
     data_checkout_prevista,
     hora_checkout_prevista,
     ignorar_reserva_ativa,
@@ -333,7 +334,6 @@ router.post("/checkin", (req, res) => {
       .json({ message: "Preencha todos os campos obrigatórios!" });
   }
 
-  // Verifica se já existe reserva ativa para o quarto
   db.query(
     `SELECT id FROM Reservas WHERE quarto_numero = ? AND status = 'ativo'`,
     [quarto_numero],
@@ -348,7 +348,6 @@ router.post("/checkin", (req, res) => {
           .json({ message: "Já existe uma reserva ativa para este quarto." });
       }
 
-      // Verifica se já existe reserva ativa para o CPF (cliente)
       db.query(
         `SELECT id FROM Reservas WHERE cliente_cpf = ? AND status = 'ativo'`,
         [cliente_cpf],
@@ -359,7 +358,6 @@ router.post("/checkin", (req, res) => {
               error: err2,
             });
           if (results2.length > 0 && !ignorar_reserva_ativa) {
-            // Cliente já tem reserva ativa, pede confirmação
             return res.status(409).json({
               message:
                 "Este cliente já possui uma reserva ativa. Deseja realizar outra mesmo assim?",
@@ -367,7 +365,6 @@ router.post("/checkin", (req, res) => {
             });
           }
 
-          // Faz o INSERT normalmente
           db.query(
             `INSERT INTO Reservas 
      (cliente_cpf, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
@@ -390,7 +387,6 @@ router.post("/checkin", (req, res) => {
 
               const reservaId = result.insertId;
 
-              // Atualiza o status do quarto
               db.query(
                 `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
                 [quarto_numero],
@@ -401,20 +397,27 @@ router.post("/checkin", (req, res) => {
                       error: err2,
                     });
 
-                  // Insere os acompanhantes na nova tabela Acompanhantes
+                  // Verifica se existem acompanhantes para registrar
                   if (nomes_acompanhantes && nomes_acompanhantes.length > 0) {
                     const acompanhantesData = nomes_acompanhantes.map(
-                      (nome) => [reservaId, nome]
+                      (nome, index) => [
+                        reservaId,
+                        nome,
+                        cpfs_acompanhantes[index] || null, // Pega o CPF correspondente
+                        nascimentos_acompanhantes[index] || null, // Pega a data de nascimento correspondente
+                      ]
                     );
                     db.query(
-                      `INSERT INTO Acompanhantes (reserva_id, nome) VALUES ?`,
+                      `INSERT INTO Acompanhantes (reserva_id, nome, cpf, data_nascimento) VALUES ?`,
                       [acompanhantesData],
                       (err3) => {
-                        if (err3)
+                        if (err3) {
+                          console.error("Erro ao registrar acompanhantes:", err3);
                           return res.status(500).json({
                             message: "Erro ao registrar acompanhantes",
                             error: err3,
                           });
+                        }
                         res.status(201).json({
                           message: "Check-in registrado com sucesso",
                           result,
