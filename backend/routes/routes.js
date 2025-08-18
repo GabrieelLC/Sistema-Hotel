@@ -236,6 +236,7 @@ router.delete("/quartos/:numero", (req, res) => {
 
 // Chegadas do dia (check-in)
 router.get("/checkins-hoje", (req, res) => {
+  const hoje = new Date().toISOString().slice(0, 10);
   db.query(
     `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkin as hora, c.telefone, c.email, 
@@ -245,12 +246,15 @@ router.get("/checkins-hoje", (req, res) => {
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
-     WHERE DATE(r.data_checkin) = CURDATE()`,
+     WHERE DATE(r.data_checkin) = ? AND r.status = 'ativo'`,
+    [hoje],
     (err, results) => {
-      if (err)
+      if (err) {
+        console.error("Erro ao buscar check-ins:", err);
         return res
           .status(500)
           .json({ message: "Erro ao buscar check-ins", error: err });
+      }
       res.json(results);
     }
   );
