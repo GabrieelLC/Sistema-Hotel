@@ -265,7 +265,8 @@ router.get("/checkouts-hoje", (req, res) => {
   db.query(
     `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkout as hora, c.telefone, c.email, 
-            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria
+            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
+            r.motivo_hospedagem
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
      JOIN Quartos q ON r.quarto_numero = q.numero
@@ -818,6 +819,35 @@ router.get("/api/checkouts-hoje", (req, res) => {
       return res
         .status(500)
         .json({ message: "Erro ao buscar checkouts", error: err });
+    res.json(results);
+  });
+});
+
+// Rota para buscar check-outs vencidos
+router.get("/checkouts-vencidos", (req, res) => {
+  const agora = new Date();
+  const dataHoraAtual = agora.toISOString().slice(0, 19).replace('T', ' ');
+
+  const sql = `
+    SELECT c.cpf, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
+           DATE_FORMAT(r.data_checkout_prevista, '%d/%m/%Y') as data_saida_prevista,
+           DATE_FORMAT(r.hora_checkout_prevista, '%H:%i') as hora_saida_prevista,
+           c.telefone, c.email
+    FROM Reservas r
+    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Quartos q ON r.quarto_numero = q.numero
+    JOIN TiposQuarto tq ON q.tipo_id = tq.id 
+    WHERE r.status = 'ativo' AND CONCAT(r.data_checkout_prevista, ' ', r.hora_checkout_prevista) < ?
+    ORDER BY r.data_checkout_prevista, r.hora_checkout_prevista ASC
+  `;
+
+  db.query(sql, [dataHoraAtual], (err, results) => {
+    if (err) {
+      console.error("Erro ao buscar check-outs vencidos:", err);
+      return res
+        .status(500)
+        .json({ message: "Erro ao buscar check-outs vencidos", error: err });
+    }
     res.json(results);
   });
 });

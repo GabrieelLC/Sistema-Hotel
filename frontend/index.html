@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
         /* Reset básico e configurações globais */
@@ -91,7 +91,8 @@
             transition: background-color 0.2s, color 0.2s;
         }
 
-        .menu-btn:hover, .menu-btn.active {
+        .menu-btn:hover,
+        .menu-btn.active {
             background-color: var(--primary-color);
             color: #fff;
         }
@@ -132,7 +133,7 @@
             font-size: 0.9rem;
             transition: background-color 0.2s;
         }
-        
+
         .cadastro-btn:hover {
             background-color: #357abd;
         }
@@ -194,7 +195,8 @@
             font-size: 0.9rem;
         }
 
-        th, td {
+        th,
+        td {
             padding: 1rem;
             text-align: left;
             border-bottom: 1px solid var(--border-color);
@@ -205,7 +207,7 @@
             color: var(--heading-color);
             background-color: #f8f9fa;
         }
-        
+
         tbody tr:last-child td {
             border-bottom: none;
         }
@@ -219,20 +221,31 @@
             body {
                 flex-direction: column;
             }
+
             .sidebar {
                 width: 100%;
                 height: auto;
                 border-right: none;
                 border-bottom: 1px solid var(--border-color);
             }
+
             .main-content {
                 padding: 1.5rem;
             }
+
             .header {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 1rem;
             }
+        }
+
+        .checkout-vencido td {
+            background-color: #ffcdd2 !important;
+            /* Cor de fundo vermelha clara */
+            color: #c62828;
+            /* Cor do texto escura */
+            font-weight: bold;
         }
     </style>
 </head>
@@ -269,6 +282,25 @@
                 </div>
             </header>
 
+            <section class="card" id="vencidos-card" style="display: none; border-color: #e53e3e;">
+                <h2 class="card-title" style="color: #c53030;">Alerta: Check-outs Vencidos</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>CPF</th>
+                                <th>Nome</th>
+                                <th>Quarto</th>
+                                <th>Saída Prevista</th>
+                                <th>Hora Prevista</th>
+                                <th>Telefone</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vencidos-tbody"></tbody>
+                    </table>
+                </div>
+            </section>
+
             <!-- Seção de Check-ins -->
             <section class="card">
                 <h2 class="card-title">Chegadas do Dia (Check-in)</h2>
@@ -291,6 +323,7 @@
                     </table>
                 </div>
             </section>
+
 
             <!-- Seção de Check-outs -->
             <section class="card">
@@ -368,7 +401,7 @@
                 cadastroDropdown.classList.remove("show");
             }
         });
-        
+
         // --- FUNÇÕES DE CARREGAMENTO DE DADOS (com todas as colunas) ---
 
         async function carregarCheckins() {
@@ -406,7 +439,7 @@
         async function carregarCheckouts() {
             const tbody = document.getElementById("checkout-tbody");
             tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
-             try {
+            try {
                 const resp = await fetch("/api/checkouts-hoje");
                 const dados = await resp.json();
                 if (dados.length === 0) {
@@ -467,8 +500,38 @@
             }
         }
 
+        async function carregarCheckoutsVencidos() {
+            const card = document.getElementById("vencidos-card");
+            const tbody = document.getElementById("vencidos-tbody");
+            try {
+                const resp = await fetch("/api/checkouts-vencidos");
+                const dados = await resp.json();
+                if (dados.length > 0) {
+                    card.style.display = 'block'; // Mostra o card de alertas
+                    tbody.innerHTML = "";
+                    dados.forEach((item) => {
+                        tbody.innerHTML += `
+                            <tr class="checkout-vencido">
+                                <td>${item.cpf || 'N/A'}</td>
+                                <td>${item.nome || 'N/A'}</td>
+                                <td>${item.quarto || 'N/A'}</td>
+                                <td>${item.data_saida_prevista || 'N/A'}</td>
+                                <td>${item.hora_saida_prevista || 'N/A'}</td>
+                                <td>${item.telefone || 'N/A'}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    card.style.display = 'none'; // Esconde o card se não houver vencidos
+                }
+            } catch (error) {
+                console.error("Erro em carregarCheckoutsVencidos:", error);
+            }
+        }
+
         // Carrega os dados quando a página estiver pronta
         document.addEventListener("DOMContentLoaded", () => {
+            carregarCheckoutsVencidos(); // Adicionada a chamada da nova função
             carregarCheckins();
             carregarCheckouts();
             carregarHospedesAtivos();
