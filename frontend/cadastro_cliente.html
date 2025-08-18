@@ -92,6 +92,69 @@
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
     </div>
-    <script src="js/script.js"></script>
+    
+    <!-- O script original foi movido para dentro do HTML para conter a nova lógica -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const nacionalidadeInput = document.getElementById('nacionalidade');
+            const cpfInput = document.getElementById('cpf');
+
+            // Função para verificar a nacionalidade e ajustar a obrigatoriedade do CPF
+            function ajustarObrigatoriedadeCPF() {
+                const nacionalidade = nacionalidadeInput.value.trim().toLowerCase();
+                
+                // Se a nacionalidade NÃO for 'brasil' (ou vazia), o CPF não é obrigatório
+                if (nacionalidade !== 'brasil' && nacionalidade !== 'brasileira' && nacionalidade !== '') {
+                    cpfInput.required = false;
+                } else {
+                    cpfInput.required = true;
+                }
+            }
+
+            // Adiciona um listener ao campo de nacionalidade para chamar a função sempre que o valor mudar
+            nacionalidadeInput.addEventListener('input', ajustarObrigatoriedadeCPF);
+
+            // Garante que a verificação seja feita caso o campo já venha preenchido
+            ajustarObrigatoriedadeCPF();
+
+            // Lógica original do seu form (se houver no script.js, deve ser movida para cá)
+            const form = document.getElementById('cadastroForm');
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                // Validação manual antes de enviar, caso o 'required' falhe
+                if (cpfInput.required && !cpfInput.value) {
+                    alert('Por favor, preencha o campo CPF.');
+                    return;
+                }
+
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+
+                try {
+                    const response = await fetch('/api/clientes', { // Verifique se este é o endpoint correto
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(data),
+                    });
+
+                    if (response.ok) {
+                        alert('Cliente cadastrado com sucesso!');
+                        form.reset();
+                        // Redireciona ou atualiza a página conforme necessário
+                        window.location.href = 'clientes.html'; 
+                    } else {
+                        const errorData = await response.json();
+                        alert(`Erro ao cadastrar cliente: ${errorData.message}`);
+                    }
+                } catch (error) {
+                    console.error('Erro de conexão:', error);
+                    alert('Não foi possível conectar ao servidor.');
+                }
+            });
+        });
+    </script>
   </body>
 </html>
