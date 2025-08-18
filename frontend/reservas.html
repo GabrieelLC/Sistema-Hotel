@@ -163,7 +163,7 @@
 
         /* Estilo das Tabelas */
         .table-wrapper {
-            overflow-x: auto; /* ESSA LINHA CRIA A BARRA DE ROLAGEM */
+            overflow-x: auto; 
         }
 
         table {
@@ -234,6 +234,33 @@
             cursor: pointer;
             color: var(--text-color);
         }
+
+        /* Estilo para a célula de acompanhantes */
+        .acompanhantes-cell {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Estilos para o container da busca */
+        .search-container {
+            margin-bottom: 1.5rem;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #searchInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+        }
     </style>
 </head>
 
@@ -265,7 +292,12 @@
 
             <div class="card">
                 <div class="section-title" id="table-title">Todas as Reservas</div>
-                <!-- DIV ADICIONADA PARA A BARRA DE ROLAGEM -->
+                
+                <!-- Filtro de busca adicionado aqui -->
+                <div class="search-container">
+                    <input type="text" id="searchInput" onkeyup="filtrarReservas()" placeholder="Buscar por nome, CPF ou quarto...">
+                </div>
+
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -279,7 +311,6 @@
                                 <th>Status</th>
                                 <th>Acompanhantes</th>
                                 <th>Motivo</th>
-                                <th>Ações</th>
                             </tr>
                         </thead>
                         <tbody id="reservas-tbody"></tbody>
@@ -302,6 +333,8 @@
     </div>
 
     <script>
+        let todasAsReservas = []; // Guarda a lista completa de reservas
+
         // Atualiza data e hora em tempo real
         function updateDateTime() {
             const now = new Date();
@@ -312,11 +345,11 @@
         updateDateTime();
         setInterval(updateDateTime, 1000);
 
-        function preencherTabela(reservas) {
+        function renderizarTabela(reservas) {
             const tbody = document.getElementById("reservas-tbody");
             tbody.innerHTML = '';
             if (!reservas || reservas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10">Nenhuma reserva encontrada.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9">Nenhuma reserva encontrada.</td></tr>';
                 return;
             }
             reservas.forEach(reserva => {
@@ -331,14 +364,29 @@
                         <td>${reserva.data_saida || 'N/A'}</td>
                         <td>${reserva.hora_saida || 'N/A'}</td>
                         <td>${reserva.status || 'N/A'}</td>
-                        <td>${reserva.num_acompanhantes || 0}</td>
-                        <td>${reserva.motivo_hospedagem || 'Não informado'}</td>
-                        <td>
+                        <td class="acompanhantes-cell">
+                            <span>${reserva.num_acompanhantes || 0}</span>
                             <button class="btn-view" onclick='mostrarAcompanhantes(${nomesAcompanhantes})'>Ver</button>
                         </td>
+                        <td>${reserva.motivo_hospedagem || 'Não informado'}</td>
                     </tr>
                 `;
             });
+        }
+
+        // Função para filtrar as reservas
+        function filtrarReservas() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const reservasFiltradas = todasAsReservas.filter(reserva => {
+                const nome = reserva.nome || '';
+                const cpf = reserva.cliente_cpf || ''; // Supondo que a API retorne o CPF
+                const quarto = reserva.quarto ? reserva.quarto.toString() : '';
+
+                return nome.toLowerCase().includes(searchTerm) ||
+                       cpf.includes(searchTerm) ||
+                       quarto.includes(searchTerm);
+            });
+            renderizarTabela(reservasFiltradas);
         }
 
         async function carregarReservas(futuras = false) {
@@ -363,10 +411,11 @@
                     throw new Error(`Erro na API: ${response.statusText}`);
                 }
                 const data = await response.json();
-                preencherTabela(data);
+                todasAsReservas = data; // Armazena a lista completa
+                renderizarTabela(todasAsReservas); // Renderiza a tabela com os dados completos
             } catch (error) {
                 const tbody = document.getElementById("reservas-tbody");
-                tbody.innerHTML = '<tr><td colspan="10">Erro ao carregar as reservas.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar as reservas.</td></tr>';
                 console.error("Erro ao carregar reservas:", error);
             }
         }
@@ -377,9 +426,9 @@
             
             if (nomes && nomes.length > 0) {
                 list.innerHTML = '';
-                const nomesArray = nomes.split(', ');
+                const nomesArray = typeof nomes === 'string' ? nomes.split(',') : nomes;
                 nomesArray.forEach(nome => {
-                    list.innerHTML += `<li>${nome}</li>`;
+                    list.innerHTML += `<li>${nome.trim()}</li>`;
                 });
             } else {
                 list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
