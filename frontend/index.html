@@ -252,6 +252,29 @@
             background-color: #e6ffed !important;
             color: #2f855a;
         }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* Adiciona espaço entre os botões */
+        }
+
+        .refresh-btn {
+            background-color: #fff;
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border: 1px solid var(--primary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .refresh-btn:hover {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
     </style>
 </head>
 
@@ -278,11 +301,14 @@
         <main class="main-content">
             <header class="header">
                 <h1>Home</h1>
-                <div class="cadastro-dropdown" id="cadastroDropdown">
-                    <button class="cadastro-btn" id="cadastroTab">+ Novo Cadastro</button>
-                    <div class="cadastro-dropdown-content" id="cadastroDropdownContent">
-                        <a href="cadastro_cliente.html">Cliente</a>
-                        <a href="cadastro_quarto.html">Quarto</a>
+                <div class="header-actions">
+                    <button class="refresh-btn" id="refreshButton">Atualizar</button>
+                    <div class="cadastro-dropdown" id="cadastroDropdown">
+                        <button class="cadastro-btn" id="cadastroTab">+ Novo Cadastro</button>
+                        <div class="cadastro-dropdown-content" id="cadastroDropdownContent">
+                            <a href="cadastro_cliente.html">Cliente</a>
+                            <a href="cadastro_quarto.html">Quarto</a>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -534,13 +560,18 @@
             }
         }
 
-        // Carrega os dados quando a página estiver pronta
-        document.addEventListener("DOMContentLoaded", () => {
-            carregarCheckoutsVencidos(); // Adicionada a chamada da nova função
+        function atualizarTodosOsDados() {
+            carregarCheckoutsVencidos();
             carregarCheckins();
             carregarCheckouts();
             carregarHospedesAtivos();
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            atualizarTodosOsDados();
         });
+
+        document.getElementById("refreshButton").addEventListener("click", atualizarTodosOsDados);
     </script>
 </body>
 
