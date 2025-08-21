@@ -830,7 +830,13 @@ router.get("/api/checkouts-hoje", (req, res) => {
 // Rota para buscar check-outs vencidos
 router.get("/checkouts-vencidos", (req, res) => {
   const agora = new Date();
-  const dataHoraAtual = agora.toISOString().slice(0, 19).replace('T', ' ');
+  const ano = agora.getFullYear();
+  const mes = String(agora.getMonth() + 1).padStart(2, '0');
+  const dia = String(agora.getDate()).padStart(2, '0');
+  const hora = String(agora.getHours()).padStart(2, '0');
+  const minuto = String(agora.getMinutes()).padStart(2, '0');
+  const segundo = String(agora.getSeconds()).padStart(2, '0');
+  const dataHoraAtual = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
 
   const sql = `
     SELECT c.cpf, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
