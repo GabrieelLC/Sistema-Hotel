@@ -1,247 +1,268 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
-<head>
-  <meta charset="UTF-8" />
-  <title>Calendário de Ocupação de Quartos</title>
-  <link rel="stylesheet" href="css/style.css" />
-  <style>
-    .calendar-container {
-      max-width: 1100px;
-      margin: 40px auto;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.09);
-      padding: 32px;
-    }
-
-    .calendar-header {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-
-    .calendar-table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 30px;
-    }
-
-    .calendar-table th,
-    .calendar-table td {
-      border: 1px solid #e0e0e0;
-      width: 14.28%;
-      height: 80px;
-      text-align: left;
-      vertical-align: top;
-      padding: 6px 4px 4px 8px;
-      font-size: 15px;
-      position: relative;
-    }
-
-    .calendar-table th {
-      background: #f0f0f0;
-      text-align: center;
-      font-weight: 600;
-      font-size: 16px;
-      color: #1976d2;
-    }
-
-    .calendar-day-ocupado {
-      background: #ffb3b3;
-      cursor: pointer;
-    }
-
-    .calendar-day-livre {
-      background: #b3ffb3;
-    }
-
-    .calendar-quarto-label {
-      font-weight: bold;
-      color: #1976d2;
-      margin-bottom: 6px;
-      display: block;
-    }
-
-    .calendar-tooltip {
-      display: none;
-      position: absolute;
-      left: 50%;
-      top: 100%;
-      transform: translateX(-50%);
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 6px 12px;
-      border-radius: 6px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
-      font-size: 14px;
-      z-index: 10;
-      min-width: 120px;
-      white-space: pre-line;
-    }
-
-    .calendar-table td:hover .calendar-tooltip {
-      display: block;
-    }
-
-    .calendar-quarto-select {
-      margin-left: 18px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #b5c8de;
-      font-size: 1rem;
-    }
-
-    @media (max-width: 900px) {
+  <head>
+    <meta charset="UTF-8" />
+    <title>Calendário de Ocupação de Quartos</title>
+    <link rel="stylesheet" href="css/style.css" />
+    <style>
       .calendar-container {
-        padding: 10px;
+        max-width: 1100px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.09);
+        padding: 32px;
+      }
+
+      .calendar-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .calendar-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 30px;
       }
 
       .calendar-table th,
       .calendar-table td {
-        font-size: 13px;
-        height: 54px;
+        border: 1px solid #e0e0e0;
+        width: 14.28%;
+        height: 80px;
+        text-align: left;
+        vertical-align: top;
+        padding: 6px 4px 4px 8px;
+        font-size: 15px;
+        position: relative;
       }
-    }
-  </style>
-</head>
 
-<body>
-  <div class="calendar-container">
-    <div class="calendar-header">
-      <label for="mes">Mês:</label>
-      <input type="month" id="mes" />
-      <label for="quartoSelect">Quarto:</label>
-      <select id="quartoSelect" class="calendar-quarto-select"></select>
+      .calendar-table th {
+        background: #f0f0f0;
+        text-align: center;
+        font-weight: 600;
+        font-size: 16px;
+        color: #1976d2;
+      }
+
+      .calendar-day-ocupado {
+        background: #ffb3b3;
+        cursor: pointer;
+      }
+
+      .calendar-day-livre {
+        background: #b3ffb3;
+      }
+
+      .calendar-quarto-label {
+        font-weight: bold;
+        color: #1976d2;
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      .calendar-tooltip {
+        display: none;
+        position: absolute;
+        left: 50%;
+        top: 100%;
+        transform: translateX(-50%);
+        background: #fff;
+        border: 1px solid #ccc;
+        padding: 6px 12px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
+        font-size: 14px;
+        z-index: 10;
+        min-width: 120px;
+        white-space: pre-line;
+      }
+
+      .calendar-table td:hover .calendar-tooltip {
+        display: block;
+      }
+
+      .calendar-quarto-select {
+        margin-left: 18px;
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid #b5c8de;
+        font-size: 1rem;
+      }
+
+      @media (max-width: 900px) {
+        .calendar-container {
+          padding: 10px;
+        }
+
+        .calendar-table th,
+        .calendar-table td {
+          font-size: 13px;
+          height: 54px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="calendar-container">
+      <div class="calendar-header">
+        <a
+          href="index.html"
+          class="checkout_screen_back_arrow"
+          onclick="VoltarPagina()"
+          >←</a
+        >
+        <label for="mes">Mês:</label>
+        <input type="month" id="mes" />
+        <label for="quartoSelect">Quarto:</label>
+        <select id="quartoSelect" class="calendar-quarto-select"></select>
+      </div>
+      <div id="calendario"></div>
     </div>
-    <div id="calendario"></div>
-  </div>
-  <script>
+    <script>
+      // Codigo novo para visualização
 
-    // Codigo novo para visualização 
+      document.addEventListener("DOMContentLoaded", () => {
+        const hoje = new Date();
+        document.getElementById("mes").value = hoje.toISOString().slice(0, 7);
 
-    document.addEventListener("DOMContentLoaded", () => {
-      const hoje = new Date();
-      document.getElementById("mes").value = hoje.toISOString().slice(0, 7);
+        carregarCalendario();
 
-      carregarCalendario();
+        document
+          .getElementById("mes")
+          .addEventListener("change", carregarCalendario);
+      });
 
-      document.getElementById("mes").addEventListener("change", carregarCalendario);
-    });
+      async function carregarReservasEQuartos(ano, mes) {
+        const primeiroDia = new Date(ano, mes - 1, 1)
+          .toISOString()
+          .slice(0, 10);
+        const ultimoDia = new Date(ano, mes, 0).toISOString().slice(0, 10);
 
-    async function carregarReservasEQuartos(ano, mes) {
-      const primeiroDia = new Date(ano, mes - 1, 1).toISOString().slice(0, 10);
-      const ultimoDia = new Date(ano, mes, 0).toISOString().slice(0, 10);
+        // 1. Busca apenas as reservas do mês selecionado (usando a nova API)
+        const respReservas = await fetch(
+          `/api/ocupacao-quartos?inicio=${primeiroDia}&fim=${ultimoDia}`
+        );
+        if (!respReservas.ok) {
+          console.error("Falha ao buscar ocupação.");
+          return { quartos: [], reservas: [] };
+        }
+        const reservas = await respReservas.json();
 
-      // 1. Busca apenas as reservas do mês selecionado (usando a nova API)
-      const respReservas = await fetch(`/api/ocupacao-quartos?inicio=${primeiroDia}&fim=${ultimoDia}`);
-      if (!respReservas.ok) {
-        console.error("Falha ao buscar ocupação.");
-        return { quartos: [], reservas: [] };
-      }
-      const reservas = await respReservas.json();
+        // 2. Busca todos os quartos para garantir que mesmo os vazios apareçam
+        const respQuartos = await fetch("/api/quartos");
+        if (!respQuartos.ok) {
+          console.error("Falha ao buscar quartos.");
+          return { quartos: [], reservas: [] };
+        }
+        let quartos = await respQuartos.json();
+        quartos.sort((a, b) => a.numero - b.numero); // Ordena os quartos
 
-      // 2. Busca todos os quartos para garantir que mesmo os vazios apareçam
-      const respQuartos = await fetch('/api/quartos');
-      if (!respQuartos.ok) {
-        console.error("Falha ao buscar quartos.");
-        return { quartos: [], reservas: [] };
-      }
-      let quartos = await respQuartos.json();
-      quartos.sort((a, b) => a.numero - b.numero); // Ordena os quartos
-
-      return { quartos, reservas };
-    }
-
-    async function carregarCalendario() {
-      const calendarioDiv = document.getElementById("calendario");
-      calendarioDiv.innerHTML = "Carregando...";
-
-      const mesInput = document.getElementById("mes").value;
-      const ano = Number(mesInput.split("-")[0]);
-      const mes = Number(mesInput.split("-")[1]);
-
-      const { quartos, reservas } = await carregarReservasEQuartos(ano, mes);
-
-      if (quartos.length === 0) {
-        calendarioDiv.innerHTML = "Nenhum quarto cadastrado.";
-        return;
+        return { quartos, reservas };
       }
 
-      montarCalendarioGantt(quartos, reservas, ano, mes);
-    }
+      async function carregarCalendario() {
+        const calendarioDiv = document.getElementById("calendario");
+        calendarioDiv.innerHTML = "Carregando...";
 
-    function montarCalendarioGantt(quartos, reservas, ano, mes) {
-      const diasNoMes = new Date(ano, mes, 0).getDate();
-      const calendarioDiv = document.getElementById("calendario");
+        const mesInput = document.getElementById("mes").value;
+        const ano = Number(mesInput.split("-")[0]);
+        const mes = Number(mesInput.split("-")[1]);
 
-      // Monta o cabeçalho com os dias do mês
-      let headerHtml = '<tr><th>Quarto</th>';
-      for (let dia = 1; dia <= diasNoMes; dia++) {
-        const data = new Date(ano, mes - 1, dia);
-        const diaSemana = data.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3);
-        const isWeekend = data.getDay() === 0 || data.getDay() === 6;
-        headerHtml += `<th style="${isWeekend ? 'background-color:#f8fafc;' : ''}">${dia}<br><small>${diaSemana}</small></th>`;
+        const { quartos, reservas } = await carregarReservasEQuartos(ano, mes);
+
+        if (quartos.length === 0) {
+          calendarioDiv.innerHTML = "Nenhum quarto cadastrado.";
+          return;
+        }
+
+        montarCalendarioGantt(quartos, reservas, ano, mes);
       }
-      headerHtml += '</tr>';
 
-      // Monta o corpo, uma linha para cada quarto
-      let bodyHtml = '';
-      for (const quarto of quartos) {
-        bodyHtml += `<tr><td><b>${quarto.numero}</b></td>`;
+      function montarCalendarioGantt(quartos, reservas, ano, mes) {
+        const diasNoMes = new Date(ano, mes, 0).getDate();
+        const calendarioDiv = document.getElementById("calendario");
 
-        const reservasDoQuarto = reservas.filter(r => r.quarto_numero == quarto.numero);
-        let diaAtual = 1;
+        // Monta o cabeçalho com os dias do mês
+        let headerHtml = "<tr><th>Quarto</th>";
+        for (let dia = 1; dia <= diasNoMes; dia++) {
+          const data = new Date(ano, mes - 1, dia);
+          const diaSemana = data
+            .toLocaleDateString("pt-BR", { weekday: "short" })
+            .slice(0, 3);
+          const isWeekend = data.getDay() === 0 || data.getDay() === 6;
+          headerHtml += `<th style="${
+            isWeekend ? "background-color:#f8fafc;" : ""
+          }">${dia}<br><small>${diaSemana}</small></th>`;
+        }
+        headerHtml += "</tr>";
 
-        while (diaAtual <= diasNoMes) {
-          const dataAtual = new Date(ano, mes - 1, diaAtual);
-          dataAtual.setHours(12); // Evita problemas com fuso horário
+        // Monta o corpo, uma linha para cada quarto
+        let bodyHtml = "";
+        for (const quarto of quartos) {
+          bodyHtml += `<tr><td><b>${quarto.numero}</b></td>`;
 
-          const reservaDoDia = reservasDoQuarto.find(r => {
-            const checkin = new Date(r.data_checkin);
-            const saida = new Date(r.data_saida);
-            return dataAtual >= checkin && dataAtual < saida;
-          });
+          const reservasDoQuarto = reservas.filter(
+            (r) => r.quarto_numero == quarto.numero
+          );
+          let diaAtual = 1;
 
-          if (reservaDoDia) {
-            const checkin = new Date(reservaDoDia.data_checkin);
-            const saida = new Date(reservaDoDia.data_saida);
+          while (diaAtual <= diasNoMes) {
+            const dataAtual = new Date(ano, mes - 1, diaAtual);
+            dataAtual.setHours(12); // Evita problemas com fuso horário
 
-            // Garante que o início e o fim estão dentro do mês atual
-            let diaInicioNoMes = checkin.getMonth() + 1 === mes ? checkin.getDate() : 1;
-            let diaFimNoMes = saida.getMonth() + 1 === mes ? saida.getDate() - 1 : diasNoMes;
+            const reservaDoDia = reservasDoQuarto.find((r) => {
+              const checkin = new Date(r.data_checkin);
+              const saida = new Date(r.data_saida);
+              return dataAtual >= checkin && dataAtual < saida;
+            });
 
-            if (diaAtual > diaInicioNoMes) {
-              diaInicioNoMes = diaAtual;
-            }
+            if (reservaDoDia) {
+              const checkin = new Date(reservaDoDia.data_checkin);
+              const saida = new Date(reservaDoDia.data_saida);
 
-            // Calcula quantos dias a reserva ocupa na visualização
-            let diasDeOcupacao = (diaFimNoMes - diaInicioNoMes) + 1;
+              // Garante que o início e o fim estão dentro do mês atual
+              let diaInicioNoMes =
+                checkin.getMonth() + 1 === mes ? checkin.getDate() : 1;
+              let diaFimNoMes =
+                saida.getMonth() + 1 === mes ? saida.getDate() - 1 : diasNoMes;
 
-            const tooltipText = `Hóspede: ${reservaDoDia.cliente}\nPeríodo: ${formatarData(checkin)} a ${formatarData(saida)}`;
+              if (diaAtual > diaInicioNoMes) {
+                diaInicioNoMes = diaAtual;
+              }
 
-            // Usa colspan para fundir as células da reserva
-            bodyHtml += `<td colspan="${diasDeOcupacao}" class="calendar-day-ocupado" title="${tooltipText}">
+              // Calcula quantos dias a reserva ocupa na visualização
+              let diasDeOcupacao = diaFimNoMes - diaInicioNoMes + 1;
+
+              const tooltipText = `Hóspede: ${
+                reservaDoDia.cliente
+              }\nPeríodo: ${formatarData(checkin)} a ${formatarData(saida)}`;
+
+              // Usa colspan para fundir as células da reserva
+              bodyHtml += `<td colspan="${diasDeOcupacao}" class="calendar-day-ocupado" title="${tooltipText}">
                                 <div style="font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${reservaDoDia.cliente}
                                 </div>
                              </td>`;
-            diaAtual += diasDeOcupacao;
-          } else {
-            bodyHtml += `<td class="calendar-day-livre"></td>`;
-            diaAtual++;
+              diaAtual += diasDeOcupacao;
+            } else {
+              bodyHtml += `<td class="calendar-day-livre"></td>`;
+              diaAtual++;
+            }
           }
+          bodyHtml += "</tr>";
         }
-        bodyHtml += '</tr>';
-      }
 
-      // Esconde o select de quarto que não é mais necessário
-      document.getElementById("quartoSelect").style.display = 'none';
-      document.querySelector("label[for='quartoSelect']").style.display = 'none';
+        // Esconde o select de quarto que não é mais necessário
+        document.getElementById("quartoSelect").style.display = "none";
+        document.querySelector("label[for='quartoSelect']").style.display =
+          "none";
 
-      // Monta a tabela final
-      calendarioDiv.innerHTML = `
+        // Monta a tabela final
+        calendarioDiv.innerHTML = `
         <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
             <table class="calendar-table">
                 <thead>${headerHtml}</thead>
@@ -249,21 +270,20 @@
             </table>
         </div>
     `;
-    }
+      }
 
-    function formatarData(data) {
-      if (!data) return '';
-      const d = new Date(data);
-      // Adiciona o fuso horário para corrigir a data
-      const dia = String(d.getUTCDate()).padStart(2, '0');
-      const mes = String(d.getUTCMonth() + 1).padStart(2, '0');
-      return `${dia}/${mes}`;
-    }
+      function formatarData(data) {
+        if (!data) return "";
+        const d = new Date(data);
+        // Adiciona o fuso horário para corrigir a data
+        const dia = String(d.getUTCDate()).padStart(2, "0");
+        const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+        return `${dia}/${mes}`;
+      }
 
-    // Código antigo comentado para referência
+      // Código antigo comentado para referência
 
-
-    /*let reservas = [];
+      /*let reservas = [];
     let quartos = [];
 
     async function carregarReservas() {
@@ -428,7 +448,6 @@
         .getElementById("mes")
         .addEventListener("change", carregarCalendario);
     }); */
-  </script>
-</body>
-
+    </script>
+  </body>
 </html>
