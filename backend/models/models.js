@@ -47,6 +47,9 @@ const Clientes = {
   findByCpf: (cpf, callback) => {
     db.query('SELECT * FROM Clientes WHERE cpf = ?', [cpf], callback);
   },
+  findByPassaporte: (passaporte, callback) => {
+    db.query('SELECT * FROM Clientes WHERE passaporte = ?', [passaporte], callback);
+  },
   create: (data, callback) => {
     db.query('INSERT INTO Clientes (cpf, nome, telefone, email, endereco, cep) VALUES (?, ?, ?, ?, ?, ?)', 
       [data.cpf, data.nome, data.telefone, data.email, data.endereco, data.cep], callback);

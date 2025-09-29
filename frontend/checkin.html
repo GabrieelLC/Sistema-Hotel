@@ -163,6 +163,15 @@
               />
             </div>
             <div class="checkoutscreenfield_group">
+              <label class="checkoutscreenlabel" for="passaportecliente">Passaporte</label>
+              <input
+                class="checkoutscreeninput"
+                type="text"
+                id="passaportecliente"
+                name="passaportecliente"
+              />
+            </div>
+            <div class="checkoutscreenfield_group">
               <label class="checkoutscreenlabel" for="nomecliente"
                 >Nome do Cliente</label
               >
@@ -420,6 +429,38 @@
             console.error("Erro ao buscar cliente:", error);
           }
         });
+
+        // Preencher dados do cliente ao digitar o Passaporte
+        const passaporteInput = document.getElementById("passaportecliente");
+        if (passaporteInput) {
+          passaporteInput.addEventListener("blur", async function () {
+            const passaporte = this.value;
+            if (!passaporte) return;
+            try {
+              const resp = await fetch(`/api/clientes/passaporte/${encodeURIComponent(passaporte)}`);
+              if (resp.ok) {
+                const cliente = await resp.json();
+                document.getElementById("nomecliente").value = cliente.nome || "";
+                document.getElementById("telefonecliente").value = cliente.telefone || "";
+                document.getElementById("emailcliente").value = cliente.email || "";
+                document.getElementById("cepcliente").value = cliente.cep || "";
+                document.getElementById("enderecocliente").value = cliente.endereco || "";
+                if (cliente.cpf) {
+                  const cpfField = document.getElementById("cpfcliente");
+                  if (cpfField && !cpfField.value) cpfField.value = cliente.cpf;
+                }
+              } else {
+                document.getElementById("nomecliente").value = "";
+                document.getElementById("telefonecliente").value = "";
+                document.getElementById("emailcliente").value = "";
+                document.getElementById("cepcliente").value = "";
+                document.getElementById("enderecocliente").value = "";
+              }
+            } catch (error) {
+              console.error("Erro ao buscar cliente por passaporte:", error);
+            }
+          });
+        }
 
         // Gerar campos de acompanhantes dinamicamente
         document.getElementById("quantidade_acompanhantes").addEventListener("input", function () {
