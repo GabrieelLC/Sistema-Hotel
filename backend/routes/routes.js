@@ -95,6 +95,22 @@ router.get("/clientes/:cpf", (req, res) => {
   });
 });
 
+// Nova rota específica para buscar cliente por passaporte (evita conflito com rota por CPF)
+router.get("/clientes/passaporte/:passaporte", (req, res) => {
+  const { passaporte } = req.params;
+  Clientes.findByPassaporte(passaporte, (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: "Erro ao buscar cliente por passaporte", error: err });
+    }
+    if (!result || result.length === 0) {
+      return res.status(404).json({ message: "Cliente não encontrado" });
+    }
+    res.status(200).json(result[0]);
+  });
+});
+
 router.put("/clientes/:cpf", (req, res) => {
   const { cpf } = req.params;
   // 👇 Capture os novos campos aqui, incluindo o passaporte
