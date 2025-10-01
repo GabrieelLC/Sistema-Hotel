@@ -328,6 +328,10 @@
         return new Date(isoDate).toISOString().split("T")[0];
       }
 
+      function formatarCampo(valor) {
+        return valor && valor !== "null" ? valor : "N/A";
+      }
+
       // Renderiza a lista de clientes na tabela
       function renderClientes(clientes) {
         const tbody = document.getElementById("clientes-tbody");
@@ -339,7 +343,7 @@
         }
         clientes.forEach((cliente) => {
           const row = document.createElement("tr");
-          row.id = `cliente-${cliente.cpf}`;
+          row.id = `cliente-${cliente.id || cliente.cpf || cliente.passaporte}`;
           row.innerHTML = getRowHtml(cliente);
           tbody.appendChild(row);
         });
@@ -351,9 +355,9 @@
           ? new Date(cliente.data_nascimento).toLocaleDateString("pt-BR")
           : "N/A";
         return `
-                <td><span data-field="cpf">${cliente.cpf}</span></td>
+                <td>${formatarCampo(cliente.cpf)}</td>
                 <td><span data-field="nome">${cliente.nome}</span></td>
-                <td><span data-field="cep">${cliente.cep || "N/A"}</span></td>
+                <td>${formatarCampo(cliente.cep)}</td>
                 <td><span data-field="endereco">${
                   cliente.endereco || "N/A"
                 }</span></td>
@@ -363,19 +367,17 @@
                 <td><span data-field="email">${
                   cliente.email || "N/A"
                 }</span></td>
-                <td><span data-field="passaporte">${
-                  cliente.passaporte || "N/A"
-                }</span></td>
+                <td>${formatarCampo(cliente.passaporte)}</td>
                 <td><span data-field="data_nascimento">${dataNascimentoFormatada}</span></td>
                 <td><span data-field="nacionalidade">${
                   cliente.nacionalidade || "N/A"
                 }</span></td>
                 <td class="actions-cell">
                     <button class="btn-action btn-edit" onclick="editarCliente('${
-                      cliente.cpf
+                      cliente.id
                     }')">Editar</button>
                     <button class="btn-action btn-delete" onclick="deletarCliente('${
-                      cliente.cpf
+                      cliente.id
                     }')">Deletar</button>
                 </td>
             `;
@@ -414,11 +416,11 @@
       }
 
       // Habilita a edição em linha para um cliente
-      function editarCliente(cpf) {
-        const row = document.getElementById(`cliente-${cpf}`);
+      function editarCliente(id) {
+        const row = document.getElementById(`cliente-${id}`);
         if (!row || row.querySelector("input.editable")) return;
 
-        const cliente = todosClientes.find((c) => c.cpf === cpf);
+        const cliente = todosClientes.find((c) => c.id == id) || {};
 
         row.querySelectorAll("span[data-field]").forEach((span) => {
           const field = span.dataset.field;
@@ -435,28 +437,26 @@
 
         const actionsCell = row.querySelector(".actions-cell");
         actionsCell.innerHTML = `
-                <button class="btn-action btn-save" onclick="salvarCliente('${cpf}')">Salvar</button>
-                <button class="btn-action btn-cancel" onclick="cancelarEdicao('${cpf}')">Cancelar</button>
-            `;
+    <button class="btn-action btn-save" onclick="salvarCliente('${id}')">Salvar</button>
+    <button class="btn-action btn-cancel" onclick="cancelarEdicao('${id}')">Cancelar</button>
+  `;
       }
 
       // Cancela a edição e restaura a linha
-      function cancelarEdicao(cpf) {
-        const clienteOriginal = todosClientes.find((c) => c.cpf === cpf);
+      function cancelarEdicao(id) {
+        const clienteOriginal = todosClientes.find((c) => c.id == id);
         if (clienteOriginal) {
-          const row = document.getElementById(`cliente-${cpf}`);
+          const row = document.getElementById(`cliente-${id}`);
           row.innerHTML = getRowHtml(clienteOriginal);
         }
       }
 
       // Salva as alterações do cliente
-      async function salvarCliente(cpf) {
-        const row = document.getElementById(`cliente-${cpf}`);
-        const clienteOriginal = todosClientes.find((c) => c.cpf === cpf);
+      async function salvarCliente(id) {
+        const row = document.getElementById(`cliente-${id}`);
+        const clienteOriginal = todosClientes.find((c) => c.id == id);
         if (!clienteOriginal) {
-          alert(
-            "Erro: não foi possível encontrar os dados originais do cliente."
-          );
+          alert("Erro: não foi possível encontrar os dados originais do cliente.");
           return;
         }
 
@@ -467,7 +467,7 @@
         });
 
         try {
-          const response = await fetch(`/api/clientes/${cpf}`, {
+          const response = await fetch(`/api/clientes/${id}`, {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(dataToSend),
@@ -476,7 +476,7 @@
           if (response.ok) {
             alert("Cliente atualizado com sucesso!");
             Object.assign(clienteOriginal, dataToSend);
-            cancelarEdicao(cpf);
+            cancelarEdicao(id);
           } else {
             const errorData = await response.json();
             alert(
@@ -492,23 +492,15 @@
       }
 
       // Deleta um cliente
-      async function deletarCliente(cpf) {
-        if (
-          confirm(`Tem certeza que deseja deletar o cliente com CPF ${cpf}?`)
-        ) {
-          try {
-            const response = await fetch(`/api/clientes/${cpf}`, {
-              method: "DELETE",
-            });
-            if (response.ok) {
-              alert("Cliente deletado com sucesso!");
-              carregarClientes();
-            } else {
-              alert("Erro ao deletar cliente.");
-            }
-          } catch (error) {
-            console.error("Erro:", error);
-            alert("Erro de conexão ao deletar cliente.");
+      async function deletarCliente(id) {
+        if (confirm("Tem certeza que deseja deletar este cliente?")) {
+          const response = await fetch(`/api/clientes/${id}`, { method: "DELETE" });
+          if (response.ok) {
+            alert("Cliente deletado com sucesso!");
+            carregarClientes();
+          } else {
+            const errorData = await response.json();
+            alert(errorData.message || "Erro ao deletar cliente.");
           }
         }
       }

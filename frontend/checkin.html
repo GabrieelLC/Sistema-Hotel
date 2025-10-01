@@ -410,7 +410,7 @@
           const cpf = this.value;
           if (!cpf) return;
           try {
-            const resp = await fetch(`/api/clientes/${cpf}`);
+            const resp = await fetch(`/api/clientes/cpf/${cpf}`);
             if (resp.ok) {
               const cliente = await resp.json();
               document.getElementById("nomecliente").value = cliente.nome || "";
@@ -418,6 +418,11 @@
               document.getElementById("emailcliente").value = cliente.email || "";
               document.getElementById("cepcliente").value = cliente.cep || "";
               document.getElementById("enderecocliente").value = cliente.endereco || "";
+              // Se o cliente tiver passaporte, preenche também
+              if (cliente.passaporte) {
+                const passaporteField = document.getElementById("passaportecliente");
+                if (passaporteField && !passaporteField.value) passaporteField.value = cliente.passaporte;
+              }
             } else {
               document.getElementById("nomecliente").value = "";
               document.getElementById("telefonecliente").value = "";
@@ -426,7 +431,7 @@
               document.getElementById("enderecocliente").value = "";
             }
           } catch (error) {
-            console.error("Erro ao buscar cliente:", error);
+            console.error("Erro ao buscar cliente por CPF:", error);
           }
         });
 

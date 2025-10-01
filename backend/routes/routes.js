@@ -43,44 +43,27 @@ router.get("/clientes", (req, res) => {
 });
 
 router.post("/clientes", (req, res) => {
-  const {
-    nome,
-    cpf,
-    telefone,
-    email,
-    endereco,
-    cep,
-    passaporte,
-    data_nascimento,
-    nacionalidade,
-  } = req.body;
-  db.query(
-    "INSERT INTO Clientes (nome, cpf, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [
-      nome,
-      cpf,
-      telefone,
-      email,
-      endereco,
-      cep,
-      passaporte && passaporte.trim() !== "" ? passaporte : null, // <-- Torna opcional
-      data_nascimento,
-      nacionalidade,
-    ],
-    (err, result) => {
-      if (err)
-        return res.status(500).json({
-          message: "Erro ao cadastrar cliente",
-          error: err.sqlMessage || err.message,
-        });
-      res
-        .status(201)
-        .json({ message: "Cliente cadastrado com sucesso", result });
+  let { cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade } = req.body;
+  if (!cpf && !passaporte) {
+    return res.status(400).json({ message: "Preencha CPF ou Passaporte!" });
+  }
+  cpf = cpf && cpf.trim() !== "" ? cpf : null;
+  passaporte = passaporte && passaporte.trim() !== "" ? passaporte : null;
+
+  const sql = `
+    INSERT INTO clientes (cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+  db.query(sql, [cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade], (err, result) => {
+    if (err) {
+      console.error("Erro ao cadastrar cliente:", err);
+      return res.status(500).json({ message: "Erro ao cadastrar cliente", error: err });
     }
-  );
+    res.status(201).json({ message: "Cliente cadastrado com sucesso", result });
+  });
 });
 
-router.get("/clientes/:cpf", (req, res) => {
+router.get("/clientes/:id", (req, res) => {
   const { cpf } = req.params;
   Clientes.findByCpf(cpf, (err, result) => {
     if (err) {
@@ -111,40 +94,114 @@ router.get("/clientes/passaporte/:passaporte", (req, res) => {
   });
 });
 
-router.put("/clientes/:cpf", (req, res) => {
+router.get("/clientes/cpf/:cpf", (req, res) => {
   const { cpf } = req.params;
-  // 👇 Capture os novos campos aqui, incluindo o passaporte
-  const { nome, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade } = req.body;
-  if (!nome || !telefone || !email || !endereco || !cep) {
-    return res.status(400).json({ message: "Preencha todos os campos!" });
-  }
-  Clientes.update(
+  Clientes.findByCpf(cpf, (err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: "Erro ao buscar cliente por CPF", error: err });
+    }
+    if (!result || result.length === 0) {
+      return res.status(404).json({ message: "Cliente não encontrado" });
+    }
+    res.status(200).json(result[0]);
+  });
+});
+
+// A rota PUT correta: Atualizar cliente por ID
+router.put("/clientes/:id", (req, res) => {
+  const id = req.params.id;
+  const {
     cpf,
-    { nome, telefone, email, endereco, cep, passaporte, data_nascimento, nacionalidade },
+    passaporte,
+    nome,
+    telefone,
+    email,
+    endereco,
+    cep,
+    data_nascimento,
+    nacionalidade
+  } = req.body;
+
+  // Adicionando validação para garantir que pelo menos um dos identificadores está presente.
+  if (!cpf && !passaporte) {
+    return res.status(400).json({ message: "O CPF ou Passaporte não pode estar vazio." });
+  }
+
+  const sql = `
+    UPDATE clientes SET
+      cpf = ?,
+      passaporte = ?,
+      nome = ?,
+      telefone = ?,
+      email = ?,
+      endereco = ?,
+      cep = ?,
+      data_nascimento = ?,
+      nacionalidade = ?
+    WHERE id = ?
+  `;
+  db.query(
+    sql,
+    [
+      cpf,
+      passaporte,
+      nome,
+      telefone,
+      email,
+      endereco,
+      cep,
+      data_nascimento,
+      nacionalidade,
+      id
+    ],
     (err, result) => {
       if (err) {
-        return res
-          .status(500)
-          .json({ message: "Erro ao atualizar cliente", error: err });
+        console.error("Erro ao atualizar cliente no DB:", err);
+        // ER_DUP_ENTRY (1062) - Se CPF/Passaporte for duplicado
+        if (err.errno === 1062) {
+          return res.status(409).json({ message: "Erro: CPF ou Passaporte já cadastrado para outro cliente." });
+        }
+        return res.status(500).json({ message: "Erro ao atualizar cliente", error: err });
       }
-      res
-        .status(200)
-        .json({ message: "Cliente atualizado com sucesso", result });
+      
+      if (result.affectedRows === 0) {
+        // Retorna sucesso se 0 rows afetadas, mas o cliente foi encontrado (pode ser que nenhum dado mudou)
+        // O cliente.html confere se response.ok é verdadeiro
+        return res.json({ message: "Cliente atualizado com sucesso", result });
+      }
+      
+      res.json({ message: "Cliente atualizado com sucesso", result });
     }
   );
 });
 
-router.delete("/clientes/:cpf", (req, res) => {
-  const { cpf } = req.params;
-  Clientes.delete(cpf, (err, result) => {
+// Rota Antiga para deleção por CPF foi removida.
+// A rota abaixo é a correta, pois usa o ID do cliente e lida com chaves estrangeiras.
+
+// Novo: Rota para deletar cliente por ID (Acessada pelo frontend/clientes.html)
+router.delete("/clientes/:id", (req, res) => {
+  const id = req.params.id;
+  Clientes.deleteById(id, (err, result) => {
     if (err) {
-      return res
-        .status(500)
-        .json({ message: "Erro ao deletar cliente", error: err });
+      // 1451: ER_ROW_IS_REFERENCED_2 (Erro de integridade referencial - Chave Estrangeira)
+      if (err.code === "ER_ROW_IS_REFERENCED_2" || err.errno === 1451) {
+        return res.status(400).json({ // Retorna 400 Bad Request
+          message: "Não é possível excluir o cliente: Existem reservas ou check-ins ativos/anteriores ligados a este registro. Exclua as reservas ou check-ins primeiro.",
+          error: err
+        });
+      }
+      return res.status(500).json({ message: "Erro ao deletar cliente", error: err });
     }
-    res.status(200).json({ message: "Cliente deletado com sucesso", result });
+    
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Cliente não encontrado" });
+    }
+    res.json({ message: "Cliente deletado com sucesso" });
   });
 });
+
 
 // Listar todos os quartos
 router.get("/quartos", (req, res) => {
@@ -258,7 +315,7 @@ router.get("/checkins-hoje", (req, res) => {
             COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
             r.motivo_hospedagem
      FROM Reservas r
-     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     JOIN Clientes c ON r.cliente_id = c.id
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
      WHERE DATE(r.data_checkin) = ? AND r.status = 'ativo'`,
@@ -284,7 +341,7 @@ router.get("/checkouts-hoje", (req, res) => {
             COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
             r.motivo_hospedagem
      FROM Reservas r
-     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     JOIN Clientes c ON r.cliente_id = c.id
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
      WHERE DATE(r.data_checkout) = ?`,
@@ -339,7 +396,7 @@ router.post("/checkin", (req, res) => {
   } = req.body;
 
   if (
-    !cliente_cpf ||
+    !cliente_cpf || // O CPF/Passaporte preenchido deve ser tratado no frontend antes
     !quarto_numero ||
     !data_checkin ||
     !hora_checkin ||
@@ -349,103 +406,124 @@ router.post("/checkin", (req, res) => {
       .status(400)
       .json({ message: "Preencha todos os campos obrigatórios!" });
   }
-
+  
+  // CORREÇÃO: PASSO 1: Buscar o ID do cliente a partir do CPF
   db.query(
-    `SELECT id FROM Reservas WHERE quarto_numero = ? AND status = 'ativo'`,
-    [quarto_numero],
-    (err, results) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ message: "Erro ao verificar reservas", error: err });
-      if (results.length > 0) {
-        return res
-          .status(400)
-          .json({ message: "Já existe uma reserva ativa para este quarto." });
+    `SELECT id FROM Clientes WHERE cpf = ? OR passaporte = ?`,
+    [cliente_cpf, cliente_cpf], // Tenta buscar por CPF e Passaporte (caso o frontend coloque o passaporte no campo CPF)
+    (idErr, idResults) => {
+      if (idErr) {
+        console.error("Erro ao buscar ID do cliente:", idErr);
+        return res.status(500).json({ message: "Erro interno ao buscar dados do cliente.", error: idErr });
       }
+      if (idResults.length === 0) {
+        return res.status(404).json({ message: "Cliente não encontrado. Certifique-se de que o CPF/Passaporte está cadastrado." });
+      }
+      const cliente_id = idResults[0].id; // ID do cliente obtido
 
+      // PASSO 2: Verificar reserva ativa para o quarto
       db.query(
-        `SELECT id FROM Reservas WHERE cliente_cpf = ? AND status = 'ativo'`,
-        [cliente_cpf],
-        (err2, results2) => {
-          if (err2)
-            return res.status(500).json({
-              message: "Erro ao verificar reservas do cliente",
-              error: err2,
-            });
-          if (results2.length > 0 && !ignorar_reserva_ativa) {
-            return res.status(409).json({
-              message:
-                "Este cliente já possui uma reserva ativa. Deseja realizar outra mesmo assim?",
-              precisa_confirmar: true,
-            });
+        `SELECT id FROM Reservas WHERE quarto_numero = ? AND status = 'ativo'`,
+        [quarto_numero],
+        (err, results) => {
+          if (err)
+            return res
+              .status(500)
+              .json({ message: "Erro ao verificar reservas do quarto", error: err });
+          if (results.length > 0) {
+            return res
+              .status(400)
+              .json({ message: "Já existe uma reserva ativa para este quarto." });
           }
 
+          // PASSO 3: Verificar reserva ativa para o cliente (AGORA USANDO CLIENTE_ID)
           db.query(
-            `INSERT INTO Reservas 
-     (cliente_cpf, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
-            [
-              cliente_cpf,
-              quarto_numero,
-              data_checkin,
-              hora_checkin,
-              valor_diaria,
-              motivo_hospedagem || null,
-              data_checkout_prevista || null,
-              hora_checkout_prevista || null,
-            ],
-            (err, result) => {
-              if (err)
-                return res
-                  .status(500)
-                  .json({ message: "Erro ao registrar check-in", error: err });
+            `SELECT id FROM Reservas WHERE cliente_id = ? AND status = 'ativo'`,
+            [cliente_id],
+            (err2, results2) => {
+              if (err2)
+                return res.status(500).json({
+                  message: "Erro ao verificar reservas do cliente",
+                  error: err2,
+                });
+              if (results2.length > 0 && !ignorar_reserva_ativa) {
+                return res.status(409).json({
+                  message:
+                    "Este cliente já possui uma reserva ativa. Deseja realizar outra mesmo assim?",
+                  precisa_confirmar: true,
+                });
+              }
 
-              const reservaId = result.insertId;
-
+              // PASSO 4: Inserir a nova reserva (AGORA USANDO CLIENTE_ID)
               db.query(
-                `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
-                [quarto_numero],
-                (err2) => {
-                  if (err2)
-                    return res.status(500).json({
-                      message: "Erro ao atualizar status do quarto",
-                      error: err2,
-                    });
+                `INSERT INTO Reservas 
+     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+                [
+                  cliente_id, // CORREÇÃO: Usar cliente_id
+                  quarto_numero,
+                  data_checkin,
+                  hora_checkin,
+                  valor_diaria,
+                  motivo_hospedagem || null,
+                  data_checkout_prevista || null,
+                  hora_checkout_prevista || null,
+                ],
+                (err, result) => {
+                  if (err) {
+                    console.error("Erro ao registrar check-in:", err);
+                    return res
+                      .status(500)
+                      .json({ message: "Erro ao registrar check-in", error: err });
+                  }
 
-                  // Verifica se existem acompanhantes para registrar
-                  if (nomes_acompanhantes && nomes_acompanhantes.length > 0) {
-                    const acompanhantesData = nomes_acompanhantes.map(
-                      (nome, index) => [
-                        reservaId,
-                        nome,
-                        cpfs_acompanhantes[index] || null, // Pega o CPF correspondente
-                        nascimentos_acompanhantes[index] || null, // Pega a data de nascimento correspondente
-                      ]
-                    );
-                    db.query(
-                      `INSERT INTO Acompanhantes (reserva_id, nome, cpf, data_nascimento) VALUES ?`,
-                      [acompanhantesData],
-                      (err3) => {
-                        if (err3) {
-                          console.error("Erro ao registrar acompanhantes:", err3);
-                          return res.status(500).json({
-                            message: "Erro ao registrar acompanhantes",
-                            error: err3,
-                          });
-                        }
+                  const reservaId = result.insertId;
+
+                  db.query(
+                    `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
+                    [quarto_numero],
+                    (err2) => {
+                      if (err2)
+                        return res.status(500).json({
+                          message: "Erro ao atualizar status do quarto",
+                          error: err2,
+                        });
+
+                      // Verifica se existem acompanhantes para registrar
+                      if (nomes_acompanhantes && nomes_acompanhantes.length > 0) {
+                        const acompanhantesData = nomes_acompanhantes.map(
+                          (nome, index) => [
+                            reservaId,
+                            nome,
+                            cpfs_acompanhantes[index] || null, // Pega o CPF correspondente
+                            nascimentos_acompanhantes[index] || null, // Pega a data de nascimento correspondente
+                          ]
+                        );
+                        db.query(
+                          `INSERT INTO Acompanhantes (reserva_id, nome, cpf, data_nascimento) VALUES ?`,
+                          [acompanhantesData],
+                          (err3) => {
+                            if (err3) {
+                              console.error("Erro ao registrar acompanhantes:", err3);
+                              return res.status(500).json({
+                                message: "Erro ao registrar acompanhantes",
+                                error: err3,
+                              });
+                            }
+                            res.status(201).json({
+                              message: "Check-in registrado com sucesso",
+                              result,
+                            });
+                          }
+                        );
+                      } else {
                         res.status(201).json({
                           message: "Check-in registrado com sucesso",
                           result,
                         });
                       }
-                    );
-                  } else {
-                    res.status(201).json({
-                      message: "Check-in registrado com sucesso",
-                      result,
-                    });
-                  }
+                    }
+                  );
                 }
               );
             }
@@ -514,7 +592,7 @@ router.get("/reservas", (req, res) => {
              JSON_OBJECT('nome', nome, 'cpf', cpf, 'data_nascimento', data_nascimento)
            ), '[]') FROM Acompanhantes WHERE reserva_id = r.id) AS acompanhantes
     FROM Reservas r
-    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Clientes c ON r.cliente_id = c.id
   `;
   let params = [];
   let conditions = [];
@@ -554,7 +632,7 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
   db.query(
     `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria
      FROM Reservas r
-     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     JOIN Clientes c ON r.cliente_id = c.id
      JOIN Quartos q ON r.quarto_numero = q.numero
      JOIN TiposQuarto tq ON q.tipo_id = tq.id
      WHERE r.cliente_cpf = ? AND r.status = 'ativo'
@@ -577,7 +655,7 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
 /*rota antiga para buscar reservas ativas de um cliente
 // Rota para calendário de ocupação dos quartos
 router.get("/ocupacao-quartos", (req, res) => {
-  db.query(
+  db. 
     `SELECT r.quarto_numero, r.data_checkin, r.data_checkout, c.nome as cliente
      FROM Reservas r
      JOIN Clientes c ON r.cliente_cpf = c.cpf
@@ -607,7 +685,7 @@ router.get("/ocupacao-quartos", (req, res) => {
       IFNULL(r.data_checkout, r.data_checkout_prevista) as data_saida,
       c.nome as cliente
     FROM Reservas r
-    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Clientes c ON r.cliente_id = c.id
     WHERE 
       r.status IN ('ativo', 'finalizado') AND
       -- Lógica para encontrar reservas que se sobrepõem ao período solicitado:
@@ -735,7 +813,7 @@ router.get("/reserva-ativa-quarto/:numero", (req, res) => {
   db.query(
     `SELECT r.*, c.nome as nome_cliente 
      FROM Reservas r
-     JOIN Clientes c ON r.cliente_cpf = c.cpf
+     JOIN Clientes c ON r.cliente_id = c.id
      WHERE r.quarto_numero = ? AND r.status = 'ativo' 
      ORDER BY r.id DESC LIMIT 1`,
     [numero],
@@ -806,7 +884,7 @@ router.get("/hospedes-ativos", (req, res) => {
            r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, 
            r.motivo_hospedagem
     FROM Reservas r
-    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Clientes c ON r.cliente_id = c.id
     JOIN Quartos q ON r.quarto_numero = q.numero
     JOIN TiposQuarto tq ON q.tipo_id = tq.id 
     WHERE r.status = 'ativo'
@@ -829,7 +907,7 @@ router.get("/api/checkouts-hoje", (req, res) => {
            r.hora_checkout as hora, c.telefone, c.email, r.valor_diaria, 
            r.motivo_hospedagem
     FROM Reservas r
-    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Clientes c ON r.cliente_id = c.id
     JOIN Quartos q ON r.quarto_numero = q.numero
     WHERE r.status = 'finalizado' AND r.data_checkout = CURDATE()
     ORDER BY r.hora_checkout ASC
@@ -860,7 +938,7 @@ router.get("/checkouts-vencidos", (req, res) => {
            DATE_FORMAT(r.hora_checkout_prevista, '%H:%i') as hora_saida_prevista,
            c.telefone, c.email
     FROM Reservas r
-    JOIN Clientes c ON r.cliente_cpf = c.cpf
+    JOIN Clientes c ON r.cliente_id = c.id
     JOIN Quartos q ON r.quarto_numero = q.numero
     JOIN TiposQuarto tq ON q.tipo_id = tq.id 
     WHERE r.status = 'ativo' AND CONCAT(r.data_checkout_prevista, ' ', r.hora_checkout_prevista) < ?
@@ -870,12 +948,138 @@ router.get("/checkouts-vencidos", (req, res) => {
   db.query(sql, [dataHoraAtual], (err, results) => {
     if (err) {
       console.error("Erro ao buscar check-outs vencidos:", err);
-      return res
-        .status(500)
-        .json({ message: "Erro ao buscar check-outs vencidos", error: err });
+      return res.status(500).json({ message: "Erro ao buscar check-outs vencidos", error: err });
     }
     res.json(results);
   });
 });
+
+// Função utilitária para buscar cliente por CPF ou passaporte
+function buscarCliente({ cpf, passaporte }, callback) {
+  let sql = "SELECT * FROM Clientes WHERE ";
+  let params = [];
+  if (cpf) {
+    sql += "cpf = ?";
+    params.push(cpf);
+  } else if (passaporte) {
+    sql += "passaporte = ?";
+    params.push(passaporte);
+  } else {
+    return callback(new Error("Informe CPF ou passaporte"));
+  }
+  db.query(sql, params, (err, results) => {
+    if (err) return callback(err);
+    callback(null, results[0]);
+  });
+}
+
+// Rota para criar reserva usando cliente_id
+router.post("/reservas", (req, res) => {
+  const {
+    cpf,
+    passaporte,
+    quarto_numero,
+    data_checkin,
+    hora_checkin,
+    valor_diaria,
+    motivo_hospedagem,
+    data_checkout_prevista,
+    hora_checkout_prevista,
+    desconto,
+    status
+  } = req.body;
+
+  buscarCliente({ cpf, passaporte }, (err, cliente) => {
+    if (err || !cliente) return res.status(400).json({ message: "Cliente não encontrado" });
+
+    db.query(
+      `INSERT INTO Reservas (
+        quarto_numero, cliente_id, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, desconto, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        quarto_numero,
+        cliente.id,
+        data_checkin,
+        hora_checkin,
+        valor_diaria,
+        motivo_hospedagem || null,
+        data_checkout_prevista || null,
+        hora_checkout_prevista || null,
+        desconto || 0,
+        status || 'ativo'
+      ],
+      (err, result) => {
+        if (err) return res.status(500).json({ message: "Erro ao criar reserva", error: err });
+        res.status(201).json({ message: "Reserva criada com sucesso", result });
+      }
+    );
+  });
+});
+
+// Novo: Atualizar cliente por ID
+router.put("/api/clientes/:id", (req, res) => {
+  const id = req.params.id;
+  const {
+    cpf,
+    passaporte,
+    nome,
+    telefone,
+    email,
+    endereco,
+    cep,
+    data_nascimento,
+    nacionalidade
+  } = req.body;
+
+  const sql = `
+    UPDATE clientes SET
+      cpf = ?,
+      passaporte = ?,
+      nome = ?,
+      telefone = ?,
+      email = ?,
+      endereco = ?,
+      cep = ?,
+      data_nascimento = ?,
+      nacionalidade = ?
+    WHERE id = ?
+  `;
+  db.query(
+    sql,
+    [
+      cpf,
+      passaporte,
+      nome,
+      telefone,
+      email,
+      endereco,
+      cep,
+      data_nascimento,
+      nacionalidade,
+      id
+    ],
+    (err, result) => {
+      if (err) {
+        console.error("Erro ao atualizar cliente:", err);
+        return res.status(500).json({ message: "Erro ao atualizar cliente", error: err });
+      }
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ message: "Cliente não encontrado" });
+      }
+      res.json({ message: "Cliente atualizado com sucesso", result });
+    }
+  );
+});
+
+router.get("/api/clientes", (req, res) => {
+  db.query("SELECT * FROM clientes", (err, results) => {
+    if (err)
+      return res
+        .status(500)
+        .json({ message: "Erro ao buscar clientes", error: err });
+    res.json(results);
+  });
+});
+
 
 module.exports = router;

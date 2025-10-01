@@ -44,6 +44,9 @@ const Clientes = {
   findAll: (callback) => {
     db.query('SELECT * FROM Clientes', callback);
   },
+  findById: (id, callback) => {
+    db.query('SELECT * FROM Clientes WHERE id = ?', [id], callback);
+  },
   findByCpf: (cpf, callback) => {
     db.query('SELECT * FROM Clientes WHERE cpf = ?', [cpf], callback);
   },
@@ -51,18 +54,28 @@ const Clientes = {
     db.query('SELECT * FROM Clientes WHERE passaporte = ?', [passaporte], callback);
   },
   create: (data, callback) => {
-    db.query('INSERT INTO Clientes (cpf, nome, telefone, email, endereco, cep) VALUES (?, ?, ?, ?, ?, ?)', 
-      [data.cpf, data.nome, data.telefone, data.email, data.endereco, data.cep], callback);
-  },
-update: (cpf, data, callback) => {
     db.query(
-    'UPDATE Clientes SET nome = ?, telefone = ?, email = ?, endereco = ?, cep = ?, passaporte = ?, data_nascimento = ?, nacionalidade = ? WHERE cpf = ?', 
-    [data.nome, data.telefone, data.email, data.endereco, data.cep, data.passaporte, data.data_nascimento, data.nacionalidade, cpf], 
-    callback
+      'INSERT INTO Clientes (cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', 
+      [data.cpf, data.passaporte, data.nome, data.telefone, data.email, data.endereco, data.cep, data.data_nascimento, data.nacionalidade], 
+      callback
     );
-},
+  },
+  update: (id, data, callback) => {
+    // Chama updateById para manter compatibilidade
+    Clientes.updateById(id, data, callback);
+  },
+  updateById: (id, data, callback) => {
+    db.query(
+      'UPDATE Clientes SET nome = ?, telefone = ?, email = ?, endereco = ?, cep = ?, passaporte = ?, data_nascimento = ?, nacionalidade = ? WHERE id = ?', 
+      [data.nome, data.telefone, data.email, data.endereco, data.cep, data.passaporte, data.data_nascimento, data.nacionalidade, id], 
+      callback
+    );
+  },
   delete: (cpf, callback) => {
     db.query('DELETE FROM Clientes WHERE cpf = ?', [cpf], callback);
+  },
+  deleteById: (id, callback) => {
+    db.query('DELETE FROM Clientes WHERE id = ?', [id], callback);
   },
 };
 
@@ -166,5 +179,27 @@ async function carregarHospedesAtivos() {
         <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
       </tr>
     `;
+  });
+}
+
+// Exemplo de função para buscar cliente por CPF ou passaporte
+function buscarCliente({ cpf, passaporte, id }, callback) {
+  let sql = "SELECT * FROM clientes WHERE ";
+  let params = [];
+  if (id) {
+    sql += "id = ?";
+    params.push(id);
+  } else if (cpf) {
+    sql += "cpf = ?";
+    params.push(cpf);
+  } else if (passaporte) {
+    sql += "passaporte = ?";
+    params.push(passaporte);
+  } else {
+    return callback(new Error("Informe CPF, passaporte ou id"));
+  }
+  db.query(sql, params, (err, results) => {
+    if (err) return callback(err);
+    callback(null, results[0]);
   });
 }

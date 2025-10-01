@@ -1,123 +1,3 @@
-CREATE DATABASE Hotel;
-USE Hotel;
--- Login de cria
-CREATE TABLE Usuarios (
-    id INT AUTO_INCREMENT,                 
-    usuario VARCHAR(50) NOT NULL UNIQUE,
-    senha VARCHAR(255) NOT NULL,
-    nome VARCHAR(100) NOT NULL,
-    nivel_acesso ENUM('admin', 'funcionario') DEFAULT 'funcionario',
-    PRIMARY KEY(id)
-)
-ENGINE=InnoDB;
-
-drop database hotel;
-CREATE TABLE TiposQuarto (
-    id INT AUTO_INCREMENT,         
-    tipo VARCHAR(50) NOT NULL UNIQUE,
-    descricao TEXT,
-    valor_diaria DECIMAL(10, 2) NOT NULL,
-    PRIMARY KEY(id)
-)
-ENGINE=InnoDB;
-describe clientes;
-select * from clientes;
-CREATE TABLE Quartos (
-    numero INT,
-    tipo_id INT NOT NULL,
-    status ENUM('disponivel', 'ocupado', 'manutencao') DEFAULT 'disponivel',
-    FOREIGN KEY (tipo_id) REFERENCES TiposQuarto(id),
-    PRIMARY KEY(numero)
-)
-ENGINE=InnoDB;
-
-
-CREATE TABLE Clientes (
-    cpf VARCHAR(14),
-    nome VARCHAR(100) NOT NULL,
-    telefone VARCHAR(15) NOT NULL,
-    email VARCHAR(100),
-    endereco TEXT,
-    cep VARCHAR(9),
-    PRIMARY KEY(cpf)
-)
-ENGINE=InnoDB;
-
-
--- Check-in brabo
-CREATE TABLE Reservas (
-    id INT AUTO_INCREMENT,                    
-    cliente_cpf VARCHAR(14) NOT NULL,
-    quarto_numero INT NOT NULL,
-    data_checkin DATE NOT NULL,
-    hora_checkin TIME NOT NULL,
-    data_checkout DATE,
-    hora_checkout TIME,
-    valor_diaria DECIMAL(10, 2) NOT NULL,
-    desconto DECIMAL(10, 2) DEFAULT 0,
-    status ENUM('ativo', 'finalizado', 'cancelado') DEFAULT 'ativo',
-    FOREIGN KEY (cliente_cpf) REFERENCES Clientes(cpf),
-    FOREIGN KEY (quarto_numero) REFERENCES Quartos(numero),
-    PRIMARY KEY(id)
-)
-ENGINE=InnoDB;
-
-
-CREATE TABLE Produtos (
-    id INT AUTO_INCREMENT,
-    nome VARCHAR(100) NOT NULL,
-    preco_unitario DECIMAL(10, 2) NOT NULL,
-    estoque INT DEFAULT 0,
-    PRIMARY KEY(id)
-)
-ENGINE=InnoDB;
-
-
-CREATE TABLE Consumos (
-    id INT AUTO_INCREMENT,
-    reserva_id INT NOT NULL,
-    produto_id INT NOT NULL,
-    quantidade INT NOT NULL,
-    preco_unitario DECIMAL(10, 2) NOT NULL,
-    data_hora TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY(id),
-    FOREIGN KEY (reserva_id) REFERENCES Reservas(id),
-    FOREIGN KEY (produto_id) REFERENCES Produtos(id)
-)
-ENGINE=InnoDB;
-
-INSERT INTO Usuarios (usuario, senha, nome, nivel_acesso)
-VALUES ('admin', '123456', 'Administrador', 'admin');
-
-INSERT INTO TiposQuarto (tipo, descricao, valor_diaria)
-VALUES
-  ('Individual', 'Quarto para uma pessoa', 250.00),
-  ('Familiar', 'Quarto para famÃ­lia', 400.00);
-  ALTER TABLE Quartos ADD COLUMN descricao VARCHAR(255);
-ALTER TABLE Quartos ADD COLUMN valor_diaria DECIMAL(10,2);
-ALTER TABLE Reservas ADD COLUMN motivo_hospedagem VARCHAR(100);
-ALTER TABLE Reservas ADD COLUMN motivo_hospedagem VARCHAR(100);
-ALTER TABLE Clientes ADD COLUMN passaporte VARCHAR(30);
-ALTER TABLE Reservas ADD COLUMN acompanhantes INT DEFAULT 0;
-ALTER TABLE Clientes ADD COLUMN data_nascimento DATE;
-ALTER TABLE Clientes ADD COLUMN nacionalidade VARCHAR(50);
-ALTER TABLE Reservas ADD COLUMN data_checkout_prevista DATE NULL;
-ALTER TABLE Reservas ADD COLUMN hora_checkout_prevista TIME NULL;
-alter table reservas drop column data_checkout_prevista;
-alter table reservas drop column hora_checkout_prevista;
-
-select * from clientes;
-use hotel;
-
-ALTER TABLE Acompanhantes
-ADD COLUMN cpf VARCHAR(14) NULL,
-ADD COLUMN data_nascimento DATE NULL;
-
-create database hotel;
-use hotel;
-
-
-
 -- MySQL dump 10.13  Distrib 8.0.42, for Win64 (x86_64)
 --
 -- Host: localhost    Database: hotel
@@ -146,10 +26,12 @@ CREATE TABLE `acompanhantes` (
   `id` int NOT NULL AUTO_INCREMENT,
   `reserva_id` int NOT NULL,
   `nome` varchar(255) NOT NULL,
+  `cpf` varchar(14) DEFAULT NULL,
+  `data_nascimento` date DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `reserva_id` (`reserva_id`),
   CONSTRAINT `acompanhantes_ibfk_1` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -158,8 +40,64 @@ CREATE TABLE `acompanhantes` (
 
 LOCK TABLES `acompanhantes` WRITE;
 /*!40000 ALTER TABLE `acompanhantes` DISABLE KEYS */;
-INSERT INTO `acompanhantes` VALUES (1,15,'osvaldo gamer'),(2,15,'tomás turbano'),(3,15,'shuppa pika'),(4,15,'junin kome bostah');
+INSERT INTO `acompanhantes` VALUES (7,19,'gabriel',NULL,NULL),(8,21,'bruno',NULL,NULL),(9,23,'gabriel','03732264114','2006-04-30'),(10,24,'ina','12938432343','2002-02-10'),(11,24,'heitor','12343232553','3004-02-10'),(12,25,'gabriel','03732264114','2025-08-18'),(13,33,'bruno','03732264114','2006-04-30'),(14,34,'gabriel','03732264114','2006-04-30'),(15,34,'pedro','12343232553','2006-04-03'),(16,35,'gabriel','03732264114','2006-04-30'),(17,39,'Heitor','06712345690','2006-12-27');
 /*!40000 ALTER TABLE `acompanhantes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cadastro_clientes`
+--
+
+DROP TABLE IF EXISTS `cadastro_clientes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cadastro_clientes` (
+  `CPF` varchar(11) NOT NULL,
+  `Nome` varchar(45) NOT NULL,
+  `data_nasc` date NOT NULL,
+  `CEP` int NOT NULL,
+  `Endereco` varchar(50) DEFAULT NULL,
+  `Email` varchar(45) NOT NULL,
+  `Telefone` varchar(15) NOT NULL,
+  `quarto` int NOT NULL,
+  PRIMARY KEY (`CPF`),
+  UNIQUE KEY `CPF` (`CPF`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cadastro_clientes`
+--
+
+LOCK TABLES `cadastro_clientes` WRITE;
+/*!40000 ALTER TABLE `cadastro_clientes` DISABLE KEYS */;
+INSERT INTO `cadastro_clientes` VALUES ('12345678901','Teste da Silva Junior','2005-03-20',12345678,'Rua Teste Número B','testedasilva@gmail.com','123456789',32),('12345678911','Teste da Silva Junior Junior','0001-03-20',12345678,'Rua Teste Número C','testedasilva2@gmail.com','123456789',42);
+/*!40000 ALTER TABLE `cadastro_clientes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cardapio`
+--
+
+DROP TABLE IF EXISTS `cardapio`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `cardapio` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `nome` varchar(50) NOT NULL,
+  `preco` decimal(10,2) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cardapio`
+--
+
+LOCK TABLES `cardapio` WRITE;
+/*!40000 ALTER TABLE `cardapio` DISABLE KEYS */;
+INSERT INTO `cardapio` VALUES (1,'Coca Fanta',80000000.00);
+/*!40000 ALTER TABLE `cardapio` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -170,7 +108,8 @@ DROP TABLE IF EXISTS `clientes`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `clientes` (
-  `cpf` varchar(14) NOT NULL,
+  `id` int NOT NULL AUTO_INCREMENT,
+  `cpf` varchar(14) DEFAULT NULL,
   `nome` varchar(100) NOT NULL,
   `telefone` varchar(15) NOT NULL,
   `email` varchar(100) DEFAULT NULL,
@@ -179,8 +118,11 @@ CREATE TABLE `clientes` (
   `passaporte` varchar(30) DEFAULT NULL,
   `data_nascimento` date DEFAULT NULL,
   `nacionalidade` varchar(50) DEFAULT NULL,
-  PRIMARY KEY (`cpf`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `cpf` (`cpf`),
+  UNIQUE KEY `passaporte` (`passaporte`),
+  CONSTRAINT `ck_documento` CHECK (((`cpf` is not null) or (`passaporte` is not null)))
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -189,7 +131,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
-INSERT INTO `clientes` VALUES ('03732264114','gabriel','61991892074','gabriiel@gmail.com','morro da quadra 17','73045173','','2006-04-30','viado'),('03806978268','ian bundudo golçalves','61981640495','ian.golcalves_pub2410@fac.unb.br','imperio dos pobres ','73252158',NULL,NULL,NULL),('06718562190','heitor luiz de dousa caralho de mirando','61992369194','heitor@gmail.com','condnomio rk (rosca kagada)','73252200','13124124','2005-12-27','preto'),('12345678910','claudio','61661616161','claudio@gmail.com','casa di caralho numero 69','73773733',NULL,NULL,NULL),('12345678911','claudia','99199191919','cladia@gmail.copm','quinto dos inferno','73733731',NULL,NULL,NULL);
+INSERT INTO `clientes` VALUES (1,'03732264114','gabriel','61991892074','gabriiel@gmail.com','Quadra 17','73045173','','2006-04-30','Brasileiro'),(2,'03806978268','Ian Bastos Gonçalves','61981640495','ian.golcalves_pub2410@fac.unb.br','Imperio dos Nobres','73252158',NULL,'2005-10-22','Brasileiro'),(3,'06718562190','Heitor Luiz de Souza Carvalho de Miranda','61992369194','heitor@gmail.com','Condomínio RK','73252200',NULL,'2005-12-27','Brasileiro'),(19,'12345678910','Arthur Prados Piana','6192342345','arthur.piana@gmail.com','Condomínio Império dos Nobres','73252158',NULL,'2006-03-16','Brasileiro'),(20,NULL,'Teste da Silva','61991293456','teste.silva@gmail.com','Avenida Quase ali','73252158','123456','2000-02-20','Computaciano');
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -212,7 +154,7 @@ CREATE TABLE `consumos` (
   KEY `produto_id` (`produto_id`),
   CONSTRAINT `consumos_ibfk_1` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`),
   CONSTRAINT `consumos_ibfk_2` FOREIGN KEY (`produto_id`) REFERENCES `produtos` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -221,8 +163,67 @@ CREATE TABLE `consumos` (
 
 LOCK TABLES `consumos` WRITE;
 /*!40000 ALTER TABLE `consumos` DISABLE KEYS */;
-INSERT INTO `consumos` VALUES (1,6,1,2,10.00,'2025-07-01 19:38:18'),(5,11,2,53,22.00,'2025-07-14 21:19:21'),(6,14,1,6,10.00,'2025-08-11 15:25:23'),(7,15,1,22,10.00,'2025-08-11 16:07:07');
+INSERT INTO `consumos` VALUES (9,24,1,75,10.00,'2025-08-18 20:34:43'),(10,33,2,18,22.00,'2025-08-19 19:37:57'),(11,25,3,14,10.00,'2025-08-19 19:38:08'),(12,34,1,29,10.00,'2025-08-19 19:38:27');
 /*!40000 ALTER TABLE `consumos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `controle_checkin_check_out`
+--
+
+DROP TABLE IF EXISTS `controle_checkin_check_out`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `controle_checkin_check_out` (
+  `idcheck_in_check_out` int NOT NULL AUTO_INCREMENT,
+  `FkCPF` varchar(11) NOT NULL,
+  `data_check_in` date DEFAULT NULL,
+  `hora_check_in` time DEFAULT NULL,
+  `data_check_out` date DEFAULT NULL,
+  `hora_check_out` time DEFAULT NULL,
+  `FkNumero` int NOT NULL,
+  PRIMARY KEY (`idcheck_in_check_out`),
+  KEY `FkNumero` (`FkNumero`),
+  KEY `controle_checkin_check_out_ibfk_1` (`FkCPF`),
+  CONSTRAINT `controle_checkin_check_out_ibfk_1` FOREIGN KEY (`FkCPF`) REFERENCES `cadastro_clientes` (`CPF`),
+  CONSTRAINT `controle_checkin_check_out_ibfk_2` FOREIGN KEY (`FkNumero`) REFERENCES `quartos` (`Numero`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `controle_checkin_check_out`
+--
+
+LOCK TABLES `controle_checkin_check_out` WRITE;
+/*!40000 ALTER TABLE `controle_checkin_check_out` DISABLE KEYS */;
+/*!40000 ALTER TABLE `controle_checkin_check_out` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `controle_frigobar`
+--
+
+DROP TABLE IF EXISTS `controle_frigobar`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `controle_frigobar` (
+  `FkNumero` int NOT NULL,
+  `Produto` varchar(50) NOT NULL,
+  `Quantidade` int NOT NULL,
+  `Preco` int NOT NULL,
+  PRIMARY KEY (`Produto`),
+  KEY `FkNumero` (`FkNumero`),
+  CONSTRAINT `controle_frigobar_ibfk_1` FOREIGN KEY (`FkNumero`) REFERENCES `quartos` (`Numero`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `controle_frigobar`
+--
+
+LOCK TABLES `controle_frigobar` WRITE;
+/*!40000 ALTER TABLE `controle_frigobar` DISABLE KEYS */;
+/*!40000 ALTER TABLE `controle_frigobar` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -261,7 +262,7 @@ DROP TABLE IF EXISTS `quartos`;
 CREATE TABLE `quartos` (
   `numero` int NOT NULL,
   `tipo_id` int NOT NULL,
-  `status` enum('disponivel','ocupado','manutencao') DEFAULT 'disponivel',
+  `status` enum('disponivel','ocupado','manutencao','interditado') DEFAULT 'disponivel',
   `descricao` varchar(255) DEFAULT NULL,
   `valor_diaria` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`numero`),
@@ -276,7 +277,7 @@ CREATE TABLE `quartos` (
 
 LOCK TABLES `quartos` WRITE;
 /*!40000 ALTER TABLE `quartos` DISABLE KEYS */;
-INSERT INTO `quartos` VALUES (13,2,'disponivel','lula ladrao',13000.00),(22,1,'disponivel','testando de novo',250.00);
+INSERT INTO `quartos` VALUES (1,1,'ocupado','Uma cama',100.00),(13,2,'ocupado','2 camas (casal, beliche)',13000.00),(22,3,'disponivel','Duas camas soltero',250.00);
 /*!40000 ALTER TABLE `quartos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -289,7 +290,6 @@ DROP TABLE IF EXISTS `reservas`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `reservas` (
   `id` int NOT NULL AUTO_INCREMENT,
-  `cliente_cpf` varchar(14) NOT NULL,
   `quarto_numero` int NOT NULL,
   `data_checkin` date NOT NULL,
   `hora_checkin` time DEFAULT NULL,
@@ -301,12 +301,13 @@ CREATE TABLE `reservas` (
   `motivo_hospedagem` varchar(100) DEFAULT NULL,
   `data_checkout_prevista` date DEFAULT NULL,
   `hora_checkout_prevista` time DEFAULT NULL,
+  `cliente_id` int NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `cliente_cpf` (`cliente_cpf`),
   KEY `quarto_numero` (`quarto_numero`),
-  CONSTRAINT `reservas_ibfk_1` FOREIGN KEY (`cliente_cpf`) REFERENCES `clientes` (`cpf`),
+  KEY `fk_reservas_clientes` (`cliente_id`),
+  CONSTRAINT `fk_reservas_clientes` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`quarto_numero`) REFERENCES `quartos` (`numero`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,7 +316,7 @@ CREATE TABLE `reservas` (
 
 LOCK TABLES `reservas` WRITE;
 /*!40000 ALTER TABLE `reservas` DISABLE KEYS */;
-INSERT INTO `reservas` VALUES (5,'06718562190',22,'2025-07-01','13:03:00','2025-07-01','15:55:00',250.00,0.00,'finalizado',NULL,NULL,NULL),(6,'06718562190',22,'2025-07-01','15:55:00','2025-07-14','17:57:00',250.00,0.00,'finalizado',NULL,NULL,NULL),(8,'03732264114',22,'2025-07-02','15:47:00','2025-07-14','11:20:00',250.00,0.00,'finalizado','quer comer o heitor',NULL,NULL),(11,'03732264114',22,'2025-07-13','17:59:00','2025-07-15','17:50:00',250.00,0.00,'finalizado','descansar que o cabao n é de ferro','2025-07-15','18:00:00'),(12,'03732264114',22,'2025-07-15','17:50:00','2025-07-16','18:20:00',250.00,0.00,'finalizado','caçar lobos','2025-07-16','17:50:00'),(13,'03732264114',22,'2025-07-17','16:45:00','2025-07-17','17:27:00',250.00,0.00,'finalizado','dormir ne ','2025-07-17','19:00:00'),(14,'03732264114',22,'2025-08-11','12:11:00','2025-08-11','12:37:00',250.00,0.00,'finalizado','discansar','2025-08-13','12:11:00'),(15,'03732264114',13,'2025-08-11','12:48:00','2025-08-11','13:07:00',13000.00,0.00,'finalizado','discansa com as lendas','2025-08-12','13:49:00'),(16,'03732264114',13,'2025-08-11','13:17:00','2025-08-11','13:17:00',13000.00,0.00,'finalizado','gosto de dormir','2025-08-12','13:17:00'),(17,'03732264114',13,'2025-08-10','13:26:00','2025-08-11','13:26:00',13000.00,0.00,'finalizado','a','2025-08-12','14:27:00');
+INSERT INTO `reservas` VALUES (19,22,'2025-03-12','10:20:00','2025-08-15','20:07:00',250.00,0.00,'finalizado','dicansar','2025-08-16','21:05:00',2),(20,22,'2025-08-15','20:09:00','2025-08-15','20:10:00',250.00,0.00,'finalizado','quer dar a bunda pra uns cara ai','2025-08-16','20:10:00',1),(21,1,'2025-08-12','11:38:00','2025-08-18','12:14:00',100.00,0.00,'finalizado','descansar ne','2025-08-19','11:38:00',2),(22,22,'2025-08-18','12:13:00','2025-08-18','12:14:00',250.00,0.00,'finalizado','descansar ne','2025-08-19','12:13:00',1),(23,13,'2025-08-18','12:57:00','2025-08-18','16:54:00',13000.00,0.00,'finalizado','descansar ne','2025-08-18','13:57:00',2),(24,22,'2025-08-18','17:33:00','2025-08-19','16:33:00',250.00,0.00,'finalizado','quer dar a bunda pra uns cara ai','2025-08-19','17:33:00',1),(25,13,'2025-08-18','18:01:00','2025-08-21','16:09:00',13000.00,0.00,'finalizado','dicansar','2025-08-20','19:02:00',2),(33,22,'2025-08-19','16:34:00','2025-08-21','16:10:00',250.00,0.00,'finalizado','descansar ne','2025-08-20','16:34:00',1),(34,1,'2025-08-19','16:35:00','2025-08-21','16:10:00',100.00,0.00,'finalizado','quer dar a bunda pra dois caras','2025-08-21','17:36:00',3),(35,1,'2025-08-21','16:12:00','2025-08-21','16:16:00',100.00,0.00,'finalizado','teste','2025-08-21','16:15:00',3),(37,1,'2025-08-21','16:17:00','2025-08-21','16:35:00',100.00,0.00,'finalizado',NULL,'2025-08-21','16:20:00',3),(38,1,'2025-10-01','16:30:00',NULL,NULL,100.00,0.00,'ativo','descansar','2025-10-02','16:30:00',19),(39,13,'2025-10-01','16:33:00',NULL,NULL,13000.00,0.00,'ativo','descansar','2025-10-02','16:34:00',1);
 /*!40000 ALTER TABLE `reservas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -383,4 +384,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-08-11 14:59:54
+-- Dump completed on 2025-10-01 16:47:00

@@ -131,6 +131,25 @@
                 const formData = new FormData(form);
                 const data = Object.fromEntries(formData.entries());
 
+                const data_nascimento = document.getElementById('data_nascimento').value;
+                const cliente = {
+                  cpf,
+                  passaporte,
+                  nome,
+                  telefone,
+                  email,
+                  endereco,
+                  cep,
+                  data_nascimento, 
+                  nacionalidade
+                };
+
+                // Nova validação: CPF ou Passaporte devem ser preenchidos
+                if (!data.cpf && !data.passaporte) {
+                    alert("Preencha CPF ou Passaporte!");
+                    return;
+                }
+
                 try {
                     const response = await fetch('/api/clientes', { // Verifique se este é o endpoint correto
                         method: 'POST',

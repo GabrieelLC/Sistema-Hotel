@@ -502,4 +502,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setTimeout(() => {
   }, 100);
+
+  // Exemplo de busca de cliente e uso do id
+  function buscarCliente(cpf, passaporte, callback) {
+    let url = "/api/clientes/busca?";
+    if (cpf) url += "cpf=" + cpf;
+    else if (passaporte) url += "passaporte=" + passaporte;
+    fetch(url)
+      .then(res => res.json())
+      .then(cliente => callback(cliente.id))
+      .catch(() => callback(null));
+  }
+
+  // Exemplo de criação de reserva usando cliente_id
+  function criarReserva(dadosReserva) {
+    buscarCliente(dadosReserva.cpf, dadosReserva.passaporte, function(clienteId) {
+      if (!clienteId) {
+        alert("Cliente não encontrado");
+        return;
+      }
+      dadosReserva.cliente_id = clienteId;
+      fetch("/api/reservas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(dadosReserva)
+      })
+      .then(res => res.json())
+      .then(data => alert(data.message));
+    });
+  }
 });
