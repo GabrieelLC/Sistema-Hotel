@@ -44,20 +44,43 @@ router.get("/clientes", (req, res) => {
 
 router.post("/clientes", (req, res) => {
   let { cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade } = req.body;
+
+  // Função utilitária para converter string vazia ou nula para NULL do SQL
+  const toNull = (value) => (value && String(value).trim() !== "" ? value : null);
+
+  // 1. Validação Obrigatória
   if (!cpf && !passaporte) {
     return res.status(400).json({ message: "Preencha CPF ou Passaporte!" });
   }
-  cpf = cpf && cpf.trim() !== "" ? cpf : null;
-  passaporte = passaporte && passaporte.trim() !== "" ? passaporte : null;
+
+  // 2. Aplica o tratamento de NULLs para todos os campos
+  const params = [
+    toNull(cpf),
+    toNull(passaporte),
+    nome, // Presumimos que 'nome' é obrigatório (NOT NULL)
+    toNull(telefone),
+    toNull(email),
+    toNull(endereco),
+    toNull(cep),
+    toNull(data_nascimento),
+    toNull(nacionalidade),
+  ];
 
   const sql = `
     INSERT INTO clientes (cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  db.query(sql, [cpf, passaporte, nome, telefone, email, endereco, cep, data_nascimento, nacionalidade], (err, result) => {
+  
+  db.query(sql, params, (err, result) => {
     if (err) {
       console.error("Erro ao cadastrar cliente:", err);
-      return res.status(500).json({ message: "Erro ao cadastrar cliente", error: err });
+      // CORREÇÃO: Trata o erro de duplicidade (ER_DUP_ENTRY: 1062)
+      if (err.errno === 1062) {
+         // Retorna 409 Conflict para o frontend, que exibirá a mensagem no alert.
+         return res.status(409).json({ message: "Erro: CPF ou Passaporte já cadastrado para outro cliente." });
+      }
+      // Trata outros erros 500 (como problemas de conexão ou de tipagem no DB)
+      return res.status(500).json({ message: "Erro interno ao cadastrar cliente. Verifique o console do servidor para detalhes.", error: err });
     }
     res.status(201).json({ message: "Cliente cadastrado com sucesso", result });
   });
