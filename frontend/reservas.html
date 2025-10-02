@@ -331,7 +331,7 @@
                 <!-- Filtro de busca adicionado aqui -->
                 <div class="search-container">
                     <input type="text" id="searchInput" onkeyup="filtrarReservas()"
-                        placeholder="Buscar por nome, CPF ou quarto...">
+                        placeholder="Buscar por nome, documento ou quarto...">
                 </div>
 
                 <div class="table-wrapper">
@@ -424,11 +424,13 @@
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             const reservasFiltradas = todasAsReservas.filter(reserva => {
                 const nome = reserva.nome || '';
-                const cpf = reserva.cliente_cpf || ''; // Supondo que a API retorne o CPF
+                const cpf = reserva.cliente_cpf || ''; 
+                const passaporte = reserva.cliente_passaporte || ''; // NOVO: Captura o passaporte do cliente
                 const quarto = reserva.quarto ? reserva.quarto.toString() : '';
 
                 return nome.toLowerCase().includes(searchTerm) ||
                     cpf.includes(searchTerm) ||
+                    passaporte.toLowerCase().includes(searchTerm) || // NOVO: Inclui busca por passaporte
                     quarto.includes(searchTerm);
             });
             renderizarTabela(reservasFiltradas);
@@ -476,21 +478,26 @@
 
                 if (validAcompanhantes.length > 0) {
                     validAcompanhantes.forEach(ac => {
+                        // NOVO: Lógica para exibir CPF ou Passaporte
+                        let documentoHTML = '<strong>Documento:</strong> Não Informado';
+                        if (ac.cpf && ac.cpf.trim() !== '') {
+                            documentoHTML = `<strong>CPF:</strong> ${ac.cpf}`;
+                        } else if (ac.passaporte && ac.passaporte.trim() !== '') {
+                            documentoHTML = `<strong>Passaporte:</strong> ${ac.passaporte}`;
+                        }
+
                         // Formata a data de nascimento
                         const dataNasc = ac.data_nascimento ? new Date(ac.data_nascimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'N/A';
 
                         list.innerHTML += `
                             <li style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee; list-style: none;">
                                 <strong>Nome:</strong> ${ac.nome || 'N/A'}<br>
-                                <strong>CPF:</strong> ${ac.cpf || 'N/A'}<br>
-                                <strong>Nascimento:</strong> ${dataNasc}
+                                ${documentoHTML}<br> <strong>Nascimento:</strong> ${dataNasc}
                             </li>`;
                     });
                 } else {
                     list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
                 }
-            } else {
-                list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
             }
 
             modal.style.display = 'flex';

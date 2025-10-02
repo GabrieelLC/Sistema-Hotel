@@ -604,8 +604,8 @@ router.put("/checkout/:id", (req, res) => {
 // GET /api/reservas?futuras=1&quarto_numero=...
 router.get("/reservas", (req, res) => {
   const { futuras, quarto_numero } = req.query;
-  let sql = `
-    SELECT c.nome, 
+let sql = `
+    SELECT c.nome, c.cpf AS cliente_cpf, c.passaporte AS cliente_passaporte, -- ADICIONADO: CPF e Passaporte do Cliente
            r.quarto_numero as quarto, 
            DATE_FORMAT(r.data_checkin, '%d/%m/%Y') as data_entrada,
            DATE_FORMAT(r.hora_checkin, '%H:%i') as hora_entrada,
@@ -616,7 +616,7 @@ router.get("/reservas", (req, res) => {
            r.id,
            (SELECT COUNT(*) FROM Acompanhantes WHERE reserva_id = r.id) AS num_acompanhantes,
            (SELECT COALESCE(JSON_ARRAYAGG(
-             JSON_OBJECT('nome', nome, 'cpf', cpf, 'data_nascimento', data_nascimento)
+             JSON_OBJECT('nome', nome, 'cpf', cpf, 'passaporte', passaporte, 'data_nascimento', data_nascimento) -- ALTERADO: Inclui 'passaporte' do acompanhante
            ), '[]') FROM Acompanhantes WHERE reserva_id = r.id) AS acompanhantes
     FROM Reservas r
     JOIN Clientes c ON r.cliente_id = c.id
