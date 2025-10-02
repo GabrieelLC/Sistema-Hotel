@@ -151,25 +151,16 @@
         <div class="checkoutscreencolumns_wrapper">
           <div class="checkoutscreencolumn">
             <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="cpfcliente"
-                >CPF cliente:</label
-              >
+              <label for="documentocliente">CPF ou Passaporte cliente (obrigatório):</label>
               <input
                 class="checkoutscreeninput"
                 type="text"
-                id="cpfcliente"
-                name="cpfcliente"
+                id="documentocliente"
+                name="documentocliente"
               />
             </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="passaportecliente">Passaporte</label>
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="passaportecliente"
-                name="passaportecliente"
-              />
-            </div>
+            <input type="hidden" id="cpfcliente_hidden" name="cpfcliente_hidden" value="" />
+            <input type="hidden" id="passaportecliente_hidden" name="passaportecliente_hidden" value="" />
             <div class="checkoutscreenfield_group">
               <label class="checkoutscreenlabel" for="nomecliente"
                 >Nome do Cliente</label
@@ -405,66 +396,91 @@
         document.getElementById("quarto").addEventListener("change", atualizarDetalhesQuarto);
 
         // Preencher dados do cliente ao digitar o CPF
-        document.getElementById("cpfcliente").addEventListener("blur", async function () {
-          const cpf = this.value;
-          if (!cpf) return;
-          try {
-            const resp = await fetch(`/api/clientes/cpf/${cpf}`);
+// Função auxiliar para limpar campos de cliente e hidden
+      function limparDadosCliente() {
+        document.getElementById("nomecliente").value = "";
+        document.getElementById("telefonecliente").value = "";
+        document.getElementById("emailcliente").value = "";
+        document.getElementById("cepcliente").value = "";
+        document.getElementById("enderecocliente").value = "";
+        document.getElementById("cpfcliente_hidden").value = "";
+        document.getElementById("passaportecliente_hidden").value = "";
+      }
+
+      // Função para buscar cliente por CPF ou Passaporte (Unificado)
+      async function buscarClientePorDocumento(documento) {
+        // Remove formatação (pontos, traços, barras)
+        const documentoLimpo = documento.replace(/[.\-/]/g, '').trim();
+
+        if (!documentoLimpo) return null;
+        
+        // 1. Tenta buscar por CPF (assume CPF se tiver 11 dígitos, ou se for totalmente numérico)
+        if (documentoLimpo.length === 11 && /^\d+$/.test(documentoLimpo)) {
+             try {
+                const resp = await fetch(`/api/clientes/cpf/${documentoLimpo}`);
+                if (resp.ok) {
+                    return { cliente: await resp.json(), tipo: 'cpf' };
+                }
+            } catch (error) {
+                console.error("Erro ao buscar cliente por CPF:", error);
+            }
+        }
+        
+        // 2. Tenta buscar por Passaporte, usando o valor original para o encode
+        try {
+            const resp = await fetch(`/api/clientes/passaporte/${encodeURIComponent(documento)}`);
             if (resp.ok) {
-              const cliente = await resp.json();
+                return { cliente: await resp.json(), tipo: 'passaporte' };
+            }
+        } catch (error) {
+            console.error("Erro ao buscar cliente por passaporte:", error);
+        }
+
+        return null; // Não encontrou
+      }
+
+      // NOVO: Função para processar a entrada do documento e preencher campos
+      async function processarDocumentoCliente(documentoDigitado, exibirAlerta = false) {
+          if (!documentoDigitado) {
+              limparDadosCliente();
+              return;
+          }
+
+          const resultado = await buscarClientePorDocumento(documentoDigitado);
+          limparDadosCliente(); // Limpa antes de preencher
+          
+          if (resultado && resultado.cliente) {
+              const cliente = resultado.cliente;
+              
               document.getElementById("nomecliente").value = cliente.nome || "";
               document.getElementById("telefonecliente").value = cliente.telefone || "";
               document.getElementById("emailcliente").value = cliente.email || "";
               document.getElementById("cepcliente").value = cliente.cep || "";
               document.getElementById("enderecocliente").value = cliente.endereco || "";
-              // Se o cliente tiver passaporte, preenche também
-              if (cliente.passaporte) {
-                const passaporteField = document.getElementById("passaportecliente");
-                if (passaporteField && !passaporteField.value) passaporteField.value = cliente.passaporte;
-              }
-            } else {
-              document.getElementById("nomecliente").value = "";
-              document.getElementById("telefonecliente").value = "";
-              document.getElementById("emailcliente").value = "";
-              document.getElementById("cepcliente").value = "";
-              document.getElementById("enderecocliente").value = "";
-            }
-          } catch (error) {
-            console.error("Erro ao buscar cliente por CPF:", error);
-          }
-        });
 
-        // Preencher dados do cliente ao digitar o Passaporte
-        const passaporteInput = document.getElementById("passaportecliente");
-        if (passaporteInput) {
-          passaporteInput.addEventListener("blur", async function () {
-            const passaporte = this.value;
-            if (!passaporte) return;
-            try {
-              const resp = await fetch(`/api/clientes/passaporte/${encodeURIComponent(passaporte)}`);
-              if (resp.ok) {
-                const cliente = await resp.json();
-                document.getElementById("nomecliente").value = cliente.nome || "";
-                document.getElementById("telefonecliente").value = cliente.telefone || "";
-                document.getElementById("emailcliente").value = cliente.email || "";
-                document.getElementById("cepcliente").value = cliente.cep || "";
-                document.getElementById("enderecocliente").value = cliente.endereco || "";
-                if (cliente.cpf) {
-                  const cpfField = document.getElementById("cpfcliente");
-                  if (cpfField && !cpfField.value) cpfField.value = cliente.cpf;
-                }
+              // Salva o CPF e Passaporte nos campos hidden para uso no submit
+              document.getElementById("cpfcliente_hidden").value = cliente.cpf || "";
+              document.getElementById("passaportecliente_hidden").value = cliente.passaporte || "";
+
+          } else {
+              // Cliente não encontrado. Define o documento digitado nos campos hidden.
+              const documentoLimpo = documentoDigitado.replace(/[.\-/]/g, '').trim();
+              if (documentoLimpo.length === 11 && /^\d+$/.test(documentoLimpo)) {
+                  document.getElementById("cpfcliente_hidden").value = documentoLimpo;
               } else {
-                document.getElementById("nomecliente").value = "";
-                document.getElementById("telefonecliente").value = "";
-                document.getElementById("emailcliente").value = "";
-                document.getElementById("cepcliente").value = "";
-                document.getElementById("enderecocliente").value = "";
+                  document.getElementById("passaportecliente_hidden").value = documentoDigitado;
               }
-            } catch (error) {
-              console.error("Erro ao buscar cliente por passaporte:", error);
-            }
-          });
-        }
+              
+              if (exibirAlerta) {
+                 alert("Cliente não encontrado. Preencha os dados restantes. Se este for um cliente novo, ele será cadastrado no check-in.");
+              }
+          }
+      }
+
+      // Listener de blur chama a nova função e exibe o alerta (mantendo a usabilidade original)
+      document.getElementById("documentocliente").addEventListener("blur", async function () {
+          await processarDocumentoCliente(this.value, true); 
+      });
 
         // Gerar campos de acompanhantes dinamicamente
         document.getElementById("quantidade_acompanhantes").addEventListener("input", function () {
@@ -481,9 +497,8 @@
                       <input type="text" class="checkoutscreeninput nome-acompanhante" name="nome_acompanhante_${i}" />
                   </div>
                   <div class="checkoutscreenfield_group">
-                      <label class="checkoutscreenlabel">CPF do acompanhante ${i}:</label>
-                      <input type="text" class="checkoutscreeninput cpf-acompanhante" name="cpf_acompanhante_${i}" />
-                  </div>
+                      <label class="checkoutscreenlabel">CPF ou Passaporte do acompanhante ${i}:</label>
+                      <input type="text" class="checkoutscreeninput documento-acompanhante" name="documento_acompanhante_${i}" /> </div>
                   <div class="checkoutscreenfield_group">
                       <label class="checkoutscreenlabel">Data de Nascimento do acompanhante ${i}:</label>
                       <input type="date" class="checkoutscreeninput nascimento-acompanhante" name="nascimento_acompanhante_${i}" />
@@ -494,9 +509,21 @@
         });
 
         // Enviar o formulário de check-in
+// Enviar o formulário de check-in
+// Enviar o formulário de check-in
         document.getElementById("checkinForm").addEventListener("submit", async function (e) {
-          e.preventDefault();
-          const cliente_cpf = document.getElementById("cpfcliente").value;
+e.preventDefault();
+          
+          // *** CORREÇÃO: Força o processamento do documento antes de ler os campos hidden ***
+          const documentoDigitado = document.getElementById("documentocliente").value;
+          await processarDocumentoCliente(documentoDigitado); 
+          // ********************************************************************************
+
+          // Obtém os dados dos campos hidden (que agora têm certeza de estarem preenchidos se o campo de input não for vazio)
+          const cliente_cpf = document.getElementById("cpfcliente_hidden").value; 
+          const passaporte_cliente = document.getElementById("passaportecliente_hidden").value; 
+          
+          // Campos restantes
           const quarto_numero = document.getElementById("quarto").value;
           const data_checkin = document.getElementById("datacheckin").value;
           const hora_checkin = document.getElementById("horacheckin").value;
@@ -510,24 +537,41 @@
           const endereco = document.getElementById("enderecocliente").value;
           const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
           
-          const nomes_acompanhantes = Array.from(document.querySelectorAll('.nome-acompanhante')).map(input => input.value);
-          const cpfs_acompanhantes = Array.from(document.querySelectorAll('.cpf-acompanhante')).map(input => input.value);
+const nomes_acompanhantes = Array.from(document.querySelectorAll('.nome-acompanhante')).map(input => input.value);
+          const documentos_acompanhantes = Array.from(document.querySelectorAll('.documento-acompanhante')).map(input => input.value); // NOVO: Campo único
+
+          const cpfs_acompanhantes = documentos_acompanhantes.map(doc => 
+            doc.replace(/[.\-/]/g, '').trim().length === 11 && /^\d+$/.test(doc.replace(/[.\-/]/g, '')) ? doc.replace(/[.\-/]/g, '') : null
+          );
+          const passaportes_acompanhantes = documentos_acompanhantes.map(doc => 
+            doc.replace(/[.\-/]/g, '').trim().length === 11 && /^\d+$/.test(doc.replace(/[.\-/]/g, '')) ? null : doc
+          );
+          
           const nascimentos_acompanhantes = Array.from(document.querySelectorAll('.nascimento-acompanhante')).map(input => input.value);
 
-          if (!cliente_cpf || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
-            alert("Preencha todos os campos obrigatórios!");
+          // Validação: CPF OU Passaporte é obrigatório, além dos campos usuais.
+          if ((!cliente_cpf && !passaporte_cliente) || !quarto_numero || !data_checkin || !hora_checkin || !data_checkout_prevista || !hora_checkout_prevista || !valor_diaria) {
+            alert("Preencha todos os campos obrigatórios! (CPF/Passaporte do Cliente, Quarto, Datas/Horas e Valor da Diária)");
             return;
           }
 
           try {
-              await fetch(`/api/clientes/${cliente_cpf}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ nome, telefone, email, endereco, cep }),
-              });
+              // Tenta atualizar o cliente se houver CPF (API PUT usa CPF como chave)
+              if (cliente_cpf) {
+                  await fetch(`/api/clientes/${cliente_cpf}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    // Envia todos os dados do cliente, incluindo o Passaporte
+                    body: JSON.stringify({ nome, telefone, email, endereco, cep, passaporte: passaporte_cliente }),
+                  });
+              } else {
+                  console.log("Cliente estrangeiro (sem CPF) ou novo cliente. Pulando PUT de atualização por CPF.");
+              }
+
 
               const checkinData = {
                   cliente_cpf,
+                  cliente_passaporte: passaporte_cliente, 
                   quarto_numero,
                   data_checkin,
                   hora_checkin,
@@ -537,6 +581,7 @@
                   motivo_hospedagem,
                   nomes_acompanhantes,
                   cpfs_acompanhantes, 
+                  passaportes_acompanhantes,
                   nascimentos_acompanhantes
               };
 
@@ -549,6 +594,7 @@
               if (resp.ok) {
                 alert("Check-in registrado com sucesso!");
                 this.reset();
+                limparDadosCliente(); // Limpa os campos hidden também
                 document.getElementById("acompanhantes-container").innerHTML = "";
                 carregarQuartosDisponiveis();
               } else if (resp.status === 409 && data.precisa_confirmar) {
@@ -563,6 +609,7 @@
                   if (resp2.ok) {
                     alert("Check-in registrado com sucesso!");
                     this.reset();
+                    limparDadosCliente(); // Limpa os campos hidden também
                     document.getElementById("acompanhantes-container").innerHTML = "";
                     carregarQuartosDisponiveis();
                   } else {
@@ -573,7 +620,8 @@
                 alert(data.message || "Erro ao registrar check-in");
               }
           } catch (error) {
-              alert("Erro ao conectar ao servidor");
+              alert("Erro ao conectar ao servidor. Verifique o console para mais detalhes.");
+              console.error(error);
           }
         });
       });

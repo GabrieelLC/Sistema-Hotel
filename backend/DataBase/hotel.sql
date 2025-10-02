@@ -28,10 +28,11 @@ CREATE TABLE `acompanhantes` (
   `nome` varchar(255) NOT NULL,
   `cpf` varchar(14) DEFAULT NULL,
   `data_nascimento` date DEFAULT NULL,
+  `passaporte` varchar(30) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `reserva_id` (`reserva_id`),
   CONSTRAINT `acompanhantes_ibfk_1` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -40,7 +41,7 @@ CREATE TABLE `acompanhantes` (
 
 LOCK TABLES `acompanhantes` WRITE;
 /*!40000 ALTER TABLE `acompanhantes` DISABLE KEYS */;
-INSERT INTO `acompanhantes` VALUES (7,19,'gabriel',NULL,NULL),(8,21,'bruno',NULL,NULL),(9,23,'gabriel','03732264114','2006-04-30'),(10,24,'ina','12938432343','2002-02-10'),(11,24,'heitor','12343232553','3004-02-10'),(12,25,'gabriel','03732264114','2025-08-18'),(13,33,'bruno','03732264114','2006-04-30'),(14,34,'gabriel','03732264114','2006-04-30'),(15,34,'pedro','12343232553','2006-04-03'),(16,35,'gabriel','03732264114','2006-04-30'),(17,39,'Heitor','06712345690','2006-12-27');
+INSERT INTO `acompanhantes` VALUES (7,19,'gabriel',NULL,NULL,NULL),(8,21,'bruno',NULL,NULL,NULL),(9,23,'gabriel','03732264114','2006-04-30',NULL),(10,24,'ina','12938432343','2002-02-10',NULL),(11,24,'heitor','12343232553','3004-02-10',NULL),(12,25,'gabriel','03732264114','2025-08-18',NULL),(13,33,'bruno','03732264114','2006-04-30',NULL),(14,34,'gabriel','03732264114','2006-04-30',NULL),(15,34,'pedro','12343232553','2006-04-03',NULL),(16,35,'gabriel','03732264114','2006-04-30',NULL),(17,39,'Heitor','06712345690','2006-12-27',NULL),(18,41,'gringo 2',NULL,'2005-04-30','123457');
 /*!40000 ALTER TABLE `acompanhantes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -122,7 +123,7 @@ CREATE TABLE `clientes` (
   UNIQUE KEY `cpf` (`cpf`),
   UNIQUE KEY `passaporte` (`passaporte`),
   CONSTRAINT `ck_documento` CHECK (((`cpf` is not null) or (`passaporte` is not null)))
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,7 +132,7 @@ CREATE TABLE `clientes` (
 
 LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
-INSERT INTO `clientes` VALUES (1,'03732264114','gabriel','61991892074','gabriiel@gmail.com','Quadra 17','73045173','','2006-04-30','Brasileiro'),(2,'03806978268','Ian Bastos Gonçalves','61981640495','ian.golcalves_pub2410@fac.unb.br','Imperio dos Nobres','73252158',NULL,'2005-10-22','Brasileiro'),(3,'06718562190','Heitor Luiz de Souza Carvalho de Miranda','61992369194','heitor@gmail.com','Condomínio RK','73252200',NULL,'2005-12-27','Brasileiro'),(19,'12345678910','Arthur Prados Piana','6192342345','arthur.piana@gmail.com','Condomínio Império dos Nobres','73252158',NULL,'2006-03-16','Brasileiro'),(20,NULL,'Teste da Silva','61991293456','teste.silva@gmail.com','Avenida Quase ali','73252158','123456','2000-02-20','Computaciano');
+INSERT INTO `clientes` VALUES (1,'03732264114','gabriel','61991892074','gabriiel@gmail.com','Quadra 17','73045173','','2006-04-30','Brasileiro'),(2,'03806978268','Ian Bastos Gonçalves','61981640495','ian.golcalves_pub2410@fac.unb.br','Imperio dos Nobres','73252158',NULL,'2005-10-22','Brasileiro'),(3,'06718562190','Heitor Luiz de Souza Carvalho de Miranda','61992369194','heitor@gmail.com','Condomínio RK','73252200',NULL,'2005-12-27','Brasileiro'),(19,'12345678910','Arthur Prados Piana','6192342345','arthur.piana@gmail.com','Condomínio Império dos Nobres','73252158',NULL,'2006-03-16','Brasileiro'),(26,NULL,'Sobesvaldo','12643234323','sobesvaldo@gmail.com','a','73045173','123457','1994-05-30','viadao'),(27,NULL,'gringo','61992891074','gringo@gmail.com','fora do brasil','73045173','123458','1934-02-10','gringo');
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -277,7 +278,7 @@ CREATE TABLE `quartos` (
 
 LOCK TABLES `quartos` WRITE;
 /*!40000 ALTER TABLE `quartos` DISABLE KEYS */;
-INSERT INTO `quartos` VALUES (1,1,'ocupado','Uma cama',100.00),(13,2,'ocupado','2 camas (casal, beliche)',13000.00),(22,3,'disponivel','Duas camas soltero',250.00);
+INSERT INTO `quartos` VALUES (1,1,'ocupado','Uma cama',100.00),(5,6,'ocupado','quartao ',500.00),(13,2,'ocupado','2 camas (casal, beliche)',13000.00),(22,3,'disponivel','Duas camas soltero',250.00);
 /*!40000 ALTER TABLE `quartos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -307,7 +308,7 @@ CREATE TABLE `reservas` (
   KEY `fk_reservas_clientes` (`cliente_id`),
   CONSTRAINT `fk_reservas_clientes` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`quarto_numero`) REFERENCES `quartos` (`numero`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -316,7 +317,7 @@ CREATE TABLE `reservas` (
 
 LOCK TABLES `reservas` WRITE;
 /*!40000 ALTER TABLE `reservas` DISABLE KEYS */;
-INSERT INTO `reservas` VALUES (19,22,'2025-03-12','10:20:00','2025-08-15','20:07:00',250.00,0.00,'finalizado','dicansar','2025-08-16','21:05:00',2),(20,22,'2025-08-15','20:09:00','2025-08-15','20:10:00',250.00,0.00,'finalizado','quer dar a bunda pra uns cara ai','2025-08-16','20:10:00',1),(21,1,'2025-08-12','11:38:00','2025-08-18','12:14:00',100.00,0.00,'finalizado','descansar ne','2025-08-19','11:38:00',2),(22,22,'2025-08-18','12:13:00','2025-08-18','12:14:00',250.00,0.00,'finalizado','descansar ne','2025-08-19','12:13:00',1),(23,13,'2025-08-18','12:57:00','2025-08-18','16:54:00',13000.00,0.00,'finalizado','descansar ne','2025-08-18','13:57:00',2),(24,22,'2025-08-18','17:33:00','2025-08-19','16:33:00',250.00,0.00,'finalizado','quer dar a bunda pra uns cara ai','2025-08-19','17:33:00',1),(25,13,'2025-08-18','18:01:00','2025-08-21','16:09:00',13000.00,0.00,'finalizado','dicansar','2025-08-20','19:02:00',2),(33,22,'2025-08-19','16:34:00','2025-08-21','16:10:00',250.00,0.00,'finalizado','descansar ne','2025-08-20','16:34:00',1),(34,1,'2025-08-19','16:35:00','2025-08-21','16:10:00',100.00,0.00,'finalizado','quer dar a bunda pra dois caras','2025-08-21','17:36:00',3),(35,1,'2025-08-21','16:12:00','2025-08-21','16:16:00',100.00,0.00,'finalizado','teste','2025-08-21','16:15:00',3),(37,1,'2025-08-21','16:17:00','2025-08-21','16:35:00',100.00,0.00,'finalizado',NULL,'2025-08-21','16:20:00',3),(38,1,'2025-10-01','16:30:00',NULL,NULL,100.00,0.00,'ativo','descansar','2025-10-02','16:30:00',19),(39,13,'2025-10-01','16:33:00',NULL,NULL,13000.00,0.00,'ativo','descansar','2025-10-02','16:34:00',1);
+INSERT INTO `reservas` VALUES (19,22,'2025-03-12','10:20:00','2025-08-15','20:07:00',250.00,0.00,'finalizado','dicansar','2025-08-16','21:05:00',2),(20,22,'2025-08-15','20:09:00','2025-08-15','20:10:00',250.00,0.00,'finalizado','quer dar a bunda pra uns cara ai','2025-08-16','20:10:00',1),(21,1,'2025-08-12','11:38:00','2025-08-18','12:14:00',100.00,0.00,'finalizado','descansar ne','2025-08-19','11:38:00',2),(22,22,'2025-08-18','12:13:00','2025-08-18','12:14:00',250.00,0.00,'finalizado','descansar ne','2025-08-19','12:13:00',1),(23,13,'2025-08-18','12:57:00','2025-08-18','16:54:00',13000.00,0.00,'finalizado','descansar ne','2025-08-18','13:57:00',2),(24,22,'2025-08-18','17:33:00','2025-08-19','16:33:00',250.00,0.00,'finalizado','quer dar a bunda pra uns cara ai','2025-08-19','17:33:00',1),(25,13,'2025-08-18','18:01:00','2025-08-21','16:09:00',13000.00,0.00,'finalizado','dicansar','2025-08-20','19:02:00',2),(33,22,'2025-08-19','16:34:00','2025-08-21','16:10:00',250.00,0.00,'finalizado','descansar ne','2025-08-20','16:34:00',1),(34,1,'2025-08-19','16:35:00','2025-08-21','16:10:00',100.00,0.00,'finalizado','quer dar a bunda pra dois caras','2025-08-21','17:36:00',3),(35,1,'2025-08-21','16:12:00','2025-08-21','16:16:00',100.00,0.00,'finalizado','teste','2025-08-21','16:15:00',3),(37,1,'2025-08-21','16:17:00','2025-08-21','16:35:00',100.00,0.00,'finalizado',NULL,'2025-08-21','16:20:00',3),(38,1,'2025-10-01','16:30:00',NULL,NULL,100.00,0.00,'ativo','descansar','2025-10-02','16:30:00',19),(39,13,'2025-10-01','16:33:00',NULL,NULL,13000.00,0.00,'ativo','descansar','2025-10-02','16:34:00',1),(40,22,'2025-10-02','10:01:00','2025-10-02','10:02:00',250.00,0.00,'finalizado','desca','2025-10-02','10:03:00',26),(41,5,'2025-10-02','10:20:00',NULL,NULL,500.00,0.00,'ativo','dormir','2025-10-02','10:22:00',27);
 /*!40000 ALTER TABLE `reservas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -384,4 +385,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-01 16:47:00
+-- Dump completed on 2025-10-02 10:26:10
