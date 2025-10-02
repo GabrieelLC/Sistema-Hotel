@@ -405,6 +405,7 @@ router.post("/tipos-quarto", (req, res) => {
 router.post("/checkin", (req, res) => {
   const {
     cliente_cpf,
+    cliente_passaporte, 
     quarto_numero,
     data_checkin,
     hora_checkin,
@@ -412,14 +413,16 @@ router.post("/checkin", (req, res) => {
     motivo_hospedagem,
     nomes_acompanhantes,
     cpfs_acompanhantes,
+    passaportes_acompanhantes,
     nascimentos_acompanhantes,
     data_checkout_prevista,
     hora_checkout_prevista,
     ignorar_reserva_ativa,
   } = req.body;
 
+  // CORREÇÃO DE VALIDAÇÃO: Verifica se há CPF OU Passaporte
   if (
-    !cliente_cpf || // O CPF/Passaporte preenchido deve ser tratado no frontend antes
+    (!cliente_cpf && !cliente_passaporte) || 
     !quarto_numero ||
     !data_checkin ||
     !hora_checkin ||
@@ -427,13 +430,14 @@ router.post("/checkin", (req, res) => {
   ) {
     return res
       .status(400)
-      .json({ message: "Preencha todos os campos obrigatórios!" });
+      .json({ message: "Preencha todos os campos obrigatórios! (CPF/Passaporte do Cliente, Quarto, Datas/Horas e Valor da Diária)" });
   }
   
-  // CORREÇÃO: PASSO 1: Buscar o ID do cliente a partir do CPF
+  // PASSO 1: Buscar o ID do cliente a partir do CPF OU Passaporte
   db.query(
+    // CORREÇÃO DE QUERY: Usa as variáveis cliente_cpf e cliente_passaporte corretamente
     `SELECT id FROM Clientes WHERE cpf = ? OR passaporte = ?`,
-    [cliente_cpf, cliente_cpf], // Tenta buscar por CPF e Passaporte (caso o frontend coloque o passaporte no campo CPF)
+    [cliente_cpf, cliente_passaporte], 
     (idErr, idResults) => {
       if (idErr) {
         console.error("Erro ao buscar ID do cliente:", idErr);
@@ -444,7 +448,6 @@ router.post("/checkin", (req, res) => {
       }
       const cliente_id = idResults[0].id; // ID do cliente obtido
 
-      // PASSO 2: Verificar reserva ativa para o quarto
       db.query(
         `SELECT id FROM Reservas WHERE quarto_numero = ? AND status = 'ativo'`,
         [quarto_numero],
@@ -519,11 +522,12 @@ router.post("/checkin", (req, res) => {
                             reservaId,
                             nome,
                             cpfs_acompanhantes[index] || null, // Pega o CPF correspondente
+                            passaportes_acompanhantes[index] || null, // Pega o Passaporte correspondente
                             nascimentos_acompanhantes[index] || null, // Pega a data de nascimento correspondente
                           ]
                         );
                         db.query(
-                          `INSERT INTO Acompanhantes (reserva_id, nome, cpf, data_nascimento) VALUES ?`,
+                          `INSERT INTO Acompanhantes (reserva_id, nome, cpf, passaporte, data_nascimento) VALUES ?`,
                           [acompanhantesData],
                           (err3) => {
                             if (err3) {
@@ -649,28 +653,45 @@ router.get("/reservas", (req, res) => {
   });
 });
 
-// GET /api/reserva-ativa/:cpf
+// GET /api/reserva-ativa/:cpf (Onde :cpf agora representa CPF ou Passaporte)
 router.get("/reserva-ativa/:cpf", (req, res) => {
-  const cpf = req.params.cpf;
+  const identifier = req.params.cpf;
+
   db.query(
-    `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria
-     FROM Reservas r
-     JOIN Clientes c ON r.cliente_id = c.id
-     JOIN Quartos q ON r.quarto_numero = q.numero
-     JOIN TiposQuarto tq ON q.tipo_id = tq.id
-     WHERE r.cliente_cpf = ? AND r.status = 'ativo'
-     ORDER BY r.data_checkin DESC LIMIT 1`,
-    [cpf],
-    (err, results) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ message: "Erro ao buscar reserva", error: err });
-      if (!results.length)
-        return res
-          .status(404)
-          .json({ message: "Nenhuma reserva ativa encontrada" });
-      res.json(results[0]);
+    // Procura na coluna CPF OU na coluna Passaporte
+    `SELECT id FROM Clientes WHERE cpf = ? OR passaporte = ?`,
+    [identifier, identifier],
+    (errId, resultId) => {
+      if (errId) {
+        console.error("Erro ao buscar cliente por identificador:", errId);
+        return res.status(500).json({ message: "Erro interno ao buscar dados do cliente.", error: errId });
+      }
+      if (resultId.length === 0) {
+        return res.status(404).json({ message: "Cliente não encontrado." });
+      }
+
+      const cliente_id = resultId[0].id;
+      db.query(
+        `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria
+         FROM Reservas r
+         JOIN Clientes c ON r.cliente_id = c.id
+         JOIN Quartos q ON r.quarto_numero = q.numero
+         JOIN TiposQuarto tq ON q.tipo_id = tq.id
+         WHERE r.cliente_id = ? AND r.status = 'ativo'
+         ORDER BY r.data_checkin DESC LIMIT 1`,
+        [cliente_id], 
+        (err, results) => {
+          if (err)
+            return res
+              .status(500)
+              .json({ message: "Erro ao buscar reserva ativa", error: err });
+          if (!results.length)
+            return res
+              .status(404)
+              .json({ message: "Nenhuma reserva ativa encontrada para este cliente." });
+          res.json(results[0]);
+        }
+      );
     }
   );
 });
