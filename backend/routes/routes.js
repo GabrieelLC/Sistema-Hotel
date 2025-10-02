@@ -333,7 +333,7 @@ router.delete("/quartos/:numero", (req, res) => {
 router.get("/checkins-hoje", (req, res) => {
   const hoje = new Date().toISOString().slice(0, 10);
   db.query(
-    `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
+    `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkin as hora, c.telefone, c.email, 
             COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
             r.motivo_hospedagem
@@ -359,7 +359,7 @@ router.get("/checkins-hoje", (req, res) => {
 router.get("/checkouts-hoje", (req, res) => {
   const hoje = new Date().toISOString().slice(0, 10);
   db.query(
-    `SELECT c.cpf, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
+    `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkout as hora, c.telefone, c.email, 
             COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
             r.motivo_hospedagem
@@ -924,7 +924,7 @@ router.delete("/consumos/:id", (req, res) => {
 // Novo: Listar hóspedes ativos
 router.get("/hospedes-ativos", (req, res) => {
   const sql = `
-    SELECT c.cpf, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
+    SELECT c.cpf, c.passaporte, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
            r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, 
            r.motivo_hospedagem
     FROM Reservas r
@@ -977,7 +977,7 @@ router.get("/checkouts-vencidos", (req, res) => {
   const dataHoraAtual = `${ano}-${mes}-${dia} ${hora}:${minuto}:${segundo}`;
 
   const sql = `
-    SELECT c.cpf, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
+    SELECT c.cpf, c.passaporte, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
            DATE_FORMAT(r.data_checkout_prevista, '%d/%m/%Y') as data_saida_prevista,
            DATE_FORMAT(r.hora_checkout_prevista, '%H:%i') as hora_saida_prevista,
            c.telefone, c.email
