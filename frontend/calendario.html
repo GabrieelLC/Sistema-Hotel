@@ -124,17 +124,31 @@
     </div>
     <script>
       // Codigo novo para visualização
+      let refreshInterval;
 
       document.addEventListener("DOMContentLoaded", () => {
         const hoje = new Date();
         document.getElementById("mes").value = hoje.toISOString().slice(0, 7);
 
         carregarCalendario();
+        iniciarAutoRefresh(); // Inicia o auto-refresh na carga inicial
 
-        document
-          .getElementById("mes")
-          .addEventListener("change", carregarCalendario);
+        document.getElementById("mes").addEventListener("change", () => {
+          carregarCalendario();
+          iniciarAutoRefresh(); // Reinicia o auto-refresh se o mês mudar
+        });
       });
+
+      function iniciarAutoRefresh() {
+        // Limpa qualquer intervalo existente para evitar múltiplos refreshes simultâneos
+        if (refreshInterval) {
+          clearInterval(refreshInterval);
+        }
+
+        // Define um novo intervalo de 60 segundos (1 minuto) para refrescar o calendário
+        refreshInterval = setInterval(carregarCalendario, 60000);
+        console.log("Auto-refresh iniciado a cada 60 segundos.");
+      }
 
       async function carregarReservasEQuartos(ano, mes) {
         const primeiroDia = new Date(ano, mes - 1, 1)
@@ -150,7 +164,23 @@
           console.error("Falha ao buscar ocupação.");
           return { quartos: [], reservas: [] };
         }
-        const reservas = await respReservas.json();
+        let reservas = await respReservas.json();
+
+        // **Ajuste para usar a data de checkout real (data_checkout) se o cliente saiu antes**
+        reservas = reservas.map((r) => {
+          // O backend deve fornecer r.data_checkout (saída real) e r.data_saida (saída prevista)
+          // Se o checkout real existir e for anterior ao previsto (data_saida),
+          // atualiza a data de saída para a data real. Isso libera o quarto mais cedo.
+          const dataCheckoutReal = r.data_checkout
+            ? new Date(r.data_checkout)
+            : null;
+          const dataSaidaPrevista = new Date(r.data_saida);
+
+          if (dataCheckoutReal && dataCheckoutReal < dataSaidaPrevista) {
+            return { ...r, data_saida: r.data_checkout };
+          }
+          return r;
+        });
 
         // 2. Busca todos os quartos para garantir que mesmo os vazios apareçam
         const respQuartos = await fetch("/api/quartos");
@@ -215,27 +245,58 @@
             dataAtual.setHours(12); // Evita problemas com fuso horário
 
             const reservaDoDia = reservasDoQuarto.find((r) => {
+              // Normaliza datas de checkin e saida para a meia-noite local para
+              // garantir que a comparação seja apenas por data, resolvendo o problema de fuso/hora (Issue 1)
               const checkin = new Date(r.data_checkin);
+              checkin.setHours(0, 0, 0, 0);
+
               const saida = new Date(r.data_saida);
+              saida.setHours(0, 0, 0, 0);
+
+              // A ocupação é do dia de checkin (inclusive) até o dia anterior ao checkout (exclusive)
               return dataAtual >= checkin && dataAtual < saida;
             });
 
             if (reservaDoDia) {
+              // Repete a normalização para as variáveis de cálculo
               const checkin = new Date(reservaDoDia.data_checkin);
+              checkin.setHours(0, 0, 0, 0);
               const saida = new Date(reservaDoDia.data_saida);
+              saida.setHours(0, 0, 0, 0);
 
-              // Garante que o início e o fim estão dentro do mês atual
+              // Calcula os limites da ocupação dentro do mês atual
               let diaInicioNoMes =
                 checkin.getMonth() + 1 === mes ? checkin.getDate() : 1;
-              let diaFimNoMes =
-                saida.getMonth() + 1 === mes ? saida.getDate() - 1 : diasNoMes;
+              let diaFimNoMes;
 
+              // O último dia ocupado é o dia anterior ao checkout (saida - 1 dia)
+              if (saida.getFullYear() === ano && saida.getMonth() + 1 === mes) {
+                diaFimNoMes = saida.getDate() - 1;
+              } else if (
+                saida.getFullYear() > ano ||
+                (saida.getFullYear() === ano && saida.getMonth() + 1 > mes)
+              ) {
+                // Se a saída for em um mês/ano futuro, o último dia ocupado é o último dia do mês atual
+                diaFimNoMes = diasNoMes;
+              } else {
+                // Se a data de saída for em um mês anterior (algo que o filtro inicial deve evitar)
+                diaFimNoMes = diaAtual - 1;
+              }
+
+              // Garante que o inicio real da ocupação não seja anterior ao dia que estamos avaliando no loop
               if (diaAtual > diaInicioNoMes) {
                 diaInicioNoMes = diaAtual;
               }
 
               // Calcula quantos dias a reserva ocupa na visualização
               let diasDeOcupacao = diaFimNoMes - diaInicioNoMes + 1;
+
+              // Evita quebra de código se os dias de ocupação forem calculados incorretamente (diasDeOcupacao <= 0)
+              if (diasDeOcupacao <= 0) {
+                bodyHtml += `<td class="calendar-day-livre"></td>`;
+                diaAtual++;
+                continue;
+              }
 
               const tooltipText = `Hóspede: ${
                 reservaDoDia.cliente
@@ -275,15 +336,13 @@
       function formatarData(data) {
         if (!data) return "";
         const d = new Date(data);
-        // Adiciona o fuso horário para corrigir a data
-        const dia = String(d.getUTCDate()).padStart(2, "0");
-        const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
+        // O dia e mês devem ser extraídos localmente (sem UTC), pois a data foi normalizada para 00:00:00 local.
+        const dia = String(d.getDate()).padStart(2, "0");
+        const mes = String(d.getMonth() + 1).padStart(2, "0");
         return `${dia}/${mes}`;
       }
 
-      // Código antigo comentado para referência
-
-      /*let reservas = [];
+    /*let reservas = [];
     let quartos = [];
 
     async function carregarReservas() {
