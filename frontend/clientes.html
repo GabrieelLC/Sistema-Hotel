@@ -277,9 +277,7 @@
               placeholder="Digite para buscar por nome, CPF ou passaporte..."
             />
           </form>
-        </section>
-
-        <section class="card">
+          <br>
           <h2 class="card-title">Clientes Cadastrados</h2>
           <div class="table-wrapper">
             <table>
@@ -307,6 +305,33 @@
     </div>
 
     <script>
+
+      // Filtra os clientes com base na busca
+      function filterClientes() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.trim()
+          .toLowerCase();
+
+        if (!searchTerm) {
+          renderClientes(todosClientes);
+          return;
+        }
+
+        const clientesFiltrados = todosClientes.filter((cliente) => {
+          const nome = String(cliente.nome || "").toLowerCase();
+          const cpf = String(cliente.cpf || "").toLowerCase();
+          const passaporte = String(cliente.passaporte || "").toLowerCase();
+
+          return (
+            nome.includes(searchTerm) ||
+            cpf.includes(searchTerm) ||
+            passaporte.includes(searchTerm)
+          );
+        });
+        renderClientes(clientesFiltrados);
+      }
+
       let todosClientes = []; // Armazena a lista completa de clientes para filtro e cancelamento
 
       // Atualiza data e hora em tempo real
@@ -398,22 +423,6 @@
         }
       }
 
-      // Filtra os clientes com base na busca
-      function filterClientes() {
-        const searchTerm = document
-          .getElementById("searchInput")
-          .value.toLowerCase();
-        const clientesFiltrados = todosClientes.filter((cliente) => {
-          const passaporte = cliente.passaporte || "";
-
-          return (
-            cliente.nome.toLowerCase().includes(searchTerm) ||
-            cliente.cpf.includes(searchTerm) ||
-            passaporte.toLowerCase().includes(searchTerm)
-          );
-        });
-        renderClientes(clientesFiltrados);
-      }
 
       // Habilita a edição em linha para um cliente
       function editarCliente(id) {
@@ -510,7 +519,7 @@
         carregarClientes();
         document
           .getElementById("searchInput")
-          .addEventListener("keyup", filterClientes);
+          .addEventListener("input", filterClientes);
       });
     </script>
   </body>
