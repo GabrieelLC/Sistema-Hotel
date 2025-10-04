@@ -696,26 +696,9 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
   );
 });
 
-/*rota antiga para buscar reservas ativas de um cliente
-// Rota para calendário de ocupação dos quartos
-router.get("/ocupacao-quartos", (req, res) => {
-  db. 
-    `SELECT r.quarto_numero, r.data_checkin, r.data_checkout, c.nome as cliente
-     FROM Reservas r
-     JOIN Clientes c ON r.cliente_cpf = c.cpf
-     WHERE r.status IN ('ativo', 'reservado', 'finalizado')`,
-    (err, results) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ message: "Erro ao buscar ocupação", error: err });
-      res.json(results);
-    }
-  );
-});
-*/
 
-// Rota para calendário de ocupação dos quartos
+// Rota para calendário de ocupação dos quartos (VERSÃO PROFISSIONAL COM DADOS PARA TOOLTIP)
+// Rota para calendário de ocupação dos quartos (VERSÃO PROFISSIONAL COM DADOS PARA TOOLTIP)
 router.get("/ocupacao-quartos", (req, res) => {
   const { inicio, fim } = req.query;
   if (!inicio || !fim) {
@@ -723,18 +706,24 @@ router.get("/ocupacao-quartos", (req, res) => {
   }
 
   const sql = `
-    SELECT 
-      r.quarto_numero, 
-      r.data_checkin, 
-      IFNULL(r.data_checkout, r.data_checkout_prevista) as data_saida,
+    SELECT
+      r.quarto_numero,
+      r.data_checkin,
+      -- Data de saída REAL para ser exibida no tooltip (ex: 18/10)
+      IFNULL(r.data_checkout, r.data_checkout_prevista) as data_saida_real,
+      -- Data de saída para a LÓGICA do frontend. A lógica do Gantt (com colspan)
+      -- usa uma comparação "menor que", então esta data já está correta.
+      CASE
+        WHEN DATE(IFNULL(r.data_checkout, r.data_checkout_prevista)) <= DATE(r.data_checkin)
+        THEN DATE_ADD(DATE(r.data_checkin), INTERVAL 1 DAY)
+        ELSE IFNULL(r.data_checkout, r.data_checkout_prevista)
+      END as data_saida_visual,
       c.nome as cliente
     FROM Reservas r
     JOIN Clientes c ON r.cliente_id = c.id
-    WHERE 
+    WHERE
       r.status IN ('ativo', 'finalizado') AND
-      -- Lógica para encontrar reservas que se sobrepõem ao período solicitado:
-      -- A reserva começa antes do fim do período E a reserva termina depois do início do período
-      r.data_checkin <= ? AND 
+      r.data_checkin <= ? AND
       IFNULL(r.data_checkout, r.data_checkout_prevista) >= ?
   `;
 
@@ -746,7 +735,6 @@ router.get("/ocupacao-quartos", (req, res) => {
     res.json(results);
   });
 });
-
 // Modelo básico para produtos (adicione em models/models.js)
 const Produtos = {
   findAll: (callback) => {

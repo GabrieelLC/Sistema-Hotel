@@ -123,40 +123,33 @@
       <div id="calendario"></div>
     </div>
     <script>
-      // Codigo novo para visualização
-      let refreshInterval;
+let refreshInterval;
 
       document.addEventListener("DOMContentLoaded", () => {
         const hoje = new Date();
         document.getElementById("mes").value = hoje.toISOString().slice(0, 7);
 
         carregarCalendario();
-        iniciarAutoRefresh(); // Inicia o auto-refresh na carga inicial
+        iniciarAutoRefresh(); 
 
         document.getElementById("mes").addEventListener("change", () => {
           carregarCalendario();
-          iniciarAutoRefresh(); // Reinicia o auto-refresh se o mês mudar
+          iniciarAutoRefresh(); 
         });
       });
 
       function iniciarAutoRefresh() {
-        // Limpa qualquer intervalo existente para evitar múltiplos refreshes simultâneos
         if (refreshInterval) {
           clearInterval(refreshInterval);
         }
-
-        // Define um novo intervalo de 60 segundos (1 minuto) para refrescar o calendário
         refreshInterval = setInterval(carregarCalendario, 60000);
-        console.log("Auto-refresh iniciado a cada 60 segundos.");
+        console.log("Auto-refresh do calendário iniciado.");
       }
 
       async function carregarReservasEQuartos(ano, mes) {
-        const primeiroDia = new Date(ano, mes - 1, 1)
-          .toISOString()
-          .slice(0, 10);
+        const primeiroDia = new Date(ano, mes - 1, 1).toISOString().slice(0, 10);
         const ultimoDia = new Date(ano, mes, 0).toISOString().slice(0, 10);
 
-        // 1. Busca apenas as reservas do mês selecionado (usando a nova API)
         const respReservas = await fetch(
           `/api/ocupacao-quartos?inicio=${primeiroDia}&fim=${ultimoDia}`
         );
@@ -164,32 +157,15 @@
           console.error("Falha ao buscar ocupação.");
           return { quartos: [], reservas: [] };
         }
-        let reservas = await respReservas.json();
+        const reservas = await respReservas.json();
 
-        // **Ajuste para usar a data de checkout real (data_checkout) se o cliente saiu antes**
-        reservas = reservas.map((r) => {
-          // O backend deve fornecer r.data_checkout (saída real) e r.data_saida (saída prevista)
-          // Se o checkout real existir e for anterior ao previsto (data_saida),
-          // atualiza a data de saída para a data real. Isso libera o quarto mais cedo.
-          const dataCheckoutReal = r.data_checkout
-            ? new Date(r.data_checkout)
-            : null;
-          const dataSaidaPrevista = new Date(r.data_saida);
-
-          if (dataCheckoutReal && dataCheckoutReal < dataSaidaPrevista) {
-            return { ...r, data_saida: r.data_checkout };
-          }
-          return r;
-        });
-
-        // 2. Busca todos os quartos para garantir que mesmo os vazios apareçam
         const respQuartos = await fetch("/api/quartos");
         if (!respQuartos.ok) {
           console.error("Falha ao buscar quartos.");
           return { quartos: [], reservas: [] };
         }
         let quartos = await respQuartos.json();
-        quartos.sort((a, b) => a.numero - b.numero); // Ordena os quartos
+        quartos.sort((a, b) => a.numero - b.numero);
 
         return { quartos, reservas };
       }
@@ -199,8 +175,7 @@
         calendarioDiv.innerHTML = "Carregando...";
 
         const mesInput = document.getElementById("mes").value;
-        const ano = Number(mesInput.split("-")[0]);
-        const mes = Number(mesInput.split("-")[1]);
+        const [ano, mes] = mesInput.split("-").map(Number);
 
         const { quartos, reservas } = await carregarReservasEQuartos(ano, mes);
 
@@ -208,7 +183,6 @@
           calendarioDiv.innerHTML = "Nenhum quarto cadastrado.";
           return;
         }
-
         montarCalendarioGantt(quartos, reservas, ano, mes);
       }
 
@@ -216,21 +190,15 @@
         const diasNoMes = new Date(ano, mes, 0).getDate();
         const calendarioDiv = document.getElementById("calendario");
 
-        // Monta o cabeçalho com os dias do mês
         let headerHtml = "<tr><th>Quarto</th>";
         for (let dia = 1; dia <= diasNoMes; dia++) {
           const data = new Date(ano, mes - 1, dia);
-          const diaSemana = data
-            .toLocaleDateString("pt-BR", { weekday: "short" })
-            .slice(0, 3);
+          const diaSemana = data.toLocaleDateString("pt-BR", { weekday: "short" }).slice(0, 3);
           const isWeekend = data.getDay() === 0 || data.getDay() === 6;
-          headerHtml += `<th style="${
-            isWeekend ? "background-color:#f8fafc;" : ""
-          }">${dia}<br><small>${diaSemana}</small></th>`;
+          headerHtml += `<th style="${isWeekend ? "background-color:#f8fafc;" : ""}">${dia}<br><small>${diaSemana}</small></th>`;
         }
         headerHtml += "</tr>";
 
-        // Monta o corpo, uma linha para cada quarto
         let bodyHtml = "";
         for (const quarto of quartos) {
           bodyHtml += `<tr><td><b>${quarto.numero}</b></td>`;
@@ -238,275 +206,97 @@
           const reservasDoQuarto = reservas.filter(
             (r) => r.quarto_numero == quarto.numero
           );
-          let diaAtual = 1;
 
+          let diaAtual = 1;
           while (diaAtual <= diasNoMes) {
             const dataAtual = new Date(ano, mes - 1, diaAtual);
-            dataAtual.setHours(12); // Evita problemas com fuso horário
+            dataAtual.setHours(12);
 
             const reservaDoDia = reservasDoQuarto.find((r) => {
-              // Normaliza datas de checkin e saida para a meia-noite local para
-              // garantir que a comparação seja apenas por data, resolvendo o problema de fuso/hora (Issue 1)
               const checkin = new Date(r.data_checkin);
               checkin.setHours(0, 0, 0, 0);
-
-              const saida = new Date(r.data_saida);
+              const saida = new Date(r.data_saida_visual); // Usa a data para lógica
               saida.setHours(0, 0, 0, 0);
-
-              // A ocupação é do dia de checkin (inclusive) até o dia anterior ao checkout (exclusive)
               return dataAtual >= checkin && dataAtual < saida;
             });
 
             if (reservaDoDia) {
-              // Repete a normalização para as variáveis de cálculo
               const checkin = new Date(reservaDoDia.data_checkin);
               checkin.setHours(0, 0, 0, 0);
-              const saida = new Date(reservaDoDia.data_saida);
-              saida.setHours(0, 0, 0, 0);
+              const saidaVisual = new Date(reservaDoDia.data_saida_visual);
+              saidaVisual.setHours(0, 0, 0, 0);
+              const saidaReal = new Date(reservaDoDia.data_saida_real); // Usa a data para exibir
+              saidaReal.setHours(0, 0, 0, 0);
 
-              // Calcula os limites da ocupação dentro do mês atual
-              let diaInicioNoMes =
-                checkin.getMonth() + 1 === mes ? checkin.getDate() : 1;
+              let diaInicioNoMes = checkin.getMonth() + 1 === mes ? checkin.getDate() : 1;
               let diaFimNoMes;
 
-              // O último dia ocupado é o dia anterior ao checkout (saida - 1 dia)
-              if (saida.getFullYear() === ano && saida.getMonth() + 1 === mes) {
-                diaFimNoMes = saida.getDate() - 1;
-              } else if (
-                saida.getFullYear() > ano ||
-                (saida.getFullYear() === ano && saida.getMonth() + 1 > mes)
-              ) {
-                // Se a saída for em um mês/ano futuro, o último dia ocupado é o último dia do mês atual
-                diaFimNoMes = diasNoMes;
+              if (saidaVisual.getFullYear() === ano && saidaVisual.getMonth() + 1 === mes) {
+                diaFimNoMes = saidaVisual.getDate() - 1;
               } else {
-                // Se a data de saída for em um mês anterior (algo que o filtro inicial deve evitar)
-                diaFimNoMes = diaAtual - 1;
+                diaFimNoMes = diasNoMes;
               }
 
-              // Garante que o inicio real da ocupação não seja anterior ao dia que estamos avaliando no loop
               if (diaAtual > diaInicioNoMes) {
                 diaInicioNoMes = diaAtual;
               }
-
-              // Calcula quantos dias a reserva ocupa na visualização
+              
               let diasDeOcupacao = diaFimNoMes - diaInicioNoMes + 1;
-
-              // Evita quebra de código se os dias de ocupação forem calculados incorretamente (diasDeOcupacao <= 0)
               if (diasDeOcupacao <= 0) {
-                bodyHtml += `<td class="calendar-day-livre"></td>`;
-                diaAtual++;
-                continue;
+                 bodyHtml += `<td class="calendar-day-livre" title="Disponível"></td>`;
+                 diaAtual++;
+                 continue;
               }
 
-              const tooltipText = `Hóspede: ${
-                reservaDoDia.cliente
-              }\nPeríodo: ${formatarData(checkin)} a ${formatarData(saida)}`;
+              const tooltipText = `Hóspede: ${reservaDoDia.cliente}\nPeríodo: ${formatarData(checkin)} a ${formatarData(saidaReal)}`; // Mostra data real
 
-              // Usa colspan para fundir as células da reserva
               bodyHtml += `<td colspan="${diasDeOcupacao}" class="calendar-day-ocupado" title="${tooltipText}">
-                                <div style="font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${reservaDoDia.cliente}
-                                </div>
-                             </td>`;
+                            <div style="font-size: 0.8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${reservaDoDia.cliente}
+                            </div>
+                         </td>`;
               diaAtual += diasDeOcupacao;
+
             } else {
-              bodyHtml += `<td class="calendar-day-livre"></td>`;
+              // NOVO: Lógica para tooltip do dia do checkout
+              const checkoutNesteDia = reservasDoQuarto.find(r => {
+                  const saidaReal = new Date(r.data_saida_real);
+                  return saidaReal.getFullYear() === dataAtual.getFullYear() &&
+                         saidaReal.getMonth() === dataAtual.getMonth() &&
+                         saidaReal.getDate() === dataAtual.getDate();
+              });
+
+              if (checkoutNesteDia) {
+                  const tooltipText = `Disponível (Saída de ${checkoutNesteDia.cliente} neste dia)`;
+                  bodyHtml += `<td class="calendar-day-livre" title="${tooltipText}"></td>`;
+              } else {
+                  bodyHtml += `<td class="calendar-day-livre" title="Disponível"></td>`;
+              }
               diaAtual++;
             }
           }
           bodyHtml += "</tr>";
         }
 
-        // Esconde o select de quarto que não é mais necessário
         document.getElementById("quartoSelect").style.display = "none";
-        document.querySelector("label[for='quartoSelect']").style.display =
-          "none";
+        document.querySelector("label[for='quartoSelect']").style.display = "none";
 
-        // Monta a tabela final
         calendarioDiv.innerHTML = `
         <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
             <table class="calendar-table">
                 <thead>${headerHtml}</thead>
                 <tbody>${bodyHtml}</tbody>
             </table>
-        </div>
-    `;
+        </div>`;
       }
 
       function formatarData(data) {
         if (!data) return "";
         const d = new Date(data);
-        // O dia e mês devem ser extraídos localmente (sem UTC), pois a data foi normalizada para 00:00:00 local.
-        const dia = String(d.getDate()).padStart(2, "0");
-        const mes = String(d.getMonth() + 1).padStart(2, "0");
+        const dia = String(d.getUTCDate()).padStart(2, "0");
+        const mes = String(d.getUTCMonth() + 1).padStart(2, "0");
         return `${dia}/${mes}`;
       }
-
-    /*let reservas = [];
-    let quartos = [];
-
-    async function carregarReservas() {
-      const resp = await fetch("/api/ocupacao-quartos");
-      reservas = await resp.json();
-      quartos = [...new Set(reservas.map((r) => r.quarto_numero))].sort(
-        (a, b) => a - b
-      );
-      const select = document.getElementById("quartoSelect");
-      select.innerHTML = quartos
-        .map((q) => `<option value="${q}">Quarto ${q}</option>`)
-        .join("");
-    }
-
-    function getDiasNoMes(ano, mes) {
-      return new Date(ano, mes, 0).getDate();
-    }
-
-    function getPrimeiroDiaSemana(ano, mes) {
-      return new Date(ano, mes - 1, 1).getDay(); // 0=Domingo
-    }
-
-    function getReservasDoQuartoNoMes(quarto, ano, mes) {
-      return reservas.filter((r) => {
-        if (r.quarto_numero != quarto) return false;
-        const checkin = new Date(r.data_checkin);
-        const checkout = r.data_checkout ? new Date(r.data_checkout) : null;
-        // Se a reserva cobre algum dia do mês
-        const inicioMes = new Date(ano, mes - 1, 1);
-        const fimMes = new Date(ano, mes, 0, 23, 59, 59);
-        return checkin <= fimMes && (!checkout || checkout >= inicioMes);
-      });
-    }
-
-    function getOcupacaoPorDia(quarto, ano, mes) {
-      const diasNoMes = getDiasNoMes(ano, mes);
-      const ocupacao = Array(diasNoMes).fill(null);
-      const reservasQuarto = getReservasDoQuartoNoMes(quarto, ano, mes);
-      reservasQuarto.forEach((r) => {
-        const checkin = new Date(r.data_checkin);
-        const checkout = new Date(r.data_checkout_prevista || r.data_checkout);
-        // Adicione +1 dia para considerar o dia do checkout como ocupado
-        checkout.setHours(23, 59, 59, 999);
-        for (let d = 1; d <= diasNoMes; d++) {
-          const diaAtual = new Date(ano, mes - 1, d);
-          if (diaAtual >= checkin && diaAtual <= checkout) {
-            ocupacao[d - 1] = {
-              cliente: r.cliente,
-              data_checkin: r.data_checkin,
-              data_saida: r.data_checkout_prevista || r.data_checkout
-            };
-          }
-        }
-      });
-      return ocupacao;
-    }
-
-    function renderCelula(dia, reservasDoDia) {
-      if (reservasDoDia.length) {
-        // Se houver mais de uma reserva no mesmo dia, pode mostrar todos os nomes
-        return reservasDoDia
-          .map(
-            (reserva) => `
-        <div style="font-size:12px;">
-          <b>${reserva.cliente}</b><br />
-          <span style="font-size:11px;">
-            ${formatarData(reserva.data_checkin)} - ${formatarData(
-              reserva.data_saida
-            )}
-          </span>
-        </div>
-      `
-          )
-          .join("");
-      } else {
-        return dia; // Dia livre
-      }
-    }
-
-    function montarCalendario(quarto, ano, mes) {
-      const diasNoMes = getDiasNoMes(ano, mes);
-      const primeiroDiaSemana = getPrimeiroDiaSemana(ano, mes);
-      const ocupacao = getOcupacaoPorDia(quarto, ano, mes);
-
-      let html = `<span class="calendar-quarto-label">Quarto ${quarto}</span>`;
-      html += '<table class="calendar-table"><thead><tr>';
-      const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-      diasSemana.forEach((d) => (html += `<th>${d}</th>`));
-      html += "</tr></thead><tbody><tr>";
-
-      // Espaços vazios até o primeiro dia do mês
-      for (let i = 0; i < primeiroDiaSemana; i++) {
-        html += "<td></td>";
-      }
-
-      for (let dia = 1; dia <= diasNoMes; dia++) {
-        const idx = dia - 1;
-        const ocupado = ocupacao[idx];
-        html += `<td class="${
-          ocupado ? "calendar-day-ocupado" : "calendar-day-livre"
-        }">`;
-        html += `<div>${dia}</div>`;
-        if (ocupado) {
-          html += `
-    <div style="font-size:12px;">
-      <b>${ocupado.cliente}</b><br>
-      <span style="font-size:11px;">
-        ${formatarData(ocupado.data_checkin)} - ${formatarData(ocupado.data_saida)}
-      </span>
-    </div>
-  `;
-        }
-        html += "</td>";
-        // Quebra de linha no sábado
-        if ((primeiroDiaSemana + dia) % 7 === 0 && dia !== diasNoMes) {
-          html += "</tr><tr>";
-        }
-      }
-      // Espaços vazios no fim
-      const totalCelas = primeiroDiaSemana + diasNoMes;
-      if (totalCelas % 7 !== 0) {
-        for (let i = 0; i < 7 - (totalCelas % 7); i++) {
-          html += "<td></td>";
-        }
-      }
-      html += "</tr></tbody></table>";
-      return html;
-    }
-
-    async function carregarCalendario() {
-      const mesInput = document.getElementById("mes").value;
-      const hoje = new Date();
-      const ano = mesInput
-        ? Number(mesInput.split("-")[0])
-        : hoje.getFullYear();
-      const mes = mesInput
-        ? Number(mesInput.split("-")[1])
-        : hoje.getMonth() + 1;
-      const select = document.getElementById("quartoSelect");
-      const quarto = select.value || quartos[0];
-      const calendarioDiv = document.getElementById("calendario");
-      calendarioDiv.innerHTML = montarCalendario(quarto, ano, mes);
-    }
-
-    function formatarData(dataStr) {
-      if (!dataStr) return '';
-      // Aceita tanto 'YYYY-MM-DD' quanto 'YYYY-MM-DDTHH:mm:ss.sssZ'
-      const partes = dataStr.split('T')[0].split('-');
-      const [ano, mes, dia] = partes;
-      return `${dia}/${mes}`;
-    }
-
-    document.addEventListener("DOMContentLoaded", async () => {
-      await carregarReservas();
-      const hoje = new Date();
-      document.getElementById("mes").value = hoje.toISOString().slice(0, 7);
-      carregarCalendario();
-      document
-        .getElementById("quartoSelect")
-        .addEventListener("change", carregarCalendario);
-      document
-        .getElementById("mes")
-        .addEventListener("change", carregarCalendario);
-    }); */
     </script>
   </body>
 </html>
