@@ -469,9 +469,19 @@
           return;
         }
 
+        // --- INÍCIO DA VALIDAÇÃO ---
+        const inputs = row.querySelectorAll("input.editable");
+        for (const input of inputs) {
+          if (input.value.trim() === "") {
+            alert(`O campo "${input.dataset.field}" não pode ficar em branco.`);
+            return; // Impede o salvamento se um campo estiver vazio
+          }
+        }
+        // --- FIM DA VALIDAÇÃO ---
+
         const dataToSend = { ...clienteOriginal };
 
-        row.querySelectorAll("input.editable").forEach((input) => {
+        inputs.forEach((input) => {
           dataToSend[input.dataset.field] = input.value;
         });
 
