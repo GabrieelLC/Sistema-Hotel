@@ -48,7 +48,13 @@ const Clientes = {
     db.query('SELECT * FROM Clientes WHERE id = ?', [id], callback);
   },
   findByCpf: (cpf, callback) => {
-    db.query('SELECT * FROM Clientes WHERE cpf = ?', [cpf], callback);
+    const cleanCpf = (cpf || '').toString().replace(/\D/g, '');
+    // Compara removendo pontuação/espaços do CPF armazenado
+    db.query(
+      "SELECT * FROM Clientes WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?",
+      [cleanCpf],
+      callback
+    );
   },
   findByPassaporte: (passaporte, callback) => {
     db.query('SELECT * FROM Clientes WHERE passaporte = ?', [passaporte], callback);
@@ -72,7 +78,12 @@ const Clientes = {
     );
   },
   delete: (cpf, callback) => {
-    db.query('DELETE FROM Clientes WHERE cpf = ?', [cpf], callback);
+    const cleanCpf = (cpf || '').toString().replace(/\D/g, '');
+    db.query(
+      "DELETE FROM Clientes WHERE REPLACE(REPLACE(REPLACE(cpf, '.', ''), '-', ''), ' ', '') = ?",
+      [cleanCpf],
+      callback
+    );
   },
   deleteById: (id, callback) => {
     db.query('DELETE FROM Clientes WHERE id = ?', [id], callback);
