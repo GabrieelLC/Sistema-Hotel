@@ -18,7 +18,10 @@
             <label for="tipo_id">Tipo do quarto</label>
             <div class="tipo-select-btn">
               <select id="tipo_id" name="tipo_id" required></select>
-              <button type="button" id="novoTipoBtn">Novo tipo</button>
+              <div style="display:flex; gap:8px">
+                <button type="button" id="novoTipoBtn">Novo tipo</button>
+                <button type="button" id="excluirTipoBtn" style="background:#c0392b;color:#fff">Excluir tipo</button>
+              </div>
             </div>
           </div>
           <div class="campo">
@@ -61,5 +64,39 @@
       </div>
     </div>
     <script src="js/script.js"></script>
+    <script>
+      // Botão para excluir o tipo selecionado
+      document.addEventListener('DOMContentLoaded', function(){
+        const btn = document.getElementById('excluirTipoBtn');
+        const select = document.getElementById('tipo_id');
+        if(!btn || !select) return;
+        btn.addEventListener('click', async function(){
+          if(!select.value){
+            alert('Selecione um tipo para excluir.');
+            return;
+          }
+          const confirmado = confirm('Excluir o tipo selecionado? Esta ação não pode ser desfeita.');
+          if(!confirmado) return;
+          try{
+            const resp = await fetch(`http://localhost:3000/api/tipos-quarto/${select.value}`, { method: 'DELETE' });
+            const data = await resp.json().catch(()=>({}));
+            if(resp.ok){
+              alert('Tipo de quarto excluído com sucesso.');
+              // Recarrega a lista de tipos e limpa seleção
+              if (typeof carregarTiposQuarto === 'function') {
+                await carregarTiposQuarto();
+              } else {
+                // fallback simples
+                window.location.reload();
+              }
+            } else {
+              alert((data && data.message) || 'Não foi possível excluir este tipo.');
+            }
+          }catch(e){
+            alert('Erro ao conectar ao servidor.');
+          }
+        });
+      });
+    </script>
   </body>
 </html>

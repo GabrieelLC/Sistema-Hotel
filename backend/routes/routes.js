@@ -402,6 +402,44 @@ router.post("/tipos-quarto", (req, res) => {
   });
 });
 
+// Deletar tipo de quarto por ID
+router.delete("/tipos-quarto/:id", (req, res) => {
+  const { id } = req.params;
+
+  // Antes de excluir, verificar se há quartos associados a este tipo
+  db.query(
+    "SELECT COUNT(*) AS total FROM Quartos WHERE tipo_id = ?",
+    [id],
+    (err, rows) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro ao verificar dependências", error: err });
+      }
+      const { total } = rows[0];
+      if (total > 0) {
+        return res.status(400).json({
+          message: "Não é possível excluir este tipo de quarto: existem quartos cadastrados usando este tipo.",
+        });
+      }
+
+      TiposQuarto.delete(id, (delErr, result) => {
+        if (delErr) {
+          // Integridade referencial
+          if (delErr.code === "ER_ROW_IS_REFERENCED_2" || delErr.errno === 1451) {
+            return res.status(400).json({
+              message: "Não é possível excluir este tipo: existem registros relacionados.",
+            });
+          }
+          return res.status(500).json({ message: "Erro ao excluir tipo de quarto", error: delErr });
+        }
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Tipo de quarto não encontrado" });
+        }
+        res.status(200).json({ message: "Tipo de quarto excluído com sucesso" });
+      });
+    }
+  );
+});
+
 router.post("/checkin", (req, res) => {
   const {
     cliente_cpf,
