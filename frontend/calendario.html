@@ -3,138 +3,134 @@
   <head>
     <meta charset="UTF-8" />
     <title>Calendário de Ocupação de Quartos</title>
-    <link rel="stylesheet" href="css/style.css" />
+    <!-- Fonte e tema do dashboard -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <style>
-      .calendar-container {
-        max-width: 1100px;
-        margin: 40px auto;
-        background: #fff;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.09);
-        padding: 32px;
+      :root {
+        --background-color: #f4f7fa;
+        --sidebar-bg: #ffffff;
+        --card-bg: #ffffff;
+        --text-color: #4a5568;
+        --heading-color: #1a202c;
+        --primary-color: #4a90e2;
+        --border-color: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { font-family: "Inter", sans-serif; background: var(--background-color); color: var(--text-color); display: flex; }
+      .container { display: flex; width: 100%; min-height: 100vh; }
+      .sidebar { width: 240px; background: var(--sidebar-bg); padding: 2rem 1.5rem; display:flex; flex-direction:column; border-right:1px solid var(--border-color); }
+      .sidebar-header { margin-bottom: 2.5rem; }
+      .logo { font-size: 1.5rem; font-weight: 700; color: var(--heading-color); text-align:center; }
+      .logo img { max-width: 100%; height: auto; }
+      .date-time { text-align:center; font-size: 0.9rem; margin-top: 0.5rem; line-height: 1.4; }
+      .nav-menu { flex-grow: 1; display:flex; flex-direction:column; gap:.5rem; }
+      .menu-btn { display:flex; align-items:center; padding:.75rem 1rem; border-radius:8px; text-decoration:none; color:var(--text-color); font-weight:500; }
+      .menu-btn:hover, .menu-btn.active { background: var(--primary-color); color:#fff; }
+      .main-content { flex-grow:1; padding:2rem; overflow-y:auto; }
+      .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; }
+      h1 { font-size: 1.8rem; color: var(--heading-color); }
+
+      /* Card container do calendário */
+      .calendar-card { background: var(--card-bg); border-radius:12px; padding:1.5rem; box-shadow: var(--shadow); }
+      .calendar-header { display:flex; align-items:center; gap:12px; margin-bottom: 1rem; }
+      .calendar-header label { font-weight: 600; color: var(--heading-color); }
+      .calendar-header input[type="month"], .calendar-quarto-select {
+        padding: 0.6rem 0.8rem; border:1px solid var(--border-color); border-radius:8px; background:#fff; color:var(--text-color);
       }
 
-      .calendar-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 20px;
+      .legend { display:flex; gap:12px; align-items:center; margin-bottom: 0.75rem; }
+      .legend span { display:inline-flex; align-items:center; gap:6px; font-size: .85rem; }
+      .dot { width: 12px; height: 12px; border-radius: 3px; display:inline-block; }
+      .dot.ocupado { background:#ff8a8a; }
+      .dot.livre { background:#a8e6b0; }
+
+      .calendar-table { width: 100%; border-collapse: collapse; }
+      .calendar-table th, .calendar-table td {
+        border: 1px solid var(--border-color); text-align: left; vertical-align: top; padding: 6px 8px; font-size: 0.9rem; position: relative; height: 64px;
       }
+      .calendar-table thead th { background:#f8f9fa; text-align:center; font-weight:600; color: var(--heading-color); }
 
-      .calendar-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 30px;
-      }
+      .calendar-day-ocupado { background: #ffe2e2; cursor: pointer; }
+      .calendar-day-livre { background: #f4fff6; }
 
-      .calendar-table th,
-      .calendar-table td {
-        border: 1px solid #e0e0e0;
-        width: 14.28%;
-        height: 80px;
-        text-align: left;
-        vertical-align: top;
-        padding: 6px 4px 4px 8px;
-        font-size: 15px;
-        position: relative;
-      }
+      .back-link { text-decoration:none; color: var(--primary-color); font-weight:600; margin-right: .5rem; }
 
-      .calendar-table th {
-        background: #f0f0f0;
-        text-align: center;
-        font-weight: 600;
-        font-size: 16px;
-        color: #1976d2;
-      }
-
-      .calendar-day-ocupado {
-        background: #ffb3b3;
-        cursor: pointer;
-      }
-
-      .calendar-day-livre {
-        background: #b3ffb3;
-      }
-
-      .calendar-quarto-label {
-        font-weight: bold;
-        color: #1976d2;
-        margin-bottom: 6px;
-        display: block;
-      }
-
-      .calendar-tooltip {
-        display: none;
-        position: absolute;
-        left: 50%;
-        top: 100%;
-        transform: translateX(-50%);
-        background: #fff;
-        border: 1px solid #ccc;
-        padding: 6px 12px;
-        border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
-        font-size: 14px;
-        z-index: 10;
-        min-width: 120px;
-        white-space: pre-line;
-      }
-
-      .calendar-table td:hover .calendar-tooltip {
-        display: block;
-      }
-
-      .calendar-quarto-select {
-        margin-left: 18px;
-        padding: 6px 10px;
-        border-radius: 6px;
-        border: 1px solid #b5c8de;
-        font-size: 1rem;
-      }
-
-      @media (max-width: 900px) {
-        .calendar-container {
-          padding: 10px;
-        }
-
-        .calendar-table th,
-        .calendar-table td {
-          font-size: 13px;
-          height: 54px;
-        }
+      @media (max-width: 768px) {
+        body { flex-direction: column; }
+        .sidebar { width: 100%; height:auto; border-right:none; border-bottom:1px solid var(--border-color); }
+        .main-content { padding:1.5rem; }
+        .header { flex-direction: column; align-items:flex-start; gap: 1rem; }
+        .calendar-table th, .calendar-table td { font-size: 0.8rem; height: 54px; }
       }
     </style>
   </head>
 
   <body>
-    <div class="calendar-container">
-      <div class="calendar-header">
-        <a
-          href="index.html"
-          class="checkout_screen_back_arrow"
-          onclick="VoltarPagina()"
-          >←</a
-        >
-        <label for="mes">Mês:</label>
-        <input type="month" id="mes" />
-        <label for="quartoSelect">Quarto:</label>
-        <select id="quartoSelect" class="calendar-quarto-select"></select>
-      </div>
-      <div id="calendario"></div>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo"><img src="imagens/LOGO HOTEL azul .svg.svg" alt="" /></div>
+          <div class="date-time" id="dateTime"></div>
+        </div>
+        <nav class="nav-menu">
+          <a href="checkin.html" class="menu-btn">Check-in</a>
+          <a href="checkout.html" class="menu-btn">Check-out</a>
+          <a href="clientes.html" class="menu-btn">Clientes</a>
+          <a href="quartos.html" class="menu-btn">Quartos</a>
+          <a href="reservas.html" class="menu-btn">Reservas</a>
+          <a href="produtos.html" class="menu-btn">Produtos</a>
+          <a href="calendario.html" class="menu-btn active">Calendário</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="header">
+          <h1>Calendário</h1>
+        </header>
+
+        <section class="calendar-card">
+          <div class="calendar-header">
+            <a href="index.html" class="back-link">← Voltar</a>
+            <label for="mes">Mês:</label>
+            <input type="month" id="mes" />
+            <label for="quartoSelect">Quarto:</label>
+            <select id="quartoSelect" class="calendar-quarto-select"></select>
+          </div>
+          <div class="legend">
+            <span><span class="dot ocupado"></span>Ocupado</span>
+            <span><span class="dot livre"></span>Livre</span>
+          </div>
+          <div id="calendario"></div>
+        </section>
+      </main>
     </div>
+
     <script>
-let refreshInterval;
+      let refreshInterval;
+
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("pt-BR", { weekday: "long", year: "numeric", month: "long", day: "numeric" });
+        const time = now.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+        const el = document.getElementById("dateTime");
+        if (el) el.innerHTML = `${date}<br>${time}`;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
 
       document.addEventListener("DOMContentLoaded", () => {
         const hoje = new Date();
         document.getElementById("mes").value = hoje.toISOString().slice(0, 7);
 
         carregarCalendario();
-        iniciarAutoRefresh(); 
+        iniciarAutoRefresh();
 
         document.getElementById("mes").addEventListener("change", () => {
           carregarCalendario();
-          iniciarAutoRefresh(); 
+          iniciarAutoRefresh();
         });
       });
 
@@ -282,7 +278,7 @@ let refreshInterval;
         document.querySelector("label[for='quartoSelect']").style.display = "none";
 
         calendarioDiv.innerHTML = `
-        <div style="overflow-x: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="overflow-x: auto; border: 1px solid var(--border-color); border-radius: 8px;">
             <table class="calendar-table">
                 <thead>${headerHtml}</thead>
                 <tbody>${bodyHtml}</tbody>
