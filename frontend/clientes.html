@@ -250,7 +250,9 @@
     <div class="main-flex">
       <div class="sidebar">
         <div class="calendar">
-          <div class="calendar-icon">📅</div>
+          <div class="calendar-icon">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
+          </div>
           <div class="date-time" id="dateTime"></div>
         </div>
         <a href="index.html" class="menu-btn">Início</a>
@@ -277,7 +279,7 @@
               placeholder="Digite para buscar por nome, CPF ou passaporte..."
             />
           </form>
-          <br>
+          <br />
           <h2 class="card-title">Clientes Cadastrados</h2>
           <div class="table-wrapper">
             <table>
@@ -305,7 +307,6 @@
     </div>
 
     <script>
-
       // Filtra os clientes com base na busca
       function filterClientes() {
         const searchTerm = document
@@ -423,7 +424,6 @@
         }
       }
 
-
       // Habilita a edição em linha para um cliente
       function editarCliente(id) {
         const row = document.getElementById(`cliente-${id}`);
@@ -465,7 +465,9 @@
         const row = document.getElementById(`cliente-${id}`);
         const clienteOriginal = todosClientes.find((c) => c.id == id);
         if (!clienteOriginal) {
-          alert("Erro: não foi possível encontrar os dados originais do cliente.");
+          alert(
+            "Erro: não foi possível encontrar os dados originais do cliente."
+          );
           return;
         }
 
@@ -513,7 +515,9 @@
       // Deleta um cliente
       async function deletarCliente(id) {
         if (confirm("Tem certeza que deseja deletar este cliente?")) {
-          const response = await fetch(`/api/clientes/${id}`, { method: "DELETE" });
+          const response = await fetch(`/api/clientes/${id}`, {
+            method: "DELETE",
+          });
           if (response.ok) {
             alert("Cliente deletado com sucesso!");
             carregarClientes();

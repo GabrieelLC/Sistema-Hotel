@@ -42,7 +42,7 @@
       }
 
       .checkout_screen_title_box {
-        background-color: #48bbbe;
+        background-color: #357abd;
         color: white;
         padding: 10px 20px;
         border-radius: 8px;
@@ -96,8 +96,8 @@
 
       .checkout_screen_input:focus {
         outline: none;
-        border-color: #48bbbe;
-        box-shadow: 0 0 5px rgba(72, 187, 190, 0.5);
+        border-color: #357abd;
+        box-shadow: 0 0 5px rgba(53, 122, 189, 0.5);
       }
 
       /* Modificador para input menor */
@@ -135,7 +135,7 @@
       }
 
       .checkout_screen_submit_button {
-        background-color: #48bbbe;
+        background-color: #357abd;
         color: white;
         border: none;
         padding: 12px 25px;
@@ -147,7 +147,7 @@
       }
 
       .checkout_screen_submit_button:hover {
-        background-color: #3a9a9d;
+        background-color: #2c639a; /* Azul um pouco mais escuro no hover */
       }
     </style>
   </head>
@@ -237,7 +237,12 @@
             </div>
             <div class="checkout_screen_field_group">
               <label for="quarto" class="checkout_screen_label">Quarto</label>
-              <input type="text" id="quarto" class="checkout_screen_input checkout_screen_input--small" readonly />
+              <input
+                type="text"
+                id="quarto"
+                class="checkout_screen_input checkout_screen_input--small"
+                readonly
+              />
             </div>
             <div class="checkout_screen_field_group">
               <label class="checkout_screen_label">Consumo</label>
@@ -266,172 +271,190 @@
 
     <script>
       document.addEventListener("DOMContentLoaded", function () {
-  var horaInput = document.getElementById("hora_checkout");
-  var maskOptions = {
-    mask: "00:00",
-    blocks: {
-      "00": {
-        mask: IMask.MaskedRange,
-        from: 0,
-        to: 23,
-        maxLength: 2,
-      },
-      "00": {
-        mask: IMask.MaskedRange,
-        from: 0,
-        to: 59,
-        maxLength: 2,
-      },
-    },
-  };
-  var mask = IMask(horaInput, maskOptions);
+        var horaInput = document.getElementById("hora_checkout");
+        var maskOptions = {
+          mask: "00:00",
+          blocks: {
+            "00": {
+              mask: IMask.MaskedRange,
+              from: 0,
+              to: 23,
+              maxLength: 2,
+            },
+            "00": {
+              mask: IMask.MaskedRange,
+              from: 0,
+              to: 59,
+              maxLength: 2,
+            },
+          },
+        };
+        var mask = IMask(horaInput, maskOptions);
 
-  // Preencher data/hora automaticamente ao abrir a tela (mas permite editar)
-  const dataInput = document.getElementById('data_checkout');
-  const horaInput2 = document.getElementById('hora_checkout');
-  const now = new Date();
-  dataInput.value = now.toISOString().slice(0,10);
-  horaInput2.value = now.toTimeString().slice(0,5);
-});
+        // Preencher data/hora automaticamente ao abrir a tela (mas permite editar)
+        const dataInput = document.getElementById("data_checkout");
+        const horaInput2 = document.getElementById("hora_checkout");
+        const now = new Date();
+        dataInput.value = now.toISOString().slice(0, 10);
+        horaInput2.value = now.toTimeString().slice(0, 5);
+      });
 
-        function VoltarPagina(){
-            window.history.back();
-        }
+      function VoltarPagina() {
+        window.history.back();
+      }
 
-        async function buscarReservaAtivaPorCpf(cpf) {
-          const resp = await fetch(`/api/reserva-ativa/${cpf}`);
-          if (resp.ok) {
-            const reservas = await resp.json();
-            if (reservas.length > 0) {
-              preencherFormularioCheckout(reservas[0]);
-            } else {
-              alert('Nenhuma reserva ativa encontrada para este CPF.');
-            }
-          }
-        }
-
-        async function realizarCheckout(reservaId, data_checkout, hora_checkout, desconto) {
-          const resp = await fetch(`/api/checkout/${reservaId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data_checkout, hora_checkout, desconto })
-          });
-          if (resp.ok) {
-            alert('Checkout realizado com sucesso!');
+      async function buscarReservaAtivaPorCpf(cpf) {
+        const resp = await fetch(`/api/reserva-ativa/${cpf}`);
+        if (resp.ok) {
+          const reservas = await resp.json();
+          if (reservas.length > 0) {
+            preencherFormularioCheckout(reservas[0]);
           } else {
-            alert('Erro ao realizar checkout');
+            alert("Nenhuma reserva ativa encontrada para este CPF.");
           }
         }
+      }
 
-        let reservaAtivaId = null;
+      async function realizarCheckout(
+        reservaId,
+        data_checkout,
+        hora_checkout,
+        desconto
+      ) {
+        const resp = await fetch(`/api/checkout/${reservaId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data_checkout, hora_checkout, desconto }),
+        });
+        if (resp.ok) {
+          alert("Checkout realizado com sucesso!");
+        } else {
+          alert("Erro ao realizar checkout");
+        }
+      }
 
-document.getElementById('cpf_cliente').addEventListener('blur', async function() {
-  const cpf = this.value.trim();
-  if (!cpf) return;
+      let reservaAtivaId = null;
 
-  // Limpa campos antes de buscar
-  document.getElementById('valor_diaria').value = '';
-  document.getElementById('qtd_dias').value = '';
-  document.getElementById('total').value = '';
-  document.getElementById('quarto').value = '';
-  reservaAtivaId = null;
+      document
+        .getElementById("cpf_cliente")
+        .addEventListener("blur", async function () {
+          const cpf = this.value.trim();
+          if (!cpf) return;
 
-  try {
-    const resp = await fetch(`/api/reserva-ativa/${cpf}`);
-    if (!resp.ok) {
-      alert('Nenhuma reserva ativa encontrada para este CPF.');
-      return;
-    }
-    const reserva = await resp.json();
-    preencherFormularioCheckout(reserva);
-  } catch (error) {
-    alert('Erro ao buscar reserva ativa');
-  }
-});
+          // Limpa campos antes de buscar
+          document.getElementById("valor_diaria").value = "";
+          document.getElementById("qtd_dias").value = "";
+          document.getElementById("total").value = "";
+          document.getElementById("quarto").value = "";
+          reservaAtivaId = null;
 
-        document.querySelector('.checkout_screen_form').addEventListener('submit', async function(e) {
-  e.preventDefault();
+          try {
+            const resp = await fetch(`/api/reserva-ativa/${cpf}`);
+            if (!resp.ok) {
+              alert("Nenhuma reserva ativa encontrada para este CPF.");
+              return;
+            }
+            const reserva = await resp.json();
+            preencherFormularioCheckout(reserva);
+          } catch (error) {
+            alert("Erro ao buscar reserva ativa");
+          }
+        });
 
-  if (!reservaAtivaId) {
-    alert('Busque o CPF do cliente primeiro!');
-    return;
-  }
+      document
+        .querySelector(".checkout_screen_form")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
 
-  const data_checkout = document.getElementById('data_checkout').value;
-  const hora_checkout = document.getElementById('hora_checkout').value;
+          if (!reservaAtivaId) {
+            alert("Busque o CPF do cliente primeiro!");
+            return;
+          }
 
-  const resp = await fetch(`/api/checkout/${reservaAtivaId}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ data_checkout, hora_checkout })
-  });
+          const data_checkout = document.getElementById("data_checkout").value;
+          const hora_checkout = document.getElementById("hora_checkout").value;
 
-  if (resp.ok) {
-    alert('Checkout realizado com sucesso!');
-    // Limpe o formulário ou redirecione
-  } else {
-    const erro = await resp.json();
-    alert('Erro ao registrar checkout: ' + (erro.message || ''));
-  }
-});
+          const resp = await fetch(`/api/checkout/${reservaAtivaId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ data_checkout, hora_checkout }),
+          });
 
-async function preencherFormularioCheckout(reserva) {
-  reservaAtivaId = reserva.id;
-  document.getElementById('valor_diaria').value = reserva.valor_diaria || '';
-  document.getElementById('quarto').value = reserva.quarto || '';
+          if (resp.ok) {
+            alert("Checkout realizado com sucesso!");
+            // Limpe o formulário ou redirecione
+          } else {
+            const erro = await resp.json();
+            alert("Erro ao registrar checkout: " + (erro.message || ""));
+          }
+        });
 
-  // Dias de hospedagem
-  const dataCheckin = new Date(reserva.data_checkin);
-  const dataCheckout = new Date(document.getElementById('data_checkout').value);
-  const diffTime = Math.abs(dataCheckout - dataCheckin);
-  let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) diffDays = 1; // Garante no mínimo 1 dia
-  document.getElementById('qtd_dias').value = diffDays;
+      async function preencherFormularioCheckout(reserva) {
+        reservaAtivaId = reserva.id;
+        document.getElementById("valor_diaria").value =
+          reserva.valor_diaria || "";
+        document.getElementById("quarto").value = reserva.quarto || "";
 
-  // Consumos
-  const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
-  const consumos = await respConsumos.json();
-  const tbody = document.querySelector('.checkout_screen_table_body');
-  tbody.innerHTML = '';
-  let totalConsumos = 0;
-  if (consumos.length) {
-    consumos.forEach(c => {
-      const totalItem = c.quantidade * c.preco_unitario;
-      totalConsumos += totalItem;
-      tbody.innerHTML += `
+        // Dias de hospedagem
+        const dataCheckin = new Date(reserva.data_checkin);
+        const dataCheckout = new Date(
+          document.getElementById("data_checkout").value
+        );
+        const diffTime = Math.abs(dataCheckout - dataCheckin);
+        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays === 0) diffDays = 1; // Garante no mínimo 1 dia
+        document.getElementById("qtd_dias").value = diffDays;
+
+        // Consumos
+        const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
+        const consumos = await respConsumos.json();
+        const tbody = document.querySelector(".checkout_screen_table_body");
+        tbody.innerHTML = "";
+        let totalConsumos = 0;
+        if (consumos.length) {
+          consumos.forEach((c) => {
+            const totalItem = c.quantidade * c.preco_unitario;
+            totalConsumos += totalItem;
+            tbody.innerHTML += `
         <tr>
           <td class="checkout_screen_table_cell">${c.produto_nome}</td>
           <td class="checkout_screen_table_cell">${c.quantidade}</td>
           <td class="checkout_screen_table_cell">${totalItem.toFixed(2)}</td>
         </tr>
       `;
-    });
-  } else {
-    tbody.innerHTML = '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
-  }
-  
-  // Função para calcular o total dinamicamente
-  function calcularTotal() {
-    const dias = Number(document.getElementById('qtd_dias').value) || 1;
-    const valorDiaria = Number(document.getElementById('valor_diaria').value) || 0;
-    const total = (valorDiaria * dias) + totalConsumos;
-    document.getElementById('total').value = total.toFixed(2);
-  }
+          });
+        } else {
+          tbody.innerHTML =
+            '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
+        }
 
-  // Adiciona eventos para recalcular o total quando a qtd de dias ou a diária for alterada
-  document.getElementById('qtd_dias').addEventListener('input', calcularTotal);
-  document.getElementById('valor_diaria').addEventListener('input', calcularTotal);
+        // Função para calcular o total dinamicamente
+        function calcularTotal() {
+          const dias = Number(document.getElementById("qtd_dias").value) || 1;
+          const valorDiaria =
+            Number(document.getElementById("valor_diaria").value) || 0;
+          const total = valorDiaria * dias + totalConsumos;
+          document.getElementById("total").value = total.toFixed(2);
+        }
 
-  // Chama a função para o primeiro cálculo
-  calcularTotal();
-}
+        // Adiciona eventos para recalcular o total quando a qtd de dias ou a diária for alterada
+        document
+          .getElementById("qtd_dias")
+          .addEventListener("input", calcularTotal);
+        document
+          .getElementById("valor_diaria")
+          .addEventListener("input", calcularTotal);
 
-  calcularTotal(reserva.valor_diaria, totalConsumos);
-// Após finalizar a reserva (check-out)
-db.query(
-  `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
-  [id]
-);
+        // Chama a função para o primeiro cálculo
+        calcularTotal();
+      }
+
+      calcularTotal(reserva.valor_diaria, totalConsumos);
+      // Após finalizar a reserva (check-out)
+      db.query(
+        `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
+        [id]
+      );
     </script>
   </body>
 </html>

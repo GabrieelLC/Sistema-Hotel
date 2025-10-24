@@ -286,7 +286,9 @@
       <!-- Barra Lateral -->
       <aside class="sidebar">
         <div class="sidebar-header">
-          <div class="logo">HotelSys</div>
+          <div class="logo">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
+          </div>
           <div class="date-time" id="dateTime"></div>
         </div>
         <nav class="nav-menu">
@@ -418,15 +420,14 @@
     </div>
 
     <script>
-
       function formatarDocumento(item) {
-        if (item.cpf && item.cpf.trim() !== '') {
-            return `CPF: ${item.cpf}`;
+        if (item.cpf && item.cpf.trim() !== "") {
+          return `CPF: ${item.cpf}`;
         }
-        if (item.passaporte && item.passaporte.trim() !== '') {
-            return `Passaporte: ${item.passaporte}`;
+        if (item.passaporte && item.passaporte.trim() !== "") {
+          return `Passaporte: ${item.passaporte}`;
         }
-        return 'N/A';
+        return "N/A";
       }
       // Atualiza data e hora em tempo real
       function updateDateTime() {
@@ -475,15 +476,16 @@
             return;
           }
           tbody.innerHTML = "";
-  dados.forEach((item) => {
-    // Determina o tipo de documento a ser exibido
-    const documento = item.cpf && item.cpf.trim() !== '' 
-        ? `CPF: ${item.cpf}` 
-        : (item.passaporte && item.passaporte.trim() !== '' 
-            ? `Passaporte: ${item.passaporte}` 
-            : 'N/A');
-            
-    tbody.innerHTML += `
+          dados.forEach((item) => {
+            // Determina o tipo de documento a ser exibido
+            const documento =
+              item.cpf && item.cpf.trim() !== ""
+                ? `CPF: ${item.cpf}`
+                : item.passaporte && item.passaporte.trim() !== ""
+                ? `Passaporte: ${item.passaporte}`
+                : "N/A";
+
+            tbody.innerHTML += `
       <tr>
         <td>${documento}</td> <td>${item.nome}</td>
         <td>${item.quarto}</td>
@@ -492,10 +494,10 @@
         <td>${item.telefone}</td>
         <td>${item.email}</td>
         <td>R$${item.valor_diaria}</td>
-        <td>${item.motivo_hospedagem || 'Sem motivo informado'}</td>
+        <td>${item.motivo_hospedagem || "Sem motivo informado"}</td>
       </tr>
     `;
-  });
+          });
         } catch (error) {
           tbody.innerHTML =
             '<tr><td colspan="9">Erro ao carregar dados.</td></tr>';
@@ -518,7 +520,9 @@
           dados.forEach((item) => {
             tbody.innerHTML += `
                         <tr>
-                            <td>${formatarDocumento(item)}</td> <td>${item.nome || "N/A"}</td>
+                            <td>${formatarDocumento(item)}</td> <td>${
+              item.nome || "N/A"
+            }</td>
                             <td>${item.quarto || "N/A"}</td>
                             <td>${item.tipo_quarto || "N/A"}</td>
                             <td>${item.hora || "N/A"}</td>
@@ -553,7 +557,9 @@
           dados.forEach((item) => {
             tbody.innerHTML += `
                         <tr class="hospede-ativo">
-                            <td>${formatarDocumento(item)}</td> <td>${item.nome || "N/A"}</td>
+                            <td>${formatarDocumento(item)}</td> <td>${
+              item.nome || "N/A"
+            }</td>
                             <td>${item.quarto || "N/A"}</td>
                             <td>${item.tipo_quarto || "N/A"}</td>
                             <td>${item.hora || "N/A"}</td>
@@ -585,7 +591,9 @@
             dados.forEach((item) => {
               tbody.innerHTML += `
                             <tr class="checkout-vencido">
-                                <td>${formatarDocumento(item)}</td> <td>${item.nome || "N/A"}</td>
+                                <td>${formatarDocumento(item)}</td> <td>${
+                item.nome || "N/A"
+              }</td>
                                 <td>${item.quarto || "N/A"}</td>
                                 <td>${item.data_saida_prevista || "N/A"}</td>
                                 <td>${item.hora_saida_prevista || "N/A"}</td>
