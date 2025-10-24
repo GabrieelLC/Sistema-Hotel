@@ -1,527 +1,558 @@
 <!DOCTYPE html>
 <html lang="pt-br">
-
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema Hotel - Reservas</title>
     <!-- Importando a fonte Inter do Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
-        /* Reset básico e configurações globais */
-        :root {
-            --background-color: #f4f7fa;
-            --sidebar-bg: #ffffff;
-            --card-bg: #ffffff;
-            --text-color: #4a5568;
-            --heading-color: #1a202c;
-            --primary-color: #4a90e2;
-            --secondary-color: #e2e8f0;
-            --secondary-text-color: #4a5568;
-            --border-color: #e2e8f0;
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      /* Reset básico e configurações globais */
+      :root {
+        --background-color: #f4f7fa;
+        --sidebar-bg: #ffffff;
+        --card-bg: #ffffff;
+        --text-color: #4a5568;
+        --heading-color: #1a202c;
+        --primary-color: #4a90e2;
+        --secondary-color: #e2e8f0;
+        --secondary-text-color: #4a5568;
+        --border-color: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background-color);
+        color: var(--text-color);
+      }
+
+      /* Estrutura principal com Flexbox */
+      .main-flex {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+      }
+
+      /* Barra Lateral (Sidebar) */
+      .sidebar {
+        width: 240px;
+        background-color: var(--sidebar-bg);
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+
+      .sidebar .calendar {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+
+      .sidebar .calendar-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .sidebar #dateTime {
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+
+      .sidebar .menu-btn {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+      }
+
+      .sidebar .menu-btn.active,
+      .sidebar .menu-btn:hover {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+
+      /* Conteúdo Principal */
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem;
+        overflow-y: auto;
+      }
+
+      .tab-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .tab-header h1 {
+        font-size: 1.8rem;
+        color: var(--heading-color);
+      }
+
+      .button-group {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .tab {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: background-color 0.2s, color 0.2s;
+        background-color: var(--secondary-color);
+        color: var(--secondary-text-color);
+      }
+
+      .tab.active {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-view {
+        background-color: #6c757d;
+        color: white;
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .btn-view:hover {
+        background-color: #5a6268;
+      }
+
+      /* Card para a tabela */
+      .card {
+        background-color: var(--card-bg);
+        border-radius: 12px;
+        padding: 1.5rem 2rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+      }
+
+      .section-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--heading-color);
+        margin-bottom: 1.5rem;
+      }
+
+      /* Estilo das Tabelas */
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+      }
+
+      th,
+      td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+        white-space: nowrap;
+      }
+
+      thead th {
+        font-weight: 600;
+        color: var(--heading-color);
+        background-color: #f8f9fa;
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover {
+        background-color: #f8f9fa;
+      }
+
+      /* Modal para Acompanhantes */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+      }
+
+      .modal-title {
+        font-size: 1.25rem;
+        color: var(--heading-color);
+      }
+
+      .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--text-color);
+      }
+
+      /* Estilo para a célula de acompanhantes */
+      .acompanhantes-cell {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      /* Estilos para o container da busca */
+      .search-container {
+        margin-bottom: 1.5rem;
+      }
+
+      #searchInput {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-family: "Inter", sans-serif;
+      }
+
+      #searchInput:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+      }
+
+      .status-ativo-text {
+        color: #2f855a;
+        display: flex;
+        align-items: center;
+      }
+
+      .status-ativo-bolinha {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #2f855a;
+        margin-right: 6px;
+        animation: piscar 1.5s infinite alternate;
+      }
+
+      .status-finalizado-text {
+        color: #c53030;
+      }
+
+      @keyframes piscar {
+        from {
+          opacity: 0.8;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        to {
+          opacity: 0.8;
         }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--background-color);
-            color: var(--text-color);
-        }
-
-        /* Estrutura principal com Flexbox */
-        .main-flex {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-        }
-
-        /* Barra Lateral (Sidebar) */
-        .sidebar {
-            width: 240px;
-            background-color: var(--sidebar-bg);
-            padding: 2rem 1.5rem;
-            display: flex;
-            flex-direction: column;
-            border-right: 1px solid var(--border-color);
-            flex-shrink: 0;
-        }
-
-        .sidebar .calendar {
-            text-align: center;
-            margin-bottom: 2.5rem;
-        }
-
-        .sidebar .calendar-icon {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .sidebar #dateTime {
-            font-size: 0.9rem;
-            line-height: 1.4;
-        }
-
-        .sidebar .menu-btn {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            margin-bottom: 0.5rem;
-            border-radius: 8px;
-            text-decoration: none;
-            color: var(--text-color);
-            font-weight: 500;
-            transition: background-color 0.2s, color 0.2s;
-        }
-
-        .sidebar .menu-btn.active,
-        .sidebar .menu-btn:hover {
-            background-color: var(--primary-color);
-            color: #fff;
-        }
-
-        /* Conteúdo Principal */
-        .main-content {
-            flex-grow: 1;
-            padding: 2rem;
-            overflow-y: auto;
-        }
-
-        .tab-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .tab-header h1 {
-            font-size: 1.8rem;
-            color: var(--heading-color);
-        }
-
-        .button-group {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .tab {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: background-color 0.2s, color 0.2s;
-            background-color: var(--secondary-color);
-            color: var(--secondary-text-color);
-        }
-
-        .tab.active {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-view {
-            background-color: #6c757d;
-            color: white;
-            padding: 0.5rem 1rem;
-            font-size: 0.8rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .btn-view:hover {
-            background-color: #5a6268;
-        }
-
-        /* Card para a tabela */
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            box-shadow: var(--shadow);
-            margin-bottom: 2rem;
-        }
-
-        .section-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: var(--heading-color);
-            margin-bottom: 1.5rem;
-        }
-
-        /* Estilo das Tabelas */
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-
-        th,
-        td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid var(--border-color);
-            white-space: nowrap;
-        }
-
-        thead th {
-            font-weight: 600;
-            color: var(--heading-color);
-            background-color: #f8f9fa;
-        }
-
-        tbody tr:last-child td {
-            border-bottom: none;
-        }
-
-        tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        /* Modal para Acompanhantes */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .modal-title {
-            font-size: 1.25rem;
-            color: var(--heading-color);
-        }
-
-        .close-btn {
-            background: none;
-            border: none;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: var(--text-color);
-        }
-
-        /* Estilo para a célula de acompanhantes */
-        .acompanhantes-cell {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* Estilos para o container da busca */
-        .search-container {
-            margin-bottom: 1.5rem;
-        }
-
-        #searchInput {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-family: 'Inter', sans-serif;
-        }
-
-        #searchInput:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
-        }
-
-        .status-ativo-text {
-            color: #2f855a;
-            display: flex;
-            align-items: center;
-        }
-
-        .status-ativo-bolinha {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #2f855a;
-            margin-right: 6px;
-            animation: piscar 1.5s infinite alternate;
-        }
-
-        .status-finalizado-text {
-            color: #c53030;
-        }
-
-        @keyframes piscar {
-            from {
-                opacity: 0.8;
-            }
-
-            to {
-                opacity: 0.8;
-            }
-        }
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="main-flex">
-        <div class="sidebar">
-            <div class="calendar">
-                <div class="calendar-icon">📅</div>
-                <div class="date-time" id="dateTime"></div>
+      <div class="sidebar">
+        <div class="calendar">
+          <div class="calendar-icon">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
+          </div>
+          <div class="date-time" id="dateTime"></div>
+        </div>
+        <a href="index.html" class="menu-btn">Home</a>
+        <a href="checkin.html" class="menu-btn">Check-in</a>
+        <a href="checkout.html" class="menu-btn">Check-out</a>
+        <a href="clientes.html" class="menu-btn">Clientes</a>
+        <a href="quartos.html" class="menu-btn">Quartos</a>
+        <a href="reservas.html" class="menu-btn active">Reservas</a>
+        <a href="produtos.html" class="menu-btn">Produtos</a>
+        <a href="calendario.html" class="menu-btn">Calendário</a>
+      </div>
+
+      <div class="main-content">
+        <div class="tab-header">
+          <h1>Reservas</h1>
+          <div class="button-group">
+            <div id="todas-reservas-tab" class="tab active">
+              Todas as Reservas
             </div>
-            <a href="index.html" class="menu-btn">Home</a>
-            <a href="checkin.html" class="menu-btn">Check-in</a>
-            <a href="checkout.html" class="menu-btn">Check-out</a>
-            <a href="clientes.html" class="menu-btn">Clientes</a>
-            <a href="quartos.html" class="menu-btn">Quartos</a>
-            <a href="reservas.html" class="menu-btn active">Reservas</a>
-            <a href="produtos.html" class="menu-btn">Produtos</a>
-            <a href="calendario.html" class="menu-btn">Calendário</a>
+            <div id="reservas-futuras-tab" class="tab">Reservas Futuras</div>
+          </div>
         </div>
 
-        <div class="main-content">
-            <div class="tab-header">
-                <h1>Reservas</h1>
-                <div class="button-group">
-                    <div id="todas-reservas-tab" class="tab active">Todas as Reservas</div>
-                    <div id="reservas-futuras-tab" class="tab">Reservas Futuras</div>
-                </div>
-            </div>
+        <div class="card">
+          <div class="section-title" id="table-title">Todas as Reservas</div>
 
-            <div class="card">
-                <div class="section-title" id="table-title">Todas as Reservas</div>
+          <!-- Filtro de busca adicionado aqui -->
+          <div class="search-container">
+            <input
+              type="text"
+              id="searchInput"
+              onkeyup="filtrarReservas()"
+              placeholder="Buscar por nome, documento ou quarto..."
+            />
+          </div>
 
-                <!-- Filtro de busca adicionado aqui -->
-                <div class="search-container">
-                    <input type="text" id="searchInput" onkeyup="filtrarReservas()"
-                        placeholder="Buscar por nome, documento ou quarto...">
-                </div>
-
-                <div class="table-wrapper">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>Quarto</th>
-                                <th>Data Entrada</th>
-                                <th>Hora</th>
-                                <th>Data Saída</th>
-                                <th>Hora</th>
-                                <th>Status</th>
-                                <th>Acompanhantes</th>
-                                <th>Motivo</th>
-                            </tr>
-                        </thead>
-                        <tbody id="reservas-tbody"></tbody>
-                    </table>
-                </div>
-            </div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Quarto</th>
+                  <th>Data Entrada</th>
+                  <th>Hora</th>
+                  <th>Data Saída</th>
+                  <th>Hora</th>
+                  <th>Status</th>
+                  <th>Acompanhantes</th>
+                  <th>Motivo</th>
+                </tr>
+              </thead>
+              <tbody id="reservas-tbody"></tbody>
+            </table>
+          </div>
         </div>
+      </div>
     </div>
 
     <div id="acompanhantes-modal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">Acompanhantes</h3>
-                <span class="close-btn">&times;</span>
-            </div>
-            <div class="modal-body">
-                <ul id="acompanhantes-list"></ul>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="modal-title">Acompanhantes</h3>
+          <span class="close-btn">&times;</span>
         </div>
+        <div class="modal-body">
+          <ul id="acompanhantes-list"></ul>
+        </div>
+      </div>
     </div>
 
     <script>
-        let todasAsReservas = []; // Guarda a lista completa de reservas
+      let todasAsReservas = []; // Guarda a lista completa de reservas
 
-        // Atualiza data e hora em tempo real
-        function updateDateTime() {
-            const now = new Date();
-            const date = now.toLocaleDateString("pt-BR");
-            const time = now.toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
-            document.getElementById("dateTime").textContent = `${date}\n${time}`;
+      // Atualiza data e hora em tempo real
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("pt-BR");
+        const time = now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("dateTime").textContent = `${date}\n${time}`;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      function renderizarTabela(reservas) {
+        const tbody = document.getElementById("reservas-tbody");
+        tbody.innerHTML = "";
+        if (!reservas || reservas.length === 0) {
+          tbody.innerHTML =
+            '<tr><td colspan="9">Nenhuma reserva encontrada.</td></tr>';
+          return;
         }
-        updateDateTime();
-        setInterval(updateDateTime, 1000);
+        reservas.forEach((reserva) => {
+          const acompanhantesData = JSON.stringify(reserva.acompanhantes || []);
 
-        function renderizarTabela(reservas) {
-            const tbody = document.getElementById("reservas-tbody");
-            tbody.innerHTML = '';
-            if (!reservas || reservas.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9">Nenhuma reserva encontrada.</td></tr>';
-                return;
-            }
-            reservas.forEach(reserva => {
-                const acompanhantesData = JSON.stringify(reserva.acompanhantes || []);
+          let statusHTML = "";
+          if (reserva.status === "ativo") {
+            statusHTML = `<div class="status-ativo-text"><span class="status-ativo-bolinha"></span>ativo</div>`;
+          } else if (reserva.status === "finalizado") {
+            statusHTML = `<span class="status-finalizado-text">finalizado</span>`;
+          } else {
+            statusHTML = reserva.status || "N/A";
+          }
 
-                let statusHTML = '';
-                if (reserva.status === 'ativo') {
-                    statusHTML = `<div class="status-ativo-text"><span class="status-ativo-bolinha"></span>ativo</div>`;
-                } else if (reserva.status === 'finalizado') {
-                    statusHTML = `<span class="status-finalizado-text">finalizado</span>`;
-                } else {
-                    statusHTML = reserva.status || 'N/A';
-                }
-
-                tbody.innerHTML += `
+          tbody.innerHTML += `
            <tr>
-               <td>${reserva.nome || 'N/A'}</td>
-               <td>${reserva.quarto || 'N/A'}</td>
-               <td>${reserva.data_entrada || 'N/A'}</td>
-               <td>${reserva.hora_entrada || 'N/A'}</td>
-               <td>${reserva.data_saida || 'N/A'}</td>
-               <td>${reserva.hora_saida || 'N/A'}</td>
+               <td>${reserva.nome || "N/A"}</td>
+               <td>${reserva.quarto || "N/A"}</td>
+               <td>${reserva.data_entrada || "N/A"}</td>
+               <td>${reserva.hora_entrada || "N/A"}</td>
+               <td>${reserva.data_saida || "N/A"}</td>
+               <td>${reserva.hora_saida || "N/A"}</td>
                <td>${statusHTML}</td>
                <td class="acompanhantes-cell">
                    <span>${reserva.num_acompanhantes || 0}</span>
                    <button class="btn-view" onclick='mostrarAcompanhantes(${acompanhantesData})'>Ver</button>
                </td>
-               <td>${reserva.motivo_hospedagem || 'Não informado'}</td>
+               <td>${reserva.motivo_hospedagem || "Não informado"}</td>
            </tr>
        `;
-            });
+        });
+      }
+
+      // Função para filtrar as reservas
+      function filtrarReservas() {
+        const searchTerm = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const reservasFiltradas = todasAsReservas.filter((reserva) => {
+          const nome = reserva.nome || "";
+          const cpf = reserva.cliente_cpf || "";
+          const passaporte = reserva.cliente_passaporte || ""; // NOVO: Captura o passaporte do cliente
+          const quarto = reserva.quarto ? reserva.quarto.toString() : "";
+
+          return (
+            nome.toLowerCase().includes(searchTerm) ||
+            cpf.includes(searchTerm) ||
+            passaporte.toLowerCase().includes(searchTerm) || // NOVO: Inclui busca por passaporte
+            quarto.includes(searchTerm)
+          );
+        });
+        renderizarTabela(reservasFiltradas);
+      }
+
+      async function carregarReservas(futuras = false) {
+        const tableTitle = document.getElementById("table-title");
+        const todasTab = document.getElementById("todas-reservas-tab");
+        const futurasTab = document.getElementById("reservas-futuras-tab");
+
+        const endpoint = futuras ? "/api/reservas?futuras=1" : "/api/reservas";
+
+        tableTitle.textContent = futuras
+          ? "Reservas Futuras"
+          : "Todas as Reservas";
+        if (futuras) {
+          futurasTab.classList.add("active");
+          todasTab.classList.remove("active");
+        } else {
+          todasTab.classList.add("active");
+          futurasTab.classList.remove("active");
         }
 
-        // Função para filtrar as reservas
-        function filtrarReservas() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-            const reservasFiltradas = todasAsReservas.filter(reserva => {
-                const nome = reserva.nome || '';
-                const cpf = reserva.cliente_cpf || ''; 
-                const passaporte = reserva.cliente_passaporte || ''; // NOVO: Captura o passaporte do cliente
-                const quarto = reserva.quarto ? reserva.quarto.toString() : '';
-
-                return nome.toLowerCase().includes(searchTerm) ||
-                    cpf.includes(searchTerm) ||
-                    passaporte.toLowerCase().includes(searchTerm) || // NOVO: Inclui busca por passaporte
-                    quarto.includes(searchTerm);
-            });
-            renderizarTabela(reservasFiltradas);
+        try {
+          const response = await fetch(endpoint);
+          if (!response.ok) {
+            throw new Error(`Erro na API: ${response.statusText}`);
+          }
+          const data = await response.json();
+          todasAsReservas = data; // Armazena a lista completa
+          renderizarTabela(todasAsReservas); // Renderiza a tabela com os dados completos
+        } catch (error) {
+          const tbody = document.getElementById("reservas-tbody");
+          tbody.innerHTML =
+            '<tr><td colspan="9">Erro ao carregar as reservas.</td></tr>';
+          console.error("Erro ao carregar reservas:", error);
         }
+      }
 
-        async function carregarReservas(futuras = false) {
-            const tableTitle = document.getElementById("table-title");
-            const todasTab = document.getElementById('todas-reservas-tab');
-            const futurasTab = document.getElementById('reservas-futuras-tab');
+      function mostrarAcompanhantes(acompanhantes) {
+        const modal = document.getElementById("acompanhantes-modal");
+        const list = document.getElementById("acompanhantes-list");
+        list.innerHTML = ""; // Limpa o conteúdo anterior
 
-            const endpoint = futuras ? '/api/reservas?futuras=1' : '/api/reservas';
+        if (acompanhantes && acompanhantes.length > 0) {
+          // Filtra para garantir que não há objetos vazios
+          const validAcompanhantes = acompanhantes.filter(
+            (ac) => ac && ac.nome
+          );
 
-            tableTitle.textContent = futuras ? 'Reservas Futuras' : 'Todas as Reservas';
-            if (futuras) {
-                futurasTab.classList.add('active');
-                todasTab.classList.remove('active');
-            } else {
-                todasTab.classList.add('active');
-                futurasTab.classList.remove('active');
-            }
+          if (validAcompanhantes.length > 0) {
+            validAcompanhantes.forEach((ac) => {
+              // NOVO: Lógica para exibir CPF ou Passaporte
+              let documentoHTML = "<strong>Documento:</strong> Não Informado";
+              if (ac.cpf && ac.cpf.trim() !== "") {
+                documentoHTML = `<strong>CPF:</strong> ${ac.cpf}`;
+              } else if (ac.passaporte && ac.passaporte.trim() !== "") {
+                documentoHTML = `<strong>Passaporte:</strong> ${ac.passaporte}`;
+              }
 
-            try {
-                const response = await fetch(endpoint);
-                if (!response.ok) {
-                    throw new Error(`Erro na API: ${response.statusText}`);
-                }
-                const data = await response.json();
-                todasAsReservas = data; // Armazena a lista completa
-                renderizarTabela(todasAsReservas); // Renderiza a tabela com os dados completos
-            } catch (error) {
-                const tbody = document.getElementById("reservas-tbody");
-                tbody.innerHTML = '<tr><td colspan="9">Erro ao carregar as reservas.</td></tr>';
-                console.error("Erro ao carregar reservas:", error);
-            }
-        }
+              // Formata a data de nascimento
+              const dataNasc = ac.data_nascimento
+                ? new Date(ac.data_nascimento).toLocaleDateString("pt-BR", {
+                    timeZone: "UTC",
+                  })
+                : "N/A";
 
-        function mostrarAcompanhantes(acompanhantes) {
-            const modal = document.getElementById('acompanhantes-modal');
-            const list = document.getElementById('acompanhantes-list');
-            list.innerHTML = ''; // Limpa o conteúdo anterior
-
-            if (acompanhantes && acompanhantes.length > 0) {
-                // Filtra para garantir que não há objetos vazios
-                const validAcompanhantes = acompanhantes.filter(ac => ac && ac.nome);
-
-                if (validAcompanhantes.length > 0) {
-                    validAcompanhantes.forEach(ac => {
-                        // NOVO: Lógica para exibir CPF ou Passaporte
-                        let documentoHTML = '<strong>Documento:</strong> Não Informado';
-                        if (ac.cpf && ac.cpf.trim() !== '') {
-                            documentoHTML = `<strong>CPF:</strong> ${ac.cpf}`;
-                        } else if (ac.passaporte && ac.passaporte.trim() !== '') {
-                            documentoHTML = `<strong>Passaporte:</strong> ${ac.passaporte}`;
-                        }
-
-                        // Formata a data de nascimento
-                        const dataNasc = ac.data_nascimento ? new Date(ac.data_nascimento).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : 'N/A';
-
-                        list.innerHTML += `
+              list.innerHTML += `
                             <li style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #eee; list-style: none;">
-                                <strong>Nome:</strong> ${ac.nome || 'N/A'}<br>
+                                <strong>Nome:</strong> ${ac.nome || "N/A"}<br>
                                 ${documentoHTML}<br> <strong>Nascimento:</strong> ${dataNasc}
                             </li>`;
-                    });
-                } else {
-                    list.innerHTML = '<li>Nenhum acompanhante registrado para esta reserva.</li>';
-                }
-            }
-
-            modal.style.display = 'flex';
+            });
+          } else {
+            list.innerHTML =
+              "<li>Nenhum acompanhante registrado para esta reserva.</li>";
+          }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const todasTab = document.getElementById('todas-reservas-tab');
-            const futurasTab = document.getElementById('reservas-futuras-tab');
-            const modal = document.getElementById('acompanhantes-modal');
-            const closeModalBtn = modal.querySelector('.close-btn');
+        modal.style.display = "flex";
+      }
 
-            carregarReservas(false);
+      document.addEventListener("DOMContentLoaded", () => {
+        const todasTab = document.getElementById("todas-reservas-tab");
+        const futurasTab = document.getElementById("reservas-futuras-tab");
+        const modal = document.getElementById("acompanhantes-modal");
+        const closeModalBtn = modal.querySelector(".close-btn");
 
-            todasTab.addEventListener('click', () => carregarReservas(false));
-            futurasTab.addEventListener('click', () => carregarReservas(true));
+        carregarReservas(false);
 
-            closeModalBtn.addEventListener('click', () => modal.style.display = 'none');
-            window.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    modal.style.display = 'none';
-                }
-            });
+        todasTab.addEventListener("click", () => carregarReservas(false));
+        futurasTab.addEventListener("click", () => carregarReservas(true));
+
+        closeModalBtn.addEventListener(
+          "click",
+          () => (modal.style.display = "none")
+        );
+        window.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            modal.style.display = "none";
+          }
         });
+      });
     </script>
-</body>
-
+  </body>
 </html>
