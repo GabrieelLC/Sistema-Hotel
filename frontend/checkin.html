@@ -5,6 +5,80 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tela de Check-in</title>
     <style>
+      :root {
+        --background-color: #f4f7fa;
+        --sidebar-bg: #ffffff;
+        --card-bg: #ffffff;
+        --text-color: #4a5568;
+        --heading-color: #1a202c;
+        --primary-color: #4a90e2;
+        --border-color: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      body {
+        display: flex;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        font-family: "Inter", sans-serif;
+      }
+      .container {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 240px;
+        background-color: var(--sidebar-bg);
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-color);
+        flex-shrink: 0;
+      }
+      .sidebar-header {
+        margin-bottom: 2.5rem;
+      }
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--heading-color);
+        text-align: center;
+      }
+      .date-time {
+        text-align: center;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        line-height: 1.4;
+      }
+      .nav-menu {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .menu-btn {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+      }
+      .menu-btn:hover,
+      .menu-btn.active {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem;
+        overflow: auto;
+      }
+
       /* Container Principal */
       .checkoutscreencontainer {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
@@ -139,212 +213,265 @@
     </style>
   </head>
   <body>
-    <div class="checkoutscreencontainer">
-      <div class="checkoutscreenheader">
-        <a class="checkoutscreenback_arrow" onclick="VoltarPagina()">←</a>
-        <div class="checkoutscreentitle_box">
-          <h2 class="checkoutscreenmain_title">Check-In</h2>
+    <div class="container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
+          </div>
+          <div class="date-time" id="dateTime"></div>
         </div>
-      </div>
-      <form class="checkoutscreenform" id="checkinForm">
-        <div class="checkoutscreencolumns_wrapper">
-          <div class="checkoutscreencolumn">
-            <div class="checkoutscreenfield_group">
-              <label for="documentocliente"
-                >CPF ou Passaporte cliente (obrigatório):</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="documentocliente"
-                name="documentocliente"
-              />
+        <nav class="nav-menu">
+          <a href="checkin.html" class="menu-btn active">Check-in</a>
+          <a href="checkout.html" class="menu-btn">Check-out</a>
+          <a href="clientes.html" class="menu-btn">Clientes</a>
+          <a href="quartos.html" class="menu-btn">Quartos</a>
+          <a href="reservas.html" class="menu-btn">Reservas</a>
+          <a href="produtos.html" class="menu-btn">Produtos</a>
+          <a href="calendario.html" class="menu-btn">Calendário</a>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <div class="checkoutscreencontainer">
+          <div class="checkoutscreenheader">
+            <a class="checkoutscreenback_arrow" onclick="VoltarPagina()">←</a>
+            <div class="checkoutscreentitle_box">
+              <h2 class="checkoutscreenmain_title">Check-In</h2>
             </div>
-            <input
-              type="hidden"
-              id="cpfcliente_hidden"
-              name="cpfcliente_hidden"
-              value=""
-            />
-            <input
-              type="hidden"
-              id="passaportecliente_hidden"
-              name="passaportecliente_hidden"
-              value=""
-            />
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="nomecliente"
-                >Nome do Cliente</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="nomecliente"
-                name="nomecliente"
-                readonly
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="telefonecliente"
-                >Telefone</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="telefonecliente"
-                name="telefonecliente"
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="emailcliente"
-                >Email</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="emailcliente"
-                name="emailcliente"
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="cepcliente">CEP</label>
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="cepcliente"
-                name="cepcliente"
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="enderecocliente"
-                >Endereço</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="enderecocliente"
-                name="enderecocliente"
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="motivo_hospedagem"
-                >Motivo da hospedagem</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="motivo_hospedagem"
-                name="motivo_hospedagem"
-                maxlength="100"
-                placeholder="Motivo da hospedagem"
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="quantidade_acompanhantes"
-                >Quantidade de acompanhantes</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="number"
-                id="quantidade_acompanhantes"
-                name="quantidade_acompanhantes"
-                min="0"
-                max="10"
-                placeholder="0"
-              />
-            </div>
-            <div id="acompanhantes-container"></div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="datacheckin"
-                >Data Check-In:</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="date"
-                id="datacheckin"
-                name="datacheckin"
-                required
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="horacheckin"
-                >Hora Check-In:</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="time"
-                id="horacheckin"
-                name="horacheckin"
-                required
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="datacheckoutprrevista"
-                >Data Check-out Prevista:</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="date"
-                id="datacheckoutprrevista"
-                name="datacheckoutprrevista"
-                required
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="horacheckoutprevista"
-                >Hora Check-out Prevista:</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="time"
-                id="horacheckoutprevista"
-                name="horacheckoutprevista"
-                required
-              />
-            </div>
-            <div class="checkoutscreenfield_group">
-              <div class="checkoutscreenfield_group">
-                <label class="checkoutscreenlabel" for="quarto">Quarto</label>
-                <select
-                  class="checkoutscreeninput"
-                  id="quarto"
-                  name="quarto"
-                  required
-                ></select>
-                <div
-                  id="quarto-detalhes"
-                  style="
-                    margin-top: 8px;
-                    padding: 10px;
-                    background-color: #f4f7fa;
-                    border-radius: 5px;
-                    color: #555;
-                  "
-                >
-                  Selecione um quarto para ver os detalhes.
+          </div>
+          <form class="checkoutscreenform" id="checkinForm">
+            <div class="checkoutscreencolumns_wrapper">
+              <div class="checkoutscreencolumn">
+                <div class="checkoutscreenfield_group">
+                  <label for="documentocliente"
+                    >CPF ou Passaporte cliente (obrigatório):</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="documentocliente"
+                    name="documentocliente"
+                  />
                 </div>
+                <input
+                  type="hidden"
+                  id="cpfcliente_hidden"
+                  name="cpfcliente_hidden"
+                  value=""
+                />
+                <input
+                  type="hidden"
+                  id="passaportecliente_hidden"
+                  name="passaportecliente_hidden"
+                  value=""
+                />
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="nomecliente"
+                    >Nome do Cliente</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="nomecliente"
+                    name="nomecliente"
+                    readonly
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="telefonecliente"
+                    >Telefone</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="telefonecliente"
+                    name="telefonecliente"
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="emailcliente"
+                    >Email</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="emailcliente"
+                    name="emailcliente"
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="cepcliente"
+                    >CEP</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="cepcliente"
+                    name="cepcliente"
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="enderecocliente"
+                    >Endereço</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="enderecocliente"
+                    name="enderecocliente"
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="motivo_hospedagem"
+                    >Motivo da hospedagem</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="motivo_hospedagem"
+                    name="motivo_hospedagem"
+                    maxlength="100"
+                    placeholder="Motivo da hospedagem"
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label
+                    class="checkoutscreenlabel"
+                    for="quantidade_acompanhantes"
+                    >Quantidade de acompanhantes</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="number"
+                    id="quantidade_acompanhantes"
+                    name="quantidade_acompanhantes"
+                    min="0"
+                    max="10"
+                    placeholder="0"
+                  />
+                </div>
+                <div id="acompanhantes-container"></div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="datacheckin"
+                    >Data Check-In:</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="date"
+                    id="datacheckin"
+                    name="datacheckin"
+                    required
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="horacheckin"
+                    >Hora Check-In:</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="time"
+                    id="horacheckin"
+                    name="horacheckin"
+                    required
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="datacheckoutprrevista"
+                    >Data Check-out Prevista:</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="date"
+                    id="datacheckoutprrevista"
+                    name="datacheckoutprrevista"
+                    required
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="horacheckoutprevista"
+                    >Hora Check-out Prevista:</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="time"
+                    id="horacheckoutprevista"
+                    name="horacheckoutprevista"
+                    required
+                  />
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <div class="checkoutscreenfield_group">
+                    <label class="checkoutscreenlabel" for="quarto"
+                      >Quarto</label
+                    >
+                    <select
+                      class="checkoutscreeninput"
+                      id="quarto"
+                      name="quarto"
+                      required
+                    ></select>
+                    <div
+                      id="quarto-detalhes"
+                      style="
+                        margin-top: 8px;
+                        padding: 10px;
+                        background-color: #f4f7fa;
+                        border-radius: 5px;
+                        color: #555;
+                      "
+                    >
+                      Selecione um quarto para ver os detalhes.
+                    </div>
+                  </div>
+                </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="valor_diaria"
+                    >Valor da diária</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="text"
+                    id="valor_diaria"
+                    name="valor_diaria"
+                    readonly
+                  />
+                </div>
+                <button class="checkoutscreensubmit_button" type="submit">
+                  Registrar
+                </button>
               </div>
             </div>
-            <div class="checkoutscreenfield_group">
-              <label class="checkoutscreenlabel" for="valor_diaria"
-                >Valor da diária</label
-              >
-              <input
-                class="checkoutscreeninput"
-                type="text"
-                id="valor_diaria"
-                name="valor_diaria"
-                readonly
-              />
-            </div>
-            <button class="checkoutscreensubmit_button" type="submit">
-              Registrar
-            </button>
-          </div>
+          </form>
         </div>
-      </form>
+      </main>
     </div>
+
     <script>
+      function formatarDocumento(item) {
+        if (item?.cpf && item.cpf.trim() !== "") return `CPF: ${item.cpf}`;
+        if (item?.passaporte && item.passaporte.trim() !== "")
+          return `Passaporte: ${item.passaporte}`;
+        return "N/A";
+      }
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const time = now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const el = document.getElementById("dateTime");
+        if (el) el.innerHTML = `${date}<br>${time}`;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
       function VoltarPagina() {
         window.location.href = "index.html";
       }
