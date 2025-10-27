@@ -16,7 +16,7 @@
       <form id="cadastroForm" class="form-cadastro">
         <div class="linha">
           <div class="campo">
-            <label for="nome">Nome Cliente</label>
+            <label for="nome">Nome Cliente *</label>
             <input
               type="text"
               id="nome"
@@ -61,16 +61,18 @@
               required
               placeholder="email@exemplo.com"
             />
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required />
           </div>
         </div>
 
         <div class="linha">
           <div class="campo">
-            <label for="cep">CEP</label>
+            <label for="cep">CEP *</label>
             <input type="text" id="cep" name="cep" required />
           </div>
           <div class="campo grande">
-            <label for="endereco">Endereço</label>
+            <label for="endereco">Endereço *</label>
             <textarea
               id="endereco"
               name="endereco"
@@ -98,18 +100,77 @@
               name="passaporte"
               placeholder="Número do Passaporte"
             />
+            <div class="campo">
+              <label for="data_nascimento">Data de Nascimento *</label>
+              <input
+                type="date"
+                id="data_nascimento"
+                name="data_nascimento"
+                required
+              />
+            </div>
+            <div class="campo">
+              <label for="passaporte">Passaporte</label>
+              <input
+                type="text"
+                id="passaporte"
+                name="passaporte"
+                placeholder="Número do Passaporte"
+              />
+            </div>
+            <div class="campo">
+              <label for="nacionalidade">Nacionalidade *</label>
+              <input
+                type="text"
+                id="nacionalidade"
+                name="nacionalidade"
+                placeholder="Nacionalidade"
+                required
+              />
+            </div>
           </div>
         </div>
 
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
     </div>
-    
+
     <!-- O script original foi movido para dentro do HTML para conter a nova lógica -->
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const nacionalidadeInput = document.getElementById('nacionalidade');
-            const cpfInput = document.getElementById('cpf');
+      document.addEventListener("DOMContentLoaded", function () {
+        const nacionalidadeInput = document.getElementById("nacionalidade");
+        const cpfInput = document.getElementById("cpf");
+
+        // Função para formatar CPF no padrão XXX.XXX.XXX-XX
+        function formatarCPF(cpf) {
+          cpf = cpf.replace(/\D/g, ""); // Remove tudo que não é dígito
+          if (cpf.length > 11) cpf = cpf.slice(0, 11); // Limita a 11 dígitos
+          if (cpf.length <= 3) return cpf;
+          if (cpf.length <= 6) return cpf.slice(0, 3) + "." + cpf.slice(3);
+          if (cpf.length <= 9)
+            return cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6);
+          return (
+            cpf.slice(0, 3) +
+            "." +
+            cpf.slice(3, 6) +
+            "." +
+            cpf.slice(6, 9) +
+            "-" +
+            cpf.slice(9)
+          );
+        }
+
+        // Adiciona evento para formatar CPF enquanto digita
+        cpfInput.addEventListener("input", function (e) {
+          let cursorPos = e.target.selectionStart;
+          let oldLength = e.target.value.length;
+          let newValue = formatarCPF(e.target.value);
+          e.target.value = newValue;
+
+          // Ajusta a posição do cursor após formatação
+          if (newValue.length > oldLength) cursorPos++;
+          e.target.setSelectionRange(cursorPos, cursorPos);
+        });
             const telefoneInput = document.getElementById('telefone');
 
             const DEFAULT_COUNTRY_CODE = '55';
@@ -573,66 +634,73 @@
 
             nacionalidadeInput.addEventListener('input', tratarMudancaNacionalidade);
 
-            // Garante que a verificação seja feita caso o campo já venha preenchido
-            tratarMudancaNacionalidade();
+        // Garante que a verificação seja feita caso o campo já venha preenchido
+        tratarMudancaNacionalidade();
 
-            // Lógica original do seu form (se houver no script.js, deve ser movida para cá)
-            const form = document.getElementById('cadastroForm');
-            form.addEventListener('submit', async function(event) {
-                event.preventDefault();
+        // Lógica original do seu form (se houver no script.js, deve ser movida para cá)
+        const form = document.getElementById("cadastroForm");
+        form.addEventListener("submit", async function (event) {
+          event.preventDefault();
 
-                // Validação manual antes de enviar, caso o 'required' falhe
-                if (cpfInput.required && !cpfInput.value) {
-                    alert('Por favor, preencha o campo CPF.');
-                    return;
-                }
+          // Validação manual antes de enviar, caso o 'required' falhe
+          if (cpfInput.required && !cpfInput.value) {
+            alert("Por favor, preencha o campo CPF.");
+            return;
+          }
 
-                const formData = new FormData(form);
-                const data = Object.fromEntries(formData.entries());
+          const formData = new FormData(form);
 
-                const data_nascimento = document.getElementById('data_nascimento').value;
-                const cliente = {
-                  cpf,
-                  passaporte,
-                  nome,
-                  telefone,
-                  email,
-                  endereco,
-                  cep,
-                  data_nascimento, 
-                  nacionalidade
-                };
+          // Remove formatação do CPF antes de enviar
+          if (cpfInput.value) {
+            formData.set("cpf", cpfInput.value.replace(/\D/g, ""));
+          }
 
-                // Nova validação: CPF ou Passaporte devem ser preenchidos
-                if (!data.cpf && !data.passaporte) {
-                    alert("Preencha CPF ou Passaporte!");
-                    return;
-                }
+          const data = Object.fromEntries(formData.entries());
+          const data_nascimento =
+            document.getElementById("data_nascimento").value;
+          const cliente = {
+            cpf,
+            passaporte,
+            nome,
+            telefone,
+            email,
+            endereco,
+            cep,
+            data_nascimento,
+            nacionalidade,
+          };
 
-                try {
-                    const response = await fetch('/api/clientes', { // Verifique se este é o endpoint correto
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(data),
-                    });
+          // Nova validação: CPF ou Passaporte devem ser preenchidos
+          if (!data.cpf && !data.passaporte) {
+            alert("Preencha CPF ou Passaporte!");
+            return;
+          }
 
-                    if (response.ok) {
-                        alert('Cliente cadastrado com sucesso!');
-                        form.reset();
-                        // Redireciona ou atualiza a página conforme necessário
-                        window.location.href = 'clientes.html'; 
-                    } else {
-                        const errorData = await response.json();
-                        alert(`Erro ao cadastrar cliente: ${errorData.message}`);
-                    }
-                } catch (error) {
-                    console.error('Erro de conexão:', error);
-                    alert('Não foi possível conectar ao servidor.');
-                }
+          try {
+            const response = await fetch("/api/clientes", {
+              // Verifique se este é o endpoint correto
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(data),
             });
+
+            if (response.ok) {
+              alert("Cliente cadastrado com sucesso!");
+              form.reset();
+              // Redireciona ou atualiza a página conforme necessário
+              window.location.href = "clientes.html";
+            } else {
+              const errorData = await response.json();
+              alert(`Erro ao cadastrar cliente: ${errorData.message}`);
+            }
+          } catch (error) {
+            console.error("Erro de conexão:", error);
+            alert("Não foi possível conectar ao servidor.");
+          }
         });
+      });
     </script>
   </body>
 </html>
