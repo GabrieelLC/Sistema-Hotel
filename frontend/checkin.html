@@ -35,8 +35,14 @@
         display: flex;
         flex-direction: column;
         border-right: 1px solid var(--border-color);
-        flex-shrink: 0;
+        transition: width 0.3s;
       }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
       .sidebar-header {
         margin-bottom: 2.5rem;
       }
@@ -222,6 +228,7 @@
           <div class="date-time" id="dateTime"></div>
         </div>
         <nav class="nav-menu">
+          <a href="index.html" class="menu-btn">Ínicio</a>
           <a href="checkin.html" class="menu-btn active">Check-in</a>
           <a href="checkout.html" class="menu-btn">Check-out</a>
           <a href="clientes.html" class="menu-btn">Clientes</a>

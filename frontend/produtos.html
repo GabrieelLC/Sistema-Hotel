@@ -238,7 +238,7 @@
           </div>
           <div class="date-time" id="dateTime"></div>
         </div>
-        <a href="index.html" class="menu-btn">Home</a>
+        <a href="index.html" class="menu-btn">Ínicio</a>
         <a href="checkin.html" class="menu-btn">Check-in</a>
         <a href="checkout.html" class="menu-btn">Check-out</a>
         <a href="clientes.html" class="menu-btn">Clientes</a>
@@ -308,7 +308,12 @@
       // Atualiza data e hora em tempo real
       function updateDateTime() {
         const now = new Date();
-        const date = now.toLocaleDateString("pt-BR");
+        const date = now.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
         const time = now.toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
