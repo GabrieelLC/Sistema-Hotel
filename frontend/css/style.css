@@ -623,3 +623,38 @@ th {
   background: #1d968e;
 }
 
+.form-cadastro .linha {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.form-cadastro .campo {
+  flex: 1 1 0;
+  min-width: 200px; /* evita que campos fiquem muito estreitos */
+  box-sizing: border-box;
+}
+
+.form-cadastro .campo.grande {
+  flex: 2 1 0;
+}
+
+.form-cadastro .campo input,
+.form-cadastro .campo textarea,
+.form-cadastro .campo select {
+  width: 100%;
+  box-sizing: border-box;
+  display: block;
+}
+
+/* opcional: uniformizar altura dos inputs */
+.form-cadastro .campo input[type="text"],
+.form-cadastro .campo input[type="email"],
+.form-cadastro .campo input[type="date"],
+.form-cadastro .campo input[type="tel"],
+.form-cadastro .campo textarea {
+  padding: 10px;
+  border-radius: 6px;
+}
+

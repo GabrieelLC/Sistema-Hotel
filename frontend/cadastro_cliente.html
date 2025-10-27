@@ -36,16 +36,34 @@
             />
           </div>
         </div>
+
         <div class="linha">
+          <div class="campo">
+            <label for="nacionalidade">Nacionalidade</label>
+            <input
+              type="text"
+              id="nacionalidade"
+              name="nacionalidade"
+              placeholder="Nacionalidade"
+              required
+            />
+          </div>
           <div class="campo">
             <label for="telefone">Telefone</label>
             <input type="text" id="telefone" name="telefone" required />
           </div>
           <div class="campo">
             <label for="email">Email</label>
-            <input type="email" id="email" name="email" required />
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              placeholder="email@exemplo.com"
+            />
           </div>
         </div>
+
         <div class="linha">
           <div class="campo">
             <label for="cep">CEP</label>
@@ -59,36 +77,30 @@
               rows="2"
               required
             ></textarea>
-            <div class="campo">
-              <label for="data_nascimento">Data de Nascimento</label>
-              <input
-                type="date"
-                id="data_nascimento"
-                name="data_nascimento"
-                required
-              />
-            </div>
-            <div class="campo">
-              <label for="passaporte">Passaporte</label>
-              <input
-                type="text"
-                id="passaporte"
-                name="passaporte"
-                placeholder="Número do Passaporte"
-              />
-            </div>
-            <div class="campo">
-              <label for="nacionalidade">Nacionalidade</label>
-              <input
-                type="text"
-                id="nacionalidade"
-                name="nacionalidade"
-                placeholder="Nacionalidade"
-                required
-              />
-            </div>
           </div>
         </div>
+
+        <div class="linha">
+          <div class="campo">
+            <label for="data_nascimento">Data de Nascimento</label>
+            <input
+              type="date"
+              id="data_nascimento"
+              name="data_nascimento"
+              required
+            />
+          </div>
+          <div class="campo">
+            <label for="passaporte">Passaporte</label>
+            <input
+              type="text"
+              id="passaporte"
+              name="passaporte"
+              placeholder="Número do Passaporte"
+            />
+          </div>
+        </div>
+
         <button type="submit" class="btn-registrar">Registrar</button>
       </form>
     </div>
@@ -98,13 +110,455 @@
         document.addEventListener('DOMContentLoaded', function() {
             const nacionalidadeInput = document.getElementById('nacionalidade');
             const cpfInput = document.getElementById('cpf');
+            const telefoneInput = document.getElementById('telefone');
+
+            const DEFAULT_COUNTRY_CODE = '55';
+            const MAX_E164_DIGITS = 15;
+            // Padrões conhecidos por DDI; adicione novos conforme necessário.
+            const PHONE_DEFINITIONS = [
+                { code: '55', formats: [
+                    { length: 11, pattern: ' (##) #####-####' },
+                    { length: 10, pattern: ' (##) ####-####' }
+                ]},
+                { code: '1', formats: [
+                    { length: 10, pattern: ' (###) ###-####' }
+                ]},
+                { code: '44', formats: [
+                    { length: 10, pattern: ' #### ######' },
+                    { length: 9, pattern: ' ### #### ###' }
+                ]},
+                { code: '33', formats: [
+                    { length: 9, pattern: ' # ## ## ## ##' }
+                ]},
+                { code: '34', formats: [
+                    { length: 9, pattern: ' ### ### ###' }
+                ]},
+                { code: '39', formats: [
+                    { length: 10, pattern: ' ### #### ###' },
+                    { length: 9, pattern: ' ### ### ####' }
+                ]},
+                { code: '351', formats: [
+                    { length: 9, pattern: ' ### ### ###' }
+                ]},
+                { code: '52', formats: [
+                    { length: 10, pattern: ' (##) ####-####' }
+                ]},
+                { code: '54', formats: [
+                    { length: 10, pattern: ' (##) ####-####' }
+                ]},
+                { code: '56', formats: [
+                    { length: 9, pattern: ' # #### ####' }
+                ]},
+                { code: '57', formats: [
+                    { length: 10, pattern: ' (###) ###-####' }
+                ]},
+                { code: '598', formats: [
+                    { length: 8, pattern: ' # ### ####' }
+                ]},
+                { code: '49', formats: [
+                    { length: 11, pattern: ' #### ########' },
+                    { length: 10, pattern: ' #### #######' }
+                ]},
+                { code: '41', formats: [
+                    { length: 9, pattern: ' ## ### ####' }
+                ]},
+                { code: '31', formats: [
+                    { length: 9, pattern: ' ## ### ####' }
+                ]},
+                { code: '32', formats: [
+                    { length: 9, pattern: ' ## ### ####' }
+                ]},
+                { code: '61', formats: [
+                    { length: 9, pattern: ' # #### ####' }
+                ]},
+                { code: '64', formats: [
+                    { length: 8, pattern: ' ## ### ####' },
+                    { length: 9, pattern: ' ### ### ###' }
+                ]},
+                { code: '81', formats: [
+                    { length: 9, pattern: ' ## #### ####' },
+                    { length: 10, pattern: ' ### ### ####' }
+                ]},
+                { code: '82', formats: [
+                    { length: 9, pattern: ' ## #### ####' },
+                    { length: 10, pattern: ' ### ### ####' }
+                ]},
+                { code: '86', formats: [
+                    { length: 11, pattern: ' ## #### #####' },
+                    { length: 10, pattern: ' ## ### #### #' }
+                ]},
+                { code: '90', formats: [
+                    { length: 10, pattern: ' (###) ###-####' }
+                ]},
+                { code: '91', formats: [
+                    { length: 10, pattern: ' #### ## ####' }
+                ]},
+                { code: '7', formats: [
+                    { length: 10, pattern: ' (###) ###-##-##' }
+                ]},
+                { code: '358', formats: [
+                    { length: 9, pattern: ' ## ### ####' }
+                ]},
+                { code: '971', formats: [
+                    { length: 9, pattern: ' # ### ####' }
+                ]}
+            ];
+
+            const PHONE_MAP = PHONE_DEFINITIONS.reduce((acc, def) => {
+                const orderedFormats = def.formats.slice().sort((a, b) => a.length - b.length);
+                acc[def.code] = { code: def.code, formats: orderedFormats };
+                return acc;
+            }, {});
+
+            const PHONE_CODES_DESC = Object.keys(PHONE_MAP).sort((a, b) => b.length - a.length);
+
+            function normalizeText(value) {
+                return value
+                    ? value
+                        .trim()
+                        .toLowerCase()
+                        .normalize('NFD')
+                        .replace(/[\u0300-\u036f]/g, '')
+                    : '';
+            }
+
+            const COUNTRY_NATIONALITY_MAP = {
+                'brasil': '55',
+                'brasileiro': '55',
+                'brasileira': '55',
+                'brasileiros': '55',
+                'brasileiras': '55',
+                'india': '91',
+                'indiano': '91',
+                'indiana': '91',
+                'indianos': '91',
+                'indianas': '91',
+                'estados unidos': '1',
+                'eua': '1',
+                'americano': '1',
+                'americana': '1',
+                'americanos': '1',
+                'americanas': '1',
+                'reino unido': '44',
+                'inglaterra': '44',
+                'britanico': '44',
+                'britanica': '44',
+                'britanicos': '44',
+                'britanicas': '44',
+                'portugal': '351',
+                'portugues': '351',
+                'portuguesa': '351',
+                'portugueses': '351',
+                'portuguesas': '351',
+                'espanha': '34',
+                'espanhol': '34',
+                'espanhola': '34',
+                'espanhois': '34',
+                'espanholas': '34',
+                'italia': '39',
+                'italiano': '39',
+                'italiana': '39',
+                'italianos': '39',
+                'italianas': '39',
+                'mexico': '52',
+                'mexicano': '52',
+                'mexicana': '52',
+                'mexicanos': '52',
+                'mexicanas': '52',
+                'argentina': '54',
+                'argentino': '54',
+                'argentinos': '54',
+                'argentinas': '54',
+                'chile': '56',
+                'chileno': '56',
+                'chilena': '56',
+                'chilenos': '56',
+                'chilenas': '56',
+                'colombia': '57',
+                'colombiano': '57',
+                'colombiana': '57',
+                'colombianos': '57',
+                'colombianas': '57',
+                'uruguai': '598',
+                'uruguaio': '598',
+                'uruguaia': '598',
+                'uruguaios': '598',
+                'uruguaias': '598',
+                'alemanha': '49',
+                'alemao': '49',
+                'alema': '49',
+                'alemoes': '49',
+                'suica': '41',
+                'suico': '41',
+                'suicos': '41',
+                'suicas': '41',
+                'japao': '81',
+                'japones': '81',
+                'japonesa': '81',
+                'japoneses': '81',
+                'japonesas': '81',
+                'coreia do sul': '82',
+                'coreano': '82',
+                'coreana': '82',
+                'coreanos': '82',
+                'coreanas': '82',
+                'china': '86',
+                'chines': '86',
+                'chinesa': '86',
+                'chineses': '86',
+                'chinesas': '86',
+                'turquia': '90',
+                'turco': '90',
+                'turca': '90',
+                'turcos': '90',
+                'turcas': '90',
+                'russia': '7',
+                'russo': '7',
+                'russa': '7',
+                'russos': '7',
+                'russas': '7',
+                'finlandia': '358',
+                'finlandes': '358',
+                'finlandesa': '358',
+                'finlandeses': '358',
+                'finlandesas': '358',
+                'emirados arabes unidos': '971',
+                'emiradense': '971',
+                'australia': '61',
+                'australiano': '61',
+                'australiana': '61',
+                'australianos': '61',
+                'australianas': '61',
+                'nova zelandia': '64',
+                'neozelandes': '64',
+                'neozelandesa': '64',
+                'neozelandeses': '64',
+                'neozelandesas': '64'
+            };
+
+            let activeCountryCode = DEFAULT_COUNTRY_CODE;
+
+            function extractDigits(value) {
+                return value ? value.replace(/\D/g, '') : '';
+            }
+
+            function choosePattern(definition, digitsLength) {
+                if (!definition || !definition.formats || !definition.formats.length) {
+                    return null;
+                }
+                for (const option of definition.formats) {
+                    if (digitsLength <= option.length) {
+                        return option;
+                    }
+                }
+                return definition.formats[definition.formats.length - 1];
+            }
+
+            function applyPattern(localDigits, pattern) {
+                const placeholderCount = (pattern.match(/#/g) || []).length;
+                const digitsToFormat = localDigits.slice(0, placeholderCount);
+                let formatted = '';
+                let digitIndex = 0;
+
+                for (const char of pattern) {
+                    if (char === '#') {
+                        if (digitIndex < digitsToFormat.length) {
+                            formatted += digitsToFormat[digitIndex];
+                            digitIndex += 1;
+                        } else {
+                            break;
+                        }
+                    } else {
+                        const hasRemainingDigits = digitIndex < digitsToFormat.length;
+                        if (digitIndex > 0 || hasRemainingDigits) {
+                            formatted += char;
+                        }
+                    }
+                }
+
+                formatted = formatted.replace(/[\s-]+$/, '');
+                const extraDigits = localDigits.slice(digitsToFormat.length);
+
+                return { formatted, extraDigits };
+            }
+
+            function groupDigits(digits, chunkSize = 3) {
+                if (!digits) {
+                    return '';
+                }
+                const parts = [];
+                for (let i = 0; i < digits.length; i += chunkSize) {
+                    parts.push(digits.slice(i, i + chunkSize));
+                }
+                return parts.join(' ');
+            }
+
+            function findDefinition(digits) {
+                for (const code of PHONE_CODES_DESC) {
+                    if (digits.startsWith(code)) {
+                        return PHONE_MAP[code];
+                    }
+                }
+                return null;
+            }
+
+            function formatWithDefinition(countryCode, localDigits) {
+                const definition = PHONE_MAP[countryCode];
+                let sanitizedLocal = localDigits.slice(0, MAX_E164_DIGITS);
+                let result = '+' + countryCode;
+
+                if (!sanitizedLocal) {
+                    return result;
+                }
+
+                if (!definition) {
+                    return (result + ' ' + groupDigits(sanitizedLocal)).trim();
+                }
+
+                const patternOption = choosePattern(definition, sanitizedLocal.length);
+
+                if (patternOption && patternOption.pattern) {
+                    const { formatted, extraDigits } = applyPattern(sanitizedLocal, patternOption.pattern);
+                    result += formatted;
+                    if (extraDigits) {
+                        result += ' ' + groupDigits(extraDigits);
+                    }
+                } else {
+                    result += ' ' + groupDigits(sanitizedLocal);
+                }
+
+                return result.trim();
+            }
+
+            function fallbackFormat(digits) {
+                if (!digits) {
+                    return '';
+                }
+                let assumedLength = 1;
+                if (digits.length >= 4) {
+                    assumedLength = 3;
+                } else if (digits.length === 3) {
+                    assumedLength = 2;
+                }
+                const countryDigits = digits.slice(0, Math.min(assumedLength, digits.length));
+                const nationalDigits = digits.slice(countryDigits.length);
+                let formatted = '+' + countryDigits;
+                if (nationalDigits) {
+                    formatted += ' ' + groupDigits(nationalDigits);
+                }
+                return formatted;
+            }
+
+            function resolveCountryCodeFromNationality(value) {
+                const normalized = normalizeText(value);
+                return COUNTRY_NATIONALITY_MAP[normalized] || null;
+            }
+
+            function buildExampleForCountry(code) {
+                const definition = PHONE_MAP[code];
+                if (!definition || !definition.formats || !definition.formats.length) {
+                    return '+' + code;
+                }
+
+                const pattern = definition.formats[0].pattern || '';
+                let digit = 1;
+                let formatted = '';
+
+                for (const char of pattern) {
+                    if (char === '#') {
+                        formatted += (digit % 10).toString();
+                        digit += 1;
+                    } else {
+                        formatted += char;
+                    }
+                }
+
+                return ('+' + code + formatted).trim();
+            }
+
+            function updatePhonePlaceholder() {
+                if (!telefoneInput) {
+                    return;
+                }
+                telefoneInput.placeholder = buildExampleForCountry(activeCountryCode);
+            }
+
+            function applyPhoneCountryFromNationality() {
+                const resolvedCode = resolveCountryCodeFromNationality(nacionalidadeInput.value);
+                activeCountryCode = resolvedCode || DEFAULT_COUNTRY_CODE;
+                updatePhonePlaceholder();
+                handlePhoneInput(true);
+            }
+
+            function formatPhoneValue(rawValue) {
+                if (!rawValue) {
+                    return '';
+                }
+
+                let value = rawValue.trim();
+                if (!value) {
+                    return '';
+                }
+
+                const startsWithInternational = value.startsWith('+') || value.startsWith('00');
+                if (value.startsWith('00')) {
+                    value = '+' + value.slice(2);
+                }
+
+                const digitsOnly = extractDigits(value).slice(0, MAX_E164_DIGITS);
+
+                if (!startsWithInternational) {
+                    if (!digitsOnly) {
+                        return '';
+                    }
+
+                    const targetCode = PHONE_MAP[activeCountryCode] ? activeCountryCode : DEFAULT_COUNTRY_CODE;
+                    return formatWithDefinition(targetCode, digitsOnly);
+                }
+
+                if (!digitsOnly) {
+                    return '+';
+                }
+
+                const definition = findDefinition(digitsOnly);
+
+                if (!definition) {
+                    return fallbackFormat(digitsOnly);
+                }
+
+                if (digitsOnly.length <= definition.code.length) {
+                    return '+' + digitsOnly;
+                }
+
+                const localDigits = digitsOnly.slice(definition.code.length);
+                return formatWithDefinition(definition.code, localDigits);
+            }
+
+            function handlePhoneInput(forceOrEvent) {
+                if (!telefoneInput) {
+                    return;
+                }
+                const force = forceOrEvent === true;
+                const formatted = formatPhoneValue(telefoneInput.value);
+                if (force || formatted !== telefoneInput.value) {
+                    telefoneInput.value = formatted;
+                }
+            }
+
+            if (telefoneInput) {
+                telefoneInput.addEventListener('input', handlePhoneInput);
+                telefoneInput.addEventListener('blur', handlePhoneInput);
+                telefoneInput.addEventListener('change', handlePhoneInput);
+            }
 
             // Função para verificar a nacionalidade e ajustar a obrigatoriedade do CPF
             function ajustarObrigatoriedadeCPF() {
-                const nacionalidade = nacionalidadeInput.value.trim().toLowerCase();
+                const nacionalidade = normalizeText(nacionalidadeInput.value);
+                const isBrasileiro = ['brasil', 'brasileira', 'brasileiro', 'brasileiros', 'brasileiras']
+                    .includes(nacionalidade);
                 
                 // Se a nacionalidade NÃO for 'brasil' (ou vazia), o CPF não é obrigatório
-                if (nacionalidade !== 'brasil' && nacionalidade !== 'brasileira' && nacionalidade !== '') {
+                if (!isBrasileiro && nacionalidade !== '') {
                     cpfInput.required = false;
                 } else {
                     cpfInput.required = true;
@@ -112,10 +566,15 @@
             }
 
             // Adiciona um listener ao campo de nacionalidade para chamar a função sempre que o valor mudar
-            nacionalidadeInput.addEventListener('input', ajustarObrigatoriedadeCPF);
+            function tratarMudancaNacionalidade() {
+                ajustarObrigatoriedadeCPF();
+                applyPhoneCountryFromNationality();
+            }
+
+            nacionalidadeInput.addEventListener('input', tratarMudancaNacionalidade);
 
             // Garante que a verificação seja feita caso o campo já venha preenchido
-            ajustarObrigatoriedadeCPF();
+            tratarMudancaNacionalidade();
 
             // Lógica original do seu form (se houver no script.js, deve ser movida para cá)
             const form = document.getElementById('cadastroForm');
