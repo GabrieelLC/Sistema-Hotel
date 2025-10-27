@@ -28,6 +28,12 @@
         --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
           0 2px 4px -1px rgba(0, 0, 0, 0.06);
       }
+      .main-flex {
+        /* Mantém esta classe como container principal */
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+      }
 
       * {
         margin: 0;
@@ -44,17 +50,11 @@
       /* Removido container, usando main-flex que já existe */
 
       /* Estrutura principal com Flexbox */
-      .main-flex {
-        /* Mantém esta classe como container principal */
-        display: flex;
-        width: 100%;
-        min-height: 100vh;
-      }
 
       /* --- ESTILOS PADRÃO DA SIDEBAR (COPIADOS DE CALENDARIO.HTML) --- */
       .sidebar {
         width: 240px;
-        background-color: var(--sidebar-bg);
+        background-color: #fff;
         padding: 2rem 1.5rem;
         display: flex;
         flex-direction: column;
@@ -72,7 +72,6 @@
         text-align: center;
       }
       .logo img {
-        max-width: 140px; /* Ajuste conforme necessário */
         height: auto;
       }
       .date-time {

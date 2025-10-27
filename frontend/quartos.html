@@ -4,51 +4,58 @@
     <meta charset="UTF-8" />
     <title>Quartos - Guia de Informações</title>
     <style>
-      .sidebar {
-        width: 240px;
-        background-color: var(--sidebar-bg);
-        padding: 2rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        border-right: 1px solid var(--border-color);
-        transition: width 0.3s;
-      }
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: var(--background-color); /* Correção: use var() */
+        color: var(--text-color);
+        display: flex; /* Mantém o body como flex container */
+      }
 
+      /* Removido container, usando main-flex que já existe */
+
+      /* Estrutura principal com Flexbox */
+
+      /* --- ESTILOS PADRÃO DA SIDEBAR (COPIADOS DE CALENDARIO.HTML) --- */
+      .sidebar {
+        width: 240px;
+        background-color: #fff;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-color);
+        flex-shrink: 0;
+        min-height: 100vh; /* Garante altura total */
+      }
       .sidebar-header {
         margin-bottom: 2.5rem;
       }
-
       .logo {
         font-size: 1.5rem;
         font-weight: 700;
         color: var(--heading-color);
-        text-align: center;     
-       }
-
+        text-align: center;
+      }
       .logo img {
-        max-width: 140px;
         height: auto;
       }
-
       .date-time {
         text-align: center;
         font-size: 0.9rem;
         margin-top: 0.5rem;
         line-height: 1.4;
+        white-space: pre-line; /* Permite quebras de linha com \n no JS */
       }
-
       .nav-menu {
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
       }
-
       .menu-btn {
         display: flex;
         align-items: center;
@@ -58,8 +65,8 @@
         color: var(--text-color);
         font-weight: 500;
         transition: background-color 0.2s, color 0.2s;
+        /* Remove margin-bottom, já que gap no nav-menu cuida disso */
       }
-
       .menu-btn:hover,
       .menu-btn.active {
         background-color: var(--primary-color);
@@ -75,11 +82,7 @@
         --border-color: #e2e8f0;
         --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       }
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body { display: flex;
-        background-color: var(--background-color);
-        color: var(--text-color);
-        font-family: "Inter", sans-serif; }
+      
       .container { max-width: 1000px; margin: 32px auto; background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); padding: 24px; }
 
       /* Cabeçalho simples */
@@ -134,13 +137,12 @@
       <aside class="sidebar">
         <div class="sidebar-header">
           <div class="logo">
-            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
-          </div>
-          <div class="date-time" id="dateTime"></div>
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="Logo Hotel" />
+          </div> <div class="date-time" id="dateTime"></div>
         </div>
         <nav class="nav-menu">
           <a href="index.html" class="menu-btn">Ínicio</a>
-          <a href="checkin.html" class="menu-btn ">Check-in</a>
+          <a href="checkin.html" class="menu-btn">Check-in</a>
           <a href="checkout.html" class="menu-btn">Check-out</a>
           <a href="clientes.html" class="menu-btn">Clientes</a>
           <a href="quartos.html" class="menu-btn active">Quartos</a>
@@ -149,7 +151,7 @@
           <a href="calendario.html" class="menu-btn">Calendário</a>
         </nav>
       </aside>
-    <div class="container">
+      <div class="container">
       <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()"
         >←</a
       >
@@ -172,7 +174,6 @@
         <tbody id="quartos-tbody"></tbody>
       </table>
 
-    <!-- Modal para Adicionar Consumo -->
     <div id="modalConsumo" style="display:none;">
       <div>
         <h3>Adicionar Consumo</h3>
@@ -191,6 +192,28 @@
     </div>
 
     <script>
+      // Script para data/hora (Adicionado para completar a sidebar)
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const time = now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        const dateTimeEl = document.getElementById("dateTime");
+        if (dateTimeEl) {
+           dateTimeEl.innerHTML = `${date}<br>${time}`;
+        }
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+
       function VoltarPagina() {
         window.location.href = "index.html";
       }
@@ -466,7 +489,7 @@ function selecionarTab(idx, quartos) {
         const preco_unitario = document.getElementById("consumoValor").value;
         const numeroQuarto = window.quartoSelecionado;
 
-        // Buscar reserva ativa do quarto
+        // Buscar reservaativa do quarto
         const respReserva = await fetch(`/api/reserva-ativa-quarto/${numeroQuarto}`);
         if (!respReserva.ok) {
           alert('Nenhuma reserva ativa para este quarto.');
