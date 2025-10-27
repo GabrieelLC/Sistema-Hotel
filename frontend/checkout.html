@@ -3,31 +3,109 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tela de Check-out Específica</title>
-    <link rel="stylesheet" href="css/style.css" />
-    <style>
-      /*
- * ===============================================
- * ESTILOS ESPECÍFICOS PARA A TELA DE CHECK-OUT
- * Usa prefixo "checkout_screen_" para evitar conflitos
- * ===============================================
- */
+    <title>Tela de Check-out</title>
 
-      /* Container Principal do Componente */
+    <style>
+      :root {
+        --background-color: #f4f7fa;
+        --sidebar-bg: #ffffff;
+        --card-bg: #ffffff;
+        --text-color: #4a5568;
+        --heading-color: #1a202c;
+        --primary-color: #4a90e2;
+        --border-color: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      body {
+        display: flex;
+        background-color: var(--background-color);
+        color: var(--text-color);
+        font-family: "Inter", sans-serif;
+      }
+
+      .container {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+      }
+      .sidebar {
+        width: 240px;
+        background-color: var(--sidebar-bg);
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-color);
+        transition: width 0.3s;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      .sidebar-header {
+        margin-bottom: 2.5rem;
+      }
+
+      .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--heading-color);
+        text-align: center;
+      }
+
+      .date-time {
+        text-align: center;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+        line-height: 1.4;
+      }
+
+      .nav-menu {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .menu-btn {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+      }
+
+      .menu-btn:hover,
+      .menu-btn.active {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+
+      /* ===== Main Content ===== */
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem;
+        overflow: auto;
+      }
+
+      /* ===== Estilos do Check-out ===== */
       .checkout_screen_container {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif;
-        color: #333;
         background-color: #ffffff;
+        color: #333;
         padding: 30px;
         border-radius: 10px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         width: 100%;
         max-width: 800px;
-        margin: 40px auto; /* Adiciona margem para centralizar caso não esteja em um flex container */
+        margin: 0 auto;
       }
 
-      /* Cabeçalho do Componente */
       .checkout_screen_header {
         display: flex;
         align-items: center;
@@ -39,6 +117,7 @@
         text-decoration: none;
         color: #555;
         margin-right: 20px;
+        cursor: pointer;
       }
 
       .checkout_screen_title_box {
@@ -56,7 +135,6 @@
         font-weight: 500;
       }
 
-      /* Estrutura do Formulário */
       .checkout_screen_form {
         width: 100%;
       }
@@ -64,6 +142,7 @@
       .checkout_screen_columns_wrapper {
         display: flex;
         gap: 40px;
+        flex-wrap: wrap;
       }
 
       .checkout_screen_column {
@@ -73,7 +152,6 @@
         gap: 15px;
       }
 
-      /* Campos (Inputs, Labels) */
       .checkout_screen_field_group {
         display: flex;
         flex-direction: column;
@@ -100,12 +178,10 @@
         box-shadow: 0 0 5px rgba(53, 122, 189, 0.5);
       }
 
-      /* Modificador para input menor */
       .checkout_screen_input--small {
         width: 80px !important;
       }
 
-      /* Tabela de Consumo */
       .checkout_screen_consumption_table {
         width: 100%;
         border-collapse: collapse;
@@ -127,7 +203,6 @@
         font-weight: 600;
       }
 
-      /* Rodapé e Botão de Ação */
       .checkout_screen_footer {
         display: flex;
         justify-content: flex-end;
@@ -147,129 +222,181 @@
       }
 
       .checkout_screen_submit_button:hover {
-        background-color: #2c639a; /* Azul um pouco mais escuro no hover */
+        background-color: #2c639a;
       }
     </style>
   </head>
+
   <body>
-    <div class="checkout_screen_container">
-      <header class="checkout_screen_header">
-        <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()"
-          >←</a
-        >
-        <div class="checkout_screen_title_box">
-          <h1 class="checkout_screen_main_title">Check-out</h1>
-        </div>
-      </header>
-
-      <form class="checkout_screen_form">
-        <div class="checkout_screen_columns_wrapper">
-          <div class="checkout_screen_column">
-            <div class="checkout_screen_field_group">
-              <label for="search_cpf">CPF ou Passaporte cliente:</label>
-              <input
-                type="text"
-                id="cpf_cliente"
-                name="cpf"
-                class="checkout_screen_input"
-              />
-            </div>
-            <div class="checkout_screen_field_group">
-              <label for="valor_diaria" class="checkout_screen_label"
-                >Valor da diaria</label
-              >
-              <input
-                type="text"
-                id="valor_diaria"
-                name="valor-diaria"
-                class="checkout_screen_input"
-              />
-            </div>
-            <div class="checkout_screen_field_group">
-              <label for="qtd_dias" class="checkout_screen_label"
-                >Quantidade de dias</label
-              >
-              <input
-                type="number"
-                id="qtd_dias"
-                name="qtd-dias"
-                class="checkout_screen_input checkout_screen_input--small"
-              />
-            </div>
-            <div class="checkout_screen_field_group">
-              <label for="total" class="checkout_screen_label"
-                >Total a pagar</label
-              >
-              <input
-                type="text"
-                id="total"
-                name="total"
-                class="checkout_screen_input"
-                readonly
-              />
-            </div>
+    <div class="container">
+      <!-- Sidebar -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="Logo" />
           </div>
-
-          <div class="checkout_screen_column">
-            <div class="checkout_screen_field_group">
-              <label for="data_checkout" class="checkout_screen_label"
-                >Data Check-out:</label
-              >
-              <input
-                type="date"
-                id="data_checkout"
-                name="data-checkout"
-                class="checkout_screen_input"
-                placeholder="dd/mm/yyyy"
-              />
-            </div>
-            <div class="checkout_screen_field_group">
-              <label for="hora_checkout" class="checkout_screen_label"
-                >Hora Check-out:</label
-              >
-              <input
-                type="time"
-                id="hora_checkout"
-                name="hora-checkout"
-                class="checkout_screen_input"
-                placeholder="--:--"
-              />
-            </div>
-            <div class="checkout_screen_field_group">
-              <label for="quarto" class="checkout_screen_label">Quarto</label>
-              <input
-                type="text"
-                id="quarto"
-                class="checkout_screen_input checkout_screen_input--small"
-                readonly
-              />
-            </div>
-            <div class="checkout_screen_field_group">
-              <label class="checkout_screen_label">Consumo</label>
-              <table class="checkout_screen_consumption_table">
-                <thead class="checkout_screen_table_head">
-                  <tr>
-                    <th class="checkout_screen_table_header">Produto</th>
-                    <th class="checkout_screen_table_header">Quantidade</th>
-                    <th class="checkout_screen_table_header">Total</th>
-                  </tr>
-                </thead>
-                <tbody class="checkout_screen_table_body"></tbody>
-              </table>
-            </div>
-          </div>
+          <div class="date-time" id="dateTime"></div>
         </div>
+        <nav class="nav-menu">
+          <a href="index.html" class="menu-btn">Início</a>
+          <a href="checkin.html" class="menu-btn">Check-in</a>
+          <a href="checkout.html" class="menu-btn active">Check-out</a>
+          <a href="clientes.html" class="menu-btn">Clientes</a>
+          <a href="quartos.html" class="menu-btn">Quartos</a>
+          <a href="reservas.html" class="menu-btn">Reservas</a>
+          <a href="produtos.html" class="menu-btn">Produtos</a>
+          <a href="calendario.html" class="menu-btn">Calendário</a>
+        </nav>
+      </aside>
 
-        <div class="checkout_screen_footer">
-          <button type="submit" class="checkout_screen_submit_button">
-            Registrar
-          </button>
+      <!-- Conteúdo principal -->
+      <main class="main-content">
+        <div class="checkout_screen_container">
+          <header class="checkout_screen_header">
+            <a
+              href="#"
+              class="checkout_screen_back_arrow"
+              onclick="VoltarPagina()"
+              >←</a
+            >
+            <div class="checkout_screen_title_box">
+              <h1 class="checkout_screen_main_title">Check-out</h1>
+            </div>
+          </header>
+
+          <form class="checkout_screen_form">
+            <div class="checkout_screen_columns_wrapper">
+              <div class="checkout_screen_column">
+                <div class="checkout_screen_field_group">
+                  <label for="cpf_cliente">CPF ou Passaporte cliente:</label>
+                  <input
+                    type="text"
+                    id="cpf_cliente"
+                    name="cpf"
+                    class="checkout_screen_input"
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="valor_diaria"
+                    >Valor da diária</label
+                  >
+                  <input
+                    type="text"
+                    id="valor_diaria"
+                    name="valor-diaria"
+                    class="checkout_screen_input"
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="qtd_dias"
+                    >Quantidade de dias</label
+                  >
+                  <input
+                    type="number"
+                    id="qtd_dias"
+                    name="qtd-dias"
+                    class="checkout_screen_input checkout_screen_input--small"
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="total"
+                    >Total a pagar</label
+                  >
+                  <input
+                    type="text"
+                    id="total"
+                    name="total"
+                    class="checkout_screen_input"
+                    readonly
+                  />
+                </div>
+              </div>
+
+              <div class="checkout_screen_column">
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="data_checkout"
+                    >Data Check-out:</label
+                  >
+                  <input
+                    type="date"
+                    id="data_checkout"
+                    name="data-checkout"
+                    class="checkout_screen_input"
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="hora_checkout"
+                    >Hora Check-out:</label
+                  >
+                  <input
+                    type="time"
+                    id="hora_checkout"
+                    name="hora-checkout"
+                    class="checkout_screen_input"
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="quarto"
+                    >Quarto</label
+                  >
+                  <input
+                    type="text"
+                    id="quarto"
+                    class="checkout_screen_input checkout_screen_input--small"
+                    readonly
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label">Consumo</label>
+                  <table class="checkout_screen_consumption_table">
+                    <thead class="checkout_screen_table_head">
+                      <tr>
+                        <th class="checkout_screen_table_header">Produto</th>
+                        <th class="checkout_screen_table_header">Quantidade</th>
+                        <th class="checkout_screen_table_header">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody class="checkout_screen_table_body"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="checkout_screen_footer">
+              <button type="submit" class="checkout_screen_submit_button">
+                Registrar
+              </button>
+            </div>
+          </form>
         </div>
-      </form>
+      </main>
     </div>
+
     <script src="https://unpkg.com/imask"></script>
 
     <script>
+      function updateDateTime() {
+        const now = new Date();
+        const date = now.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        const time = now.toLocaleTimeString("pt-BR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        document.getElementById("dateTime").innerHTML = `${date}<br>${time}`;
+      }
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+
+      function VoltarPagina() {
+        window.history.back();
+      }
+
+      // === Script original preservado ===
       document.addEventListener("DOMContentLoaded", function () {
         var horaInput = document.getElementById("hora_checkout");
         var maskOptions = {
@@ -291,47 +418,12 @@
         };
         var mask = IMask(horaInput, maskOptions);
 
-        // Preencher data/hora automaticamente ao abrir a tela (mas permite editar)
         const dataInput = document.getElementById("data_checkout");
         const horaInput2 = document.getElementById("hora_checkout");
         const now = new Date();
         dataInput.value = now.toISOString().slice(0, 10);
         horaInput2.value = now.toTimeString().slice(0, 5);
       });
-
-      function VoltarPagina() {
-        window.history.back();
-      }
-
-      async function buscarReservaAtivaPorCpf(cpf) {
-        const resp = await fetch(`/api/reserva-ativa/${cpf}`);
-        if (resp.ok) {
-          const reservas = await resp.json();
-          if (reservas.length > 0) {
-            preencherFormularioCheckout(reservas[0]);
-          } else {
-            alert("Nenhuma reserva ativa encontrada para este CPF.");
-          }
-        }
-      }
-
-      async function realizarCheckout(
-        reservaId,
-        data_checkout,
-        hora_checkout,
-        desconto
-      ) {
-        const resp = await fetch(`/api/checkout/${reservaId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ data_checkout, hora_checkout, desconto }),
-        });
-        if (resp.ok) {
-          alert("Checkout realizado com sucesso!");
-        } else {
-          alert("Erro ao realizar checkout");
-        }
-      }
 
       let reservaAtivaId = null;
 
@@ -341,7 +433,6 @@
           const cpf = this.value.trim();
           if (!cpf) return;
 
-          // Limpa campos antes de buscar
           document.getElementById("valor_diaria").value = "";
           document.getElementById("qtd_dias").value = "";
           document.getElementById("total").value = "";
@@ -382,7 +473,6 @@
 
           if (resp.ok) {
             alert("Checkout realizado com sucesso!");
-            // Limpe o formulário ou redirecione
           } else {
             const erro = await resp.json();
             alert("Erro ao registrar checkout: " + (erro.message || ""));
@@ -395,17 +485,15 @@
           reserva.valor_diaria || "";
         document.getElementById("quarto").value = reserva.quarto || "";
 
-        // Dias de hospedagem
         const dataCheckin = new Date(reserva.data_checkin);
         const dataCheckout = new Date(
           document.getElementById("data_checkout").value
         );
         const diffTime = Math.abs(dataCheckout - dataCheckin);
         let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays === 0) diffDays = 1; // Garante no mínimo 1 dia
+        if (diffDays === 0) diffDays = 1;
         document.getElementById("qtd_dias").value = diffDays;
 
-        // Consumos
         const respConsumos = await fetch(`/api/consumos/${reserva.id}`);
         const consumos = await respConsumos.json();
         const tbody = document.querySelector(".checkout_screen_table_body");
@@ -416,19 +504,19 @@
             const totalItem = c.quantidade * c.preco_unitario;
             totalConsumos += totalItem;
             tbody.innerHTML += `
-        <tr>
-          <td class="checkout_screen_table_cell">${c.produto_nome}</td>
-          <td class="checkout_screen_table_cell">${c.quantidade}</td>
-          <td class="checkout_screen_table_cell">${totalItem.toFixed(2)}</td>
-        </tr>
-      `;
+              <tr>
+                <td class="checkout_screen_table_cell">${c.produto_nome}</td>
+                <td class="checkout_screen_table_cell">${c.quantidade}</td>
+                <td class="checkout_screen_table_cell">${totalItem.toFixed(
+                  2
+                )}</td>
+              </tr>`;
           });
         } else {
           tbody.innerHTML =
             '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
         }
 
-        // Função para calcular o total dinamicamente
         function calcularTotal() {
           const dias = Number(document.getElementById("qtd_dias").value) || 1;
           const valorDiaria =
@@ -437,7 +525,6 @@
           document.getElementById("total").value = total.toFixed(2);
         }
 
-        // Adiciona eventos para recalcular o total quando a qtd de dias ou a diária for alterada
         document
           .getElementById("qtd_dias")
           .addEventListener("input", calcularTotal);
@@ -445,16 +532,8 @@
           .getElementById("valor_diaria")
           .addEventListener("input", calcularTotal);
 
-        // Chama a função para o primeiro cálculo
         calcularTotal();
       }
-
-      calcularTotal(reserva.valor_diaria, totalConsumos);
-      // Após finalizar a reserva (check-out)
-      db.query(
-        `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
-        [id]
-      );
     </script>
   </body>
 </html>

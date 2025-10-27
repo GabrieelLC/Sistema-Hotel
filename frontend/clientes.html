@@ -34,22 +34,24 @@
         padding: 0;
         box-sizing: border-box;
       }
-
       body {
         font-family: "Inter", sans-serif;
-        background-color: var(--background-color);
+        background-color: var(--background-color); /* Correção: use var() */
         color: var(--text-color);
-        display: flex;
+        display: flex; /* Mantém o body como flex container */
       }
+
+      /* Removido container, usando main-flex que já existe */
 
       /* Estrutura principal com Flexbox */
       .main-flex {
+        /* Mantém esta classe como container principal */
         display: flex;
         width: 100%;
         min-height: 100vh;
       }
 
-      /* Barra Lateral (Sidebar) */
+      /* --- ESTILOS PADRÃO DA SIDEBAR (COPIADOS DE CALENDARIO.HTML) --- */
       .sidebar {
         width: 240px;
         background-color: var(--sidebar-bg);
@@ -58,40 +60,51 @@
         flex-direction: column;
         border-right: 1px solid var(--border-color);
         flex-shrink: 0;
+        min-height: 100vh; /* Garante altura total */
       }
-
-      .sidebar .calendar {
-        text-align: center;
+      .sidebar-header {
         margin-bottom: 2.5rem;
       }
-
-      .sidebar .calendar-icon {
+      .logo {
         font-size: 1.5rem;
-        margin-bottom: 0.5rem;
+        font-weight: 700;
+        color: var(--heading-color);
+        text-align: center;
       }
-
-      .sidebar #dateTime {
+      .logo img {
+        max-width: 140px; /* Ajuste conforme necessário */
+        height: auto;
+      }
+      .date-time {
+        text-align: center;
         font-size: 0.9rem;
+        margin-top: 0.5rem;
         line-height: 1.4;
+        white-space: pre-line; /* Permite quebras de linha com \n no JS */
       }
-
-      .sidebar .menu-btn {
+      .nav-menu {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .menu-btn {
         display: flex;
         align-items: center;
         padding: 0.75rem 1rem;
-        margin-bottom: 0.5rem;
         border-radius: 8px;
         text-decoration: none;
         color: var(--text-color);
         font-weight: 500;
         transition: background-color 0.2s, color 0.2s;
+        /* Remove margin-bottom, já que gap no nav-menu cuida disso */
       }
-
-      .sidebar .menu-btn.active,
-      .sidebar .menu-btn:hover {
+      .menu-btn:hover,
+      .menu-btn.active {
         background-color: var(--primary-color);
         color: #fff;
       }
+      /* --- FIM DOS ESTILOS PADRÃO DA SIDEBAR --- */
 
       /* Conteúdo Principal */
       .main-content {
@@ -243,27 +256,55 @@
         border-color: var(--primary-color);
         box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
       }
+
+      /* Responsividade (Ajustada para o layout flex principal) */
+      @media (max-width: 768px) {
+        body {
+          /* Mantém flex, mas permite quebra de linha */
+        }
+        .main-flex {
+          flex-direction: column; /* Coloca sidebar em cima do conteúdo */
+        }
+        .sidebar {
+          width: 100%; /* Ocupa largura total */
+          min-height: auto; /* Altura automática */
+          border-right: none;
+          border-bottom: 1px solid var(--border-color);
+        }
+        .main-content {
+          padding: 1.5rem;
+        }
+
+        .header {
+          /* Ajustes se necessário para telas pequenas */
+        }
+      }
     </style>
   </head>
 
   <body>
     <div class="main-flex">
-      <div class="sidebar">
-        <div class="calendar">
-          <div class="calendar-icon">
-            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
+      <!-- ===== ESTRUTURA DA SIDEBAR ATUALIZADA ===== -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="Logo Hotel" />
+            <!-- Adicionado alt text -->
           </div>
           <div class="date-time" id="dateTime"></div>
         </div>
-        <a href="index.html" class="menu-btn">Início</a>
-        <a href="checkin.html" class="menu-btn">Check-in</a>
-        <a href="checkout.html" class="menu-btn">Check-out</a>
-        <a href="clientes.html" class="menu-btn active">Clientes</a>
-        <a href="quartos.html" class="menu-btn">Quartos</a>
-        <a href="reservas.html" class="menu-btn">Reservas</a>
-        <a href="produtos.html" class="menu-btn">Produtos</a>
-        <a href="calendario.html" class="menu-btn">Calendário</a>
-      </div>
+        <nav class="nav-menu">
+          <a href="index.html" class="menu-btn">Ínicio</a>
+          <a href="checkin.html" class="menu-btn">Check-in</a>
+          <a href="checkout.html" class="menu-btn">Check-out</a>
+          <a href="clientes.html" class="menu-btn active">Clientes</a>
+          <a href="quartos.html" class="menu-btn">Quartos</a>
+          <a href="reservas.html" class="menu-btn">Reservas</a>
+          <a href="produtos.html" class="menu-btn">Produtos</a>
+          <a href="calendario.html" class="menu-btn">Calendário</a>
+        </nav>
+      </aside>
+      <!-- ===== FIM DA SIDEBAR ATUALIZADA ===== -->
 
       <div class="main-content">
         <header class="header">
@@ -338,12 +379,18 @@
       // Atualiza data e hora em tempo real
       function updateDateTime() {
         const now = new Date();
-        const date = now.toLocaleDateString("pt-BR");
+        const date = now.toLocaleDateString("pt-BR", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
         const time = now.toLocaleTimeString("pt-BR", {
           hour: "2-digit",
           minute: "2-digit",
         });
-        document.getElementById("dateTime").textContent = `${date}\n${time}`;
+        // Correção: Usar innerHTML para permitir a quebra de linha com <br>
+        document.getElementById("dateTime").innerHTML = `${date}<br>${time}`;
       }
       updateDateTime();
       setInterval(updateDateTime, 1000);
@@ -351,25 +398,34 @@
       // Formata a data para o formato YYYY-MM-DD para o input
       function formatarDataParaInput(isoDate) {
         if (!isoDate) return "";
-        return new Date(isoDate).toISOString().split("T")[0];
+        // Garante que a data seja interpretada corretamente como UTC antes de formatar
+        const data = new Date(isoDate);
+        const offset = data.getTimezoneOffset();
+        const dataUTC = new Date(data.getTime() + offset * 60 * 1000);
+        return dataUTC.toISOString().split("T")[0];
       }
 
       function formatarCampo(valor) {
-        return valor && valor !== "null" ? valor : "N/A";
+        // Verifica se é null, undefined ou string vazia
+        return valor != null && valor !== "" ? valor : "N/A";
       }
 
       // Renderiza a lista de clientes na tabela
       function renderClientes(clientes) {
         const tbody = document.getElementById("clientes-tbody");
         tbody.innerHTML = "";
-        if (clientes.length === 0) {
+        if (!Array.isArray(clientes) || clientes.length === 0) {
+          // Verifica se é array
           tbody.innerHTML =
             '<tr><td colspan="10">Nenhum cliente encontrado.</td></tr>';
           return;
         }
         clientes.forEach((cliente) => {
           const row = document.createElement("tr");
-          row.id = `cliente-${cliente.id || cliente.cpf || cliente.passaporte}`;
+          // Usa o ID do banco se existir, senão tenta CPF ou Passaporte como fallback
+          row.id = `cliente-${
+            cliente.id || cliente.cpf || cliente.passaporte || Math.random()
+          }`; // Adiciona fallback aleatório se tudo for nulo
           row.innerHTML = getRowHtml(cliente);
           tbody.appendChild(row);
         });
@@ -377,27 +433,45 @@
 
       // Gera o HTML de uma linha da tabela
       function getRowHtml(cliente) {
-        const dataNascimentoFormatada = cliente.data_nascimento
-          ? new Date(cliente.data_nascimento).toLocaleDateString("pt-BR")
-          : "N/A";
+        // Validação defensiva para data_nascimento
+        let dataNascimentoFormatada = "N/A";
+        if (cliente.data_nascimento) {
+          try {
+            // Adiciona tratamento para interpretar a data corretamente como UTC
+            const data = new Date(cliente.data_nascimento);
+            const offset = data.getTimezoneOffset();
+            const dataUTC = new Date(data.getTime() + offset * 60 * 1000);
+            dataNascimentoFormatada = dataUTC.toLocaleDateString("pt-BR");
+          } catch (e) {
+            console.error(
+              "Erro ao formatar data de nascimento:",
+              cliente.data_nascimento,
+              e
+            );
+            // Mantém "N/A" se houver erro
+          }
+        }
+
         return `
                 <td>${formatarCampo(cliente.cpf)}</td>
-                <td><span data-field="nome">${cliente.nome}</span></td>
+                <td><span data-field="nome">${formatarCampo(
+                  cliente.nome
+                )}</span></td>
                 <td>${formatarCampo(cliente.cep)}</td>
-                <td><span data-field="endereco">${
-                  cliente.endereco || "N/A"
-                }</span></td>
-                <td><span data-field="telefone">${
-                  cliente.telefone || "N/A"
-                }</span></td>
-                <td><span data-field="email">${
-                  cliente.email || "N/A"
-                }</span></td>
+                <td><span data-field="endereco">${formatarCampo(
+                  cliente.endereco
+                )}</span></td>
+                <td><span data-field="telefone">${formatarCampo(
+                  cliente.telefone
+                )}</span></td>
+                <td><span data-field="email">${formatarCampo(
+                  cliente.email
+                )}</span></td>
                 <td>${formatarCampo(cliente.passaporte)}</td>
                 <td><span data-field="data_nascimento">${dataNascimentoFormatada}</span></td>
-                <td><span data-field="nacionalidade">${
-                  cliente.nacionalidade || "N/A"
-                }</span></td>
+                <td><span data-field="nacionalidade">${formatarCampo(
+                  cliente.nacionalidade
+                )}</span></td>
                 <td class="actions-cell">
                     <button class="btn-action btn-edit" onclick="editarCliente('${
                       cliente.id
@@ -415,55 +489,108 @@
         tbody.innerHTML = '<tr><td colspan="10">Carregando...</td></tr>';
         try {
           const response = await fetch("/api/clientes");
+          if (!response.ok) {
+            // Verifica se a requisição foi bem sucedida
+            throw new Error(
+              `Erro na API: ${response.status} ${response.statusText}`
+            );
+          }
           todosClientes = await response.json();
           renderClientes(todosClientes);
         } catch (error) {
           tbody.innerHTML =
-            '<tr><td colspan="10">Erro ao carregar clientes.</td></tr>';
-          console.error("Erro:", error);
+            '<tr><td colspan="10">Erro ao carregar clientes. Verifique a conexão com o servidor.</td></tr>';
+          console.error("Erro ao carregar clientes:", error); // Log do erro
         }
       }
 
       // Habilita a edição em linha para um cliente
       function editarCliente(id) {
         const row = document.getElementById(`cliente-${id}`);
-        if (!row || row.querySelector("input.editable")) return;
+        if (!row || row.querySelector("input.editable")) return; // Impede edições múltiplas na mesma linha
 
-        const cliente = todosClientes.find((c) => c.id == id) || {};
+        const cliente = todosClientes.find((c) => c.id == id); // Usa == para comparação mais flexível
+        if (!cliente) {
+          console.error(
+            "Cliente não encontrado na lista local para edição:",
+            id
+          );
+          return; // Sai se não encontrar o cliente
+        }
 
         row.querySelectorAll("span[data-field]").forEach((span) => {
           const field = span.dataset.field;
-          if (field !== "cpf") {
-            let value = cliente[field] || "";
-            let inputType = "text";
-            if (field === "data_nascimento") {
-              inputType = "date";
-              value = formatarDataParaInput(value);
-            }
-            span.innerHTML = `<input type="${inputType}" class="editable" data-field="${field}" value="${value}">`;
+          // Não permite editar CPF diretamente na tabela (pode ser chave primária ou única)
+          // if (field !== "cpf") { // Descomente se não quiser permitir editar CPF
+          let value = cliente[field] || ""; // Usa valor vazio se for null/undefined
+          let inputType = "text";
+          if (field === "data_nascimento") {
+            inputType = "date";
+            value = formatarDataParaInput(value); // Usa a função para formatar
+          } else if (field === "email") {
+            inputType = "email"; // Usa tipo email para validação básica
+          } else if (field === "telefone") {
+            inputType = "tel"; // Usa tipo tel
           }
+
+          // Cria o input
+          const input = document.createElement("input");
+          input.type = inputType;
+          input.className = "editable";
+          input.dataset.field = field;
+          input.value = value;
+
+          // Limpa o span e adiciona o input
+          span.textContent = ""; // Limpa o conteúdo atual
+          span.appendChild(input);
+          // } // Fim do if (field !== "cpf")
         });
 
+        // Atualiza a célula de ações com botões Salvar/Cancelar
         const actionsCell = row.querySelector(".actions-cell");
-        actionsCell.innerHTML = `
-    <button class="btn-action btn-save" onclick="salvarCliente('${id}')">Salvar</button>
-    <button class="btn-action btn-cancel" onclick="cancelarEdicao('${id}')">Cancelar</button>
-  `;
+        if (actionsCell) {
+          // Verifica se a célula de ações existe
+          actionsCell.innerHTML = `
+                <button class="btn-action btn-save" onclick="salvarCliente('${id}')">Salvar</button>
+                <button class="btn-action btn-cancel" onclick="cancelarEdicao('${id}')">Cancelar</button>
+             `;
+        } else {
+          console.error("Célula de ações não encontrada para a linha:", id);
+        }
       }
 
       // Cancela a edição e restaura a linha
       function cancelarEdicao(id) {
-        const clienteOriginal = todosClientes.find((c) => c.id == id);
+        const clienteOriginal = todosClientes.find(
+          (c) => String(c.id) === String(id)
+        ); // Comparação mais segura
         if (clienteOriginal) {
           const row = document.getElementById(`cliente-${id}`);
-          row.innerHTML = getRowHtml(clienteOriginal);
+          if (row) {
+            // Verifica se a linha existe
+            row.innerHTML = getRowHtml(clienteOriginal); // Regenera o HTML da linha
+          } else {
+            console.error("Linha não encontrada para cancelar edição:", id);
+          }
+        } else {
+          console.error(
+            "Cliente original não encontrado para cancelar edição:",
+            id
+          );
         }
       }
 
       // Salva as alterações do cliente
       async function salvarCliente(id) {
         const row = document.getElementById(`cliente-${id}`);
-        const clienteOriginal = todosClientes.find((c) => c.id == id);
+        if (!row) {
+          alert("Erro: Linha da tabela não encontrada para salvar.");
+          return;
+        }
+
+        const clienteOriginal = todosClientes.find(
+          (c) => String(c.id) === String(id)
+        );
         if (!clienteOriginal) {
           alert(
             "Erro: não foi possível encontrar os dados originais do cliente."
@@ -471,59 +598,100 @@
           return;
         }
 
-        // --- INÍCIO DA VALIDAÇÃO ---
         const inputs = row.querySelectorAll("input.editable");
-        for (const input of inputs) {
-          if (input.value.trim() === "") {
-            alert(`O campo "${input.dataset.field}" não pode ficar em branco.`);
-            return; // Impede o salvamento se um campo estiver vazio
-          }
-        }
-        // --- FIM DA VALIDAÇÃO ---
+        const dataToSend = { ...clienteOriginal }; // Começa com os dados originais
+        let algumCampoVazio = false;
 
-        const dataToSend = { ...clienteOriginal };
-
+        // Itera sobre os inputs para coletar os novos valores
         inputs.forEach((input) => {
-          dataToSend[input.dataset.field] = input.value;
+          const field = input.dataset.field;
+          const value = input.value.trim(); // Remove espaços extras
+
+          // Validação simples de campo vazio (exceto para campos que podem ser vazios como passaporte)
+          if (
+            !value &&
+            field !== "passaporte" /* Adicione outros campos opcionais aqui */
+          ) {
+            alert(`O campo "${field}" não pode ficar em branco.`);
+            algumCampoVazio = true;
+          }
+          dataToSend[field] = value; // Atualiza o objeto com o novo valor
         });
+
+        // Se algum campo obrigatório estiver vazio, interrompe o salvamento
+        if (algumCampoVazio) {
+          return;
+        }
+
+        // Validação adicional: CPF ou Passaporte deve existir (se aplicável às suas regras)
+        // if (!dataToSend.cpf && !dataToSend.passaporte) {
+        //     alert("É necessário preencher o CPF ou o Passaporte.");
+        //     return;
+        // }
 
         try {
           const response = await fetch(`/api/clientes/${id}`, {
+            // Usa o ID original na URL
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dataToSend),
+            body: JSON.stringify(dataToSend), // Envia o objeto atualizado
           });
 
           if (response.ok) {
             alert("Cliente atualizado com sucesso!");
+            // Atualiza o objeto na lista local 'todosClientes'
             Object.assign(clienteOriginal, dataToSend);
-            cancelarEdicao(id);
+            cancelarEdicao(id); // Restaura a visualização da linha
           } else {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({
+              message: "Erro desconhecido ao processar resposta.",
+            })); // Trata erro no JSON
             alert(
               `Erro ao atualizar cliente: ${
-                errorData.message || "Erro desconhecido"
+                errorData.message || response.statusText
               }`
             );
           }
         } catch (error) {
-          console.error("Erro:", error);
-          alert("Erro de conexão ao salvar cliente.");
+          console.error("Erro de conexão ao salvar cliente:", error);
+          alert("Erro de conexão ao salvar cliente. Verifique o console.");
         }
       }
 
       // Deleta um cliente
       async function deletarCliente(id) {
-        if (confirm("Tem certeza que deseja deletar este cliente?")) {
-          const response = await fetch(`/api/clientes/${id}`, {
-            method: "DELETE",
-          });
-          if (response.ok) {
-            alert("Cliente deletado com sucesso!");
-            carregarClientes();
-          } else {
-            const errorData = await response.json();
-            alert(errorData.message || "Erro ao deletar cliente.");
+        // Adiciona um null check para o ID
+        if (!id) {
+          alert("Erro: ID do cliente inválido.");
+          return;
+        }
+
+        if (
+          confirm(
+            "Tem certeza que deseja deletar este cliente? Esta ação não pode ser desfeita."
+          )
+        ) {
+          try {
+            // Adiciona try...catch
+            const response = await fetch(`/api/clientes/${id}`, {
+              method: "DELETE",
+            });
+            if (response.ok) {
+              alert("Cliente deletado com sucesso!");
+              // Remove o cliente da lista local e recarrega a tabela
+              todosClientes = todosClientes.filter(
+                (c) => String(c.id) !== String(id)
+              );
+              renderClientes(todosClientes); // Renderiza a lista atualizada
+            } else {
+              const errorData = await response.json().catch(() => ({
+                message: "Erro desconhecido ao processar resposta.",
+              }));
+              alert(errorData.message || "Erro ao deletar cliente.");
+            }
+          } catch (error) {
+            console.error("Erro de conexão ao deletar cliente:", error);
+            alert("Erro de conexão ao deletar cliente. Verifique o console.");
           }
         }
       }
@@ -531,9 +699,11 @@
       // Inicializa a página
       document.addEventListener("DOMContentLoaded", () => {
         carregarClientes();
-        document
-          .getElementById("searchInput")
-          .addEventListener("input", filterClientes);
+        const searchInput = document.getElementById("searchInput");
+        if (searchInput) {
+          // Verifica se o input de busca existe
+          searchInput.addEventListener("input", filterClientes);
+        }
       });
     </script>
   </body>
