@@ -452,6 +452,13 @@
                     readonly
                   />
                 </div>
+                <div class="form-group">
+                  <label for="pago_booking">Pagamento feito pelo Booking?</label>
+                  <select id="pago_booking" name="pago_booking" class="form-control">
+                    <option value="0">Não</option>
+                    <option value="1">Sim</option>
+                  </select>
+                </div>
                 <button class="checkoutscreensubmit_button" type="submit">
                   Registrar
                 </button>
@@ -500,6 +507,7 @@
         const numeroQuarto = selectQuarto.value;
         const valorDiariaInput = document.getElementById("valor_diaria");
         const detalhesDiv = document.getElementById("quarto-detalhes");
+        
 
         if (!numeroQuarto) {
           valorDiariaInput.value = "";
@@ -732,9 +740,9 @@
             const email = document.getElementById("emailcliente").value;
             const cep = document.getElementById("cepcliente").value;
             const endereco = document.getElementById("enderecocliente").value;
-            const motivo_hospedagem =
-              document.getElementById("motivo_hospedagem").value;
-
+            const motivo_hospedagem = document.getElementById("motivo_hospedagem").value;
+            
+            const pago_booking = document.getElementById("pago_booking").value;
             const nomes_acompanhantes = Array.from(
               document.querySelectorAll(".nome-acompanhante")
             ).map((input) => input.value);
@@ -812,6 +820,7 @@
                 cpfs_acompanhantes,
                 passaportes_acompanhantes,
                 nascimentos_acompanhantes,
+                pago_booking: pago_booking,
               };
 
               const resp = await fetch("/api/checkin", {

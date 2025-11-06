@@ -456,6 +456,7 @@ router.post("/checkin", (req, res) => {
     data_checkout_prevista,
     hora_checkout_prevista,
     ignorar_reserva_ativa,
+    pago_booking
   } = req.body;
 
   // CORREÇÃO DE VALIDAÇÃO: Verifica se há CPF OU Passaporte
@@ -532,6 +533,7 @@ router.post("/checkin", (req, res) => {
                   motivo_hospedagem || null,
                   data_checkout_prevista || null,
                   hora_checkout_prevista || null,
+                  pago_booking || 0
                 ],
                 (err, result) => {
                   if (err) {
@@ -861,20 +863,71 @@ router.get("/consumos/:reserva_id", (req, res) => {
 // Adicionar consumo a um quarto
 router.post("/consumos", (req, res) => {
   const { reserva_id, produto_id, quantidade, preco_unitario } = req.body;
-  if (!reserva_id || !produto_id || !quantidade || !preco_unitario) {
-    return res.status(400).json({ message: "Preencha todos os campos!" });
+  const quantNum = parseInt(quantidade, 10); // Garantir que a quantidade é um número
+
+  if (!reserva_id || !produto_id || !quantNum || quantNum <= 0 || !preco_unitario) {
+    return res.status(400).json({ message: "Dados do consumo inválidos (Verifique a quantidade)!" });
   }
-  db.query(
-    "INSERT INTO Consumos (reserva_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)",
-    [reserva_id, produto_id, quantidade, preco_unitario],
-    (err, result) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ message: "Erro ao adicionar consumo", error: err });
-      res.status(201).json({ message: "Consumo adicionado", result });
+
+  // 1. Iniciar a transação
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("Erro ao iniciar transação:", err);
+      return res.status(500).json({ message: "Erro ao iniciar transação", error: err });
     }
-  );
+
+    // 2. Atualizar o estoque PRIMEIRO (e verificar se há estoque disponível)
+    db.query(
+      // Esta query só vai subtrair se o estoque (estoque) for >= a quantNum
+      "UPDATE Produtos SET estoque = estoque - ? WHERE id = ? AND estoque >= ?",
+      [quantNum, produto_id, quantNum],
+      (errUpdate, resultUpdate) => {
+        if (errUpdate) {
+          // Se der erro no UPDATE, desfaz a transação
+          return db.rollback(() => {
+            console.error("Erro ao atualizar estoque:", errUpdate);
+            res.status(500).json({ message: "Erro ao atualizar estoque", error: errUpdate });
+          });
+        }
+
+        // 3. Verificar se o update realmente alterou alguma linha
+        if (resultUpdate.affectedRows === 0) {
+          // Se não alterou, significa que não havia estoque (estoque < quantNum)
+          return db.rollback(() => {
+            res.status(400).json({ message: "Erro: Estoque insuficiente para este produto." });
+          });
+        }
+
+        // 4. Se o estoque foi atualizado, INSERIR o consumo
+        db.query(
+          "INSERT INTO Consumos (reserva_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)",
+          [reserva_id, produto_id, quantNum, preco_unitario],
+          (errInsert, resultInsert) => {
+            if (errInsert) {
+              // Se der erro no INSERT, desfaz o UPDATE
+              return db.rollback(() => {
+                console.error("Erro ao adicionar consumo:", errInsert);
+                res.status(500).json({ message: "Erro ao adicionar consumo (estoque será revertido)", error: errInsert });
+              });
+            }
+
+            // 5. Se tudo deu certo, Confirmar (Commit) a transação
+            db.commit((errCommit) => {
+              if (errCommit) {
+                // Se o commit falhar, desfaz tudo
+                return db.rollback(() => {
+                  console.error("Erro ao confirmar transação:", errCommit);
+                  res.status(500).json({ message: "Erro ao confirmar transação", error: errCommit });
+                });
+              }
+              // Sucesso!
+              res.status(201).json({ message: "Consumo adicionado e estoque atualizado", resultInsert });
+            });
+          }
+        );
+      }
+    );
+  });
 });
 
 // Nova rota para buscar a reserva ativa de um quarto pelo número

@@ -295,6 +295,17 @@
                   />
                 </div>
                 <div class="checkout_screen_field_group">
+                  <label class="checkout_screen_label" for="pago_booking_status"
+                    >Pgto. Booking?</label
+                  >
+                  <input
+                    type="text"
+                    id="pago_booking_status"
+                    class="checkout_screen_input"
+                    readonly
+                  />
+                </div>
+                <div class="checkout_screen_field_group">
                   <label class="checkout_screen_label" for="qtd_dias"
                     >Quantidade de dias</label
                   >
@@ -318,6 +329,7 @@
                   />
                 </div>
               </div>
+
 
               <div class="checkout_screen_column">
                 <div class="checkout_screen_field_group">
@@ -444,6 +456,7 @@
           document.getElementById("qtd_dias").value = "";
           document.getElementById("total").value = "";
           document.getElementById("quarto").value = "";
+          document.getElementById("pago_booking_status").value = "";
           reservaAtivaId = null;
 
           try {
@@ -491,6 +504,9 @@
         document.getElementById("valor_diaria").value =
           reserva.valor_diaria || "";
         document.getElementById("quarto").value = reserva.quarto || "";
+        
+        const pagoBookingStatus = reserva.pago_booking == 1 ? "Sim" : "Não";
+        document.getElementById("pago_booking_status").value = pagoBookingStatus;
 
         const dataCheckin = new Date(reserva.data_checkin);
         const dataCheckout = new Date(
