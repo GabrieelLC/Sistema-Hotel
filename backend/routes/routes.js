@@ -522,8 +522,8 @@ router.post("/checkin", (req, res) => {
               // PASSO 4: Inserir a nova reserva (AGORA USANDO CLIENTE_ID)
               db.query(
                 `INSERT INTO Reservas 
-     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status, pago_booking)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                   cliente_id, // CORREÇÃO: Usar cliente_id
                   quarto_numero,
@@ -533,6 +533,7 @@ router.post("/checkin", (req, res) => {
                   motivo_hospedagem || null,
                   data_checkout_prevista || null,
                   hora_checkout_prevista || null,
+                  'ativo',
                   pago_booking || 0
                 ],
                 (err, result) => {
