@@ -271,6 +271,12 @@
                 </div>
                 <input
                   type="hidden"
+                  id="idcliente_hidden"
+                  name="idcliente_hidden"
+                  value=""
+                />
+                <input
+                  type="hidden"
                   id="cpfcliente_hidden"
                   name="cpfcliente_hidden"
                   value=""
@@ -573,6 +579,7 @@
         // Preencher dados do cliente ao digitar o CPF
         // Função auxiliar para limpar campos de cliente e hidden
         function limparDadosCliente() {
+          document.getElementById("idcliente_hidden").value = "";
           document.getElementById("nomecliente").value = "";
           document.getElementById("telefonecliente").value = "";
           document.getElementById("emailcliente").value = "";
@@ -632,6 +639,7 @@
           if (resultado && resultado.cliente) {
             const cliente = resultado.cliente;
 
+            document.getElementById("idcliente_hidden").value = cliente.id || "";
             document.getElementById("nomecliente").value = cliente.nome || "";
             document.getElementById("telefonecliente").value =
               cliente.telefone || "";
@@ -718,6 +726,8 @@
             // ********************************************************************************
 
             // Obtém os dados dos campos hidden (que agora têm certeza de estarem preenchidos se o campo de input não for vazio)
+            const id_cliente =
+              document.getElementById("idcliente_hidden").value;
             const cliente_cpf =
               document.getElementById("cpfcliente_hidden").value;
             const passaporte_cliente = document.getElementById(
@@ -786,8 +796,8 @@
 
             try {
               // Tenta atualizar o cliente se houver CPF (API PUT usa CPF como chave)
-              if (cliente_cpf) {
-                await fetch(`/api/clientes/${cliente_cpf}`, {
+              if (id_cliente) {
+                await fetch(`/api/clientes/${id_cliente}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
                   // Envia todos os dados do cliente, incluindo o Passaporte
@@ -798,6 +808,7 @@
                     endereco,
                     cep,
                     passaporte: passaporte_cliente,
+                    pago_booking: pago_booking,
                   }),
                 });
               } else {
@@ -820,7 +831,7 @@
                 cpfs_acompanhantes,
                 passaportes_acompanhantes,
                 nascimentos_acompanhantes,
-                pago_booking: pago_booking,
+                pago_booking,
               };
 
               const resp = await fetch("/api/checkin", {

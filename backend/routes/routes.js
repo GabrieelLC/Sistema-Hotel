@@ -144,7 +144,8 @@ router.put("/clientes/:id", (req, res) => {
     endereco,
     cep,
     data_nascimento,
-    nacionalidade
+    nacionalidade,
+    pago_booking
   } = req.body;
 
   // Adicionando validação para garantir que pelo menos um dos identificadores está presente.
@@ -162,7 +163,8 @@ router.put("/clientes/:id", (req, res) => {
       endereco = ?,
       cep = ?,
       data_nascimento = ?,
-      nacionalidade = ?
+      nacionalidade = ?,
+      pago_booking = ?
     WHERE id = ?
   `;
   db.query(
@@ -177,6 +179,7 @@ router.put("/clientes/:id", (req, res) => {
       cep,
       data_nascimento,
       nacionalidade,
+      pago_booking || 0,
       id
     ],
     (err, result) => {
@@ -522,10 +525,10 @@ router.post("/checkin", (req, res) => {
               // PASSO 4: Inserir a nova reserva (AGORA USANDO CLIENTE_ID)
               db.query(
                 `INSERT INTO Reservas 
-     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status, pago_booking)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)`, // Adicionado ', ?' e 'pago_booking'
                 [
-                  cliente_id, // CORREÇÃO: Usar cliente_id
+                  cliente_id, 
                   quarto_numero,
                   data_checkin,
                   hora_checkin,
@@ -533,7 +536,7 @@ router.post("/checkin", (req, res) => {
                   motivo_hospedagem || null,
                   data_checkout_prevista || null,
                   hora_checkout_prevista || null,
-                  pago_booking || 0
+                  pago_booking || 0 // Agora este parâmetro corresponde ao '?'
                 ],
                 (err, result) => {
                   if (err) {
@@ -1151,7 +1154,8 @@ router.put("/api/clientes/:id", (req, res) => {
     endereco,
     cep,
     data_nascimento,
-    nacionalidade
+    nacionalidade,
+    pago_booking
   } = req.body;
 
   const sql = `
@@ -1164,7 +1168,8 @@ router.put("/api/clientes/:id", (req, res) => {
       endereco = ?,
       cep = ?,
       data_nascimento = ?,
-      nacionalidade = ?
+      nacionalidade = ?,
+      pago_booking = ?
     WHERE id = ?
   `;
   db.query(
@@ -1179,6 +1184,7 @@ router.put("/api/clientes/:id", (req, res) => {
       cep,
       data_nascimento,
       nacionalidade,
+      pago_booking || 0,
       id
     ],
     (err, result) => {
