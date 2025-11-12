@@ -526,7 +526,7 @@ router.post("/checkin", (req, res) => {
               db.query(
                 `INSERT INTO Reservas 
      (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status, pago_booking)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)`, // Adicionado ', ?' e 'pago_booking'
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)`, 
                 [
                   cliente_id, 
                   quarto_numero,
