@@ -844,11 +844,21 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
           // chamar utilitário para calcular (ignora erro de cálculo e devolve reserva como está)
           calcularDiariaComAcompanhantes(db, reserva.id, Number(valorBase), reserva.taxa_acompanhante || null)
             .then((calculo) => {
-              res.json({ ...reserva, valor_diaria_final: calculo.valorFinal, total_taxa_aplicada: calculo.total_taxa_aplicada, taxa_acompanhante_usada: calculo.taxa_acompanhante });
+              res.json({ 
+                ...reserva, 
+                valor_diaria_final: calculo.valorFinal,
+                total_taxa_aplicada: calculo.total_taxa_aplicada,
+                taxa_acompanhante_usada: calculo.taxa_acompanhante,
+                acompanhantes_count: calculo.acompanhantes
+              });
             })
             .catch((e) => {
               console.warn('Erro ao calcular diária para reserva ativa:', e);
-              res.json(reserva);
+              // Se houver erro, retorna pelo menos o valor_diaria como fallback
+              res.json({ 
+                ...reserva, 
+                valor_diaria_final: reserva.valor_diaria || reserva.valor_diaria_base || reserva.tq_valor_diaria || 0
+              });
             });
         }
       );
@@ -1150,7 +1160,7 @@ router.delete("/consumos/:id", (req, res) => {
 });
 
 // Novo: Listar hóspedes ativos
-router.get("/hospedes-ativos", (req, res) => {
+router.get("/hospedes-ativos", requireAuth, (req, res) => {
   const sql = `
     SELECT c.cpf, c.passaporte, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
            r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, 
@@ -1174,7 +1184,7 @@ router.get("/hospedes-ativos", (req, res) => {
 });
 
 // Rota para buscar check-outs vencidos
-router.get("/checkouts-vencidos", (req, res) => {
+router.get("/checkouts-vencidos", requireAuth, (req, res) => {
   const agora = new Date();
   const ano = agora.getFullYear();
   const mes = String(agora.getMonth() + 1).padStart(2, '0');

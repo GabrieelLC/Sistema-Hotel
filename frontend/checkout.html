@@ -509,6 +509,7 @@
       });
 
       let reservaAtivaId = null;
+      let totalConsumos = 0; // Variável global para armazenar o total de consumos
 
       document
         .getElementById("cpf_cliente")
@@ -522,6 +523,7 @@
           document.getElementById("quarto").value = "";
           document.getElementById("pago_booking_status").value = "";
           reservaAtivaId = null;
+          totalConsumos = 0; // Reset ao buscar novo CPF
 
           try {
             const resp = await fetch(`/api/reserva-ativa/${cpf}`);
@@ -563,10 +565,19 @@
           }
         });
 
+      function calcularTotal() {
+        const dias = Number(document.getElementById("qtd_dias").value) || 1;
+        const valorDiaria =
+          Number(document.getElementById("valor_diaria").value) || 0;
+        const total = valorDiaria * dias + totalConsumos;
+        document.getElementById("total").value = total.toFixed(2);
+      }
+
       async function preencherFormularioCheckout(reserva) {
         reservaAtivaId = reserva.id;
-        document.getElementById("valor_diaria").value =
-          reserva.valor_diaria_final || reserva.valor_diaria || "";
+        // Sempre usa valor_diaria_final se disponível, pois ele já inclui a taxa dos acompanhantes
+        const valorFinal = reserva.valor_diaria_final || reserva.valor_diaria || 0;
+        document.getElementById("valor_diaria").value = Number(valorFinal).toFixed(2);
         document.getElementById("quarto").value = reserva.quarto || "";
         
         const pagoBookingStatus = reserva.pago_booking == 1 ? "Sim" : "Não";
@@ -585,7 +596,7 @@
         const consumos = await respConsumos.json();
         const tbody = document.querySelector(".checkout_screen_table_body");
         tbody.innerHTML = "";
-        let totalConsumos = 0;
+        totalConsumos = 0; // Reset do total de consumos
         if (consumos.length) {
           consumos.forEach((c) => {
             const totalItem = c.quantidade * c.preco_unitario;
@@ -602,14 +613,6 @@
         } else {
           tbody.innerHTML =
             '<tr><td colspan="3" class="checkout_screen_table_cell">Nenhum consumo registrado</td></tr>';
-        }
-
-        function calcularTotal() {
-          const dias = Number(document.getElementById("qtd_dias").value) || 1;
-          const valorDiaria =
-            Number(document.getElementById("valor_diaria").value) || 0;
-          const total = valorDiaria * dias + totalConsumos;
-          document.getElementById("total").value = total.toFixed(2);
         }
 
         document

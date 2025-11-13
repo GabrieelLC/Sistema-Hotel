@@ -180,7 +180,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('checkin-tbody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-    const resp = await fetch('/api/checkins-hoje');
+    const token = localStorage.getItem('token');
+    const resp = await fetch('/api/checkins-hoje', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     const dados = await resp.json();
     if (dados.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8">Nenhum check-in hoje</td></tr>';
@@ -207,7 +210,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('checkout-tbody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-    const resp = await fetch('/api/checkouts-hoje');
+    const token = localStorage.getItem('token');
+    const resp = await fetch('/api/checkouts-hoje', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     const dados = await resp.json();
     if (dados.length === 0) {
       tbody.innerHTML = '<tr><td colspan="8">Nenhum check-out hoje</td></tr>';

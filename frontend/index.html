@@ -543,7 +543,10 @@
         const tbody = document.getElementById("checkin-tbody");
         tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
         try {
-          const resp = await fetch("/api/checkins-hoje");
+          const token = localStorage.getItem('token');
+          const resp = await fetch("/api/checkins-hoje", {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           const dados = await resp.json();
           if (dados.length === 0) {
             tbody.innerHTML =
@@ -584,7 +587,10 @@
         const tbody = document.getElementById("checkout-tbody");
         tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
         try {
-          const resp = await fetch("/api/checkouts-hoje");
+          const token = localStorage.getItem('token');
+          const resp = await fetch("/api/checkouts-hoje", {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           const dados = await resp.json();
           if (dados.length === 0) {
             tbody.innerHTML =
@@ -621,7 +627,10 @@
         const tbody = document.getElementById("ativos-tbody");
         tbody.innerHTML = '<tr><td colspan="9">Carregando...</td></tr>';
         try {
-          const resp = await fetch("/api/hospedes-ativos");
+          const token = localStorage.getItem('token');
+          const resp = await fetch("/api/hospedes-ativos", {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           const dados = await resp.json();
           if (!Array.isArray(dados) || dados.length === 0) {
             tbody.innerHTML =
@@ -658,7 +667,10 @@
         const card = document.getElementById("vencidos-card");
         const tbody = document.getElementById("vencidos-tbody");
         try {
-          const resp = await fetch("/api/checkouts-vencidos");
+          const token = localStorage.getItem('token');
+          const resp = await fetch("/api/checkouts-vencidos", {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
           const dados = await resp.json();
           if (dados.length > 0) {
             card.style.display = "block"; // Mostra o card de alertas
