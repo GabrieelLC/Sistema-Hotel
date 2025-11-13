@@ -32,7 +32,7 @@ CREATE TABLE `acompanhantes` (
   PRIMARY KEY (`id`),
   KEY `reserva_id` (`reserva_id`),
   CONSTRAINT `acompanhantes_ibfk_1` FOREIGN KEY (`reserva_id`) REFERENCES `reservas` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -41,7 +41,7 @@ CREATE TABLE `acompanhantes` (
 
 LOCK TABLES `acompanhantes` WRITE;
 /*!40000 ALTER TABLE `acompanhantes` DISABLE KEYS */;
-INSERT INTO `acompanhantes` VALUES (1,2,'Heitor Luiz de Souza Carvalho de Miranda','06718562190','2006-12-27',NULL),(2,3,'Gabriel Liduino Costa','03732264114','2006-04-30',NULL),(3,5,'Gabriel ','03732264114','2006-04-30',NULL);
+INSERT INTO `acompanhantes` VALUES (1,2,'Heitor Luiz de Souza Carvalho de Miranda','06718562190','2006-12-27',NULL),(2,3,'Gabriel Liduino Costa','03732264114','2006-04-30',NULL),(3,5,'Gabriel ','03732264114','2006-04-30',NULL),(4,6,'heitor','06718562190','2005-12-27',NULL),(5,7,'heitor','06718562190','2006-12-27',NULL),(6,8,'heitor','06718562190','1992-01-27',NULL);
 /*!40000 ALTER TABLE `acompanhantes` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -133,6 +133,35 @@ LOCK TABLES `clientes` WRITE;
 /*!40000 ALTER TABLE `clientes` DISABLE KEYS */;
 INSERT INTO `clientes` VALUES (2,'03732264114','Gabriel Liduino Costa','61991892074','gabrielliduino@gmail.com','Quadra 17, Conjunto C, 48','73045173',NULL,'2006-04-30','Brasileiro'),(3,'06718562190','Heitor Luiz de Souza Carvalho de Miranda','6192369194','heitor@gmail.com','Condomínio RK, Centauros L 29','73158200',NULL,'2005-12-27','Brasileiro'),(4,'03423349519','Ian Bastos Gonçalves','6181640495','ian@gmail.com','Condomínio Império dos Nobres, Quadra 4, Conjunto H, 29','73158200',NULL,'2006-10-22','Brasileiro'),(5,'92384323843','Teste da Silva','+49 1234 4323434','testedasilva@gmail.com','alemanha','38438423','al123324','2005-04-20','alemao'),(6,NULL,'teste da silva junior','+1 (123) 456-7891','testedasilvajunior@gmail.com','america ne','72312123','am123456','2005-01-23','Americano');
 /*!40000 ALTER TABLE `clientes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `configuracoes_precos`
+--
+
+DROP TABLE IF EXISTS `configuracoes_precos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `configuracoes_precos` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `taxa_acompanhante_padrao` decimal(10,2) NOT NULL DEFAULT '50.00',
+  `descricao` varchar(255) DEFAULT 'Taxa de café da manhã por acompanhante',
+  `data_atualizacao` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `atualizado_por` int DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `atualizado_por` (`atualizado_por`),
+  CONSTRAINT `configuracoes_precos_ibfk_1` FOREIGN KEY (`atualizado_por`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `configuracoes_precos`
+--
+
+LOCK TABLES `configuracoes_precos` WRITE;
+/*!40000 ALTER TABLE `configuracoes_precos` DISABLE KEYS */;
+INSERT INTO `configuracoes_precos` VALUES (1,50.00,'Taxa de café da manhã por acompanhante','2025-11-12 17:58:14',NULL);
+/*!40000 ALTER TABLE `configuracoes_precos` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -276,7 +305,7 @@ CREATE TABLE `quartos` (
 
 LOCK TABLES `quartos` WRITE;
 /*!40000 ALTER TABLE `quartos` DISABLE KEYS */;
-INSERT INTO `quartos` VALUES (1,1,'disponivel','Uma cama',100.00),(5,6,'disponivel','quartao ',500.00),(13,2,'disponivel','2 camas (casal, beliche)',13000.00),(22,3,'disponivel','Duas camas soltero',250.00);
+INSERT INTO `quartos` VALUES (1,1,'interditado','Uma cama',100.00),(5,6,'ocupado','quartao ',500.00),(13,2,'disponivel','2 camas (casal, beliche)',13000.00),(22,3,'disponivel','Duas camas soltero',250.00);
 /*!40000 ALTER TABLE `quartos` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -301,12 +330,15 @@ CREATE TABLE `reservas` (
   `data_checkout_prevista` date DEFAULT NULL,
   `hora_checkout_prevista` time DEFAULT NULL,
   `cliente_id` int NOT NULL,
+  `taxa_acompanhante` decimal(10,2) DEFAULT NULL,
+  `valor_diaria_base` decimal(10,2) DEFAULT NULL,
+  `pago_booking` tinyint(1) DEFAULT '0',
   PRIMARY KEY (`id`),
   KEY `quarto_numero` (`quarto_numero`),
   KEY `fk_reservas_clientes` (`cliente_id`),
   CONSTRAINT `fk_reservas_clientes` FOREIGN KEY (`cliente_id`) REFERENCES `clientes` (`id`),
   CONSTRAINT `reservas_ibfk_2` FOREIGN KEY (`quarto_numero`) REFERENCES `quartos` (`numero`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,7 +347,7 @@ CREATE TABLE `reservas` (
 
 LOCK TABLES `reservas` WRITE;
 /*!40000 ALTER TABLE `reservas` DISABLE KEYS */;
-INSERT INTO `reservas` VALUES (1,1,'2025-10-03','11:56:00','2025-10-04','11:03:00',100.00,0.00,'finalizado','Descanso','2025-10-03','12:00:00',4),(2,5,'2025-10-03','11:58:00','2025-10-04','11:03:00',500.00,0.00,'finalizado','Trabalho','2025-10-03','12:00:00',2),(3,22,'2025-10-04','11:04:00','2025-10-04','11:46:00',250.00,0.00,'finalizado','descansar','2025-10-04','11:06:00',4),(4,1,'2025-10-04','11:05:00','2025-10-24','15:09:00',100.00,0.00,'finalizado','testar','2025-10-09','11:05:00',2),(5,5,'2025-10-04','11:06:00','2025-10-24','15:09:00',500.00,0.00,'finalizado','des','2025-10-18','11:06:00',3);
+INSERT INTO `reservas` VALUES (1,1,'2025-10-03','11:56:00','2025-10-04','11:03:00',100.00,0.00,'finalizado','Descanso','2025-10-03','12:00:00',4,NULL,NULL,0),(2,5,'2025-10-03','11:58:00','2025-10-04','11:03:00',500.00,0.00,'finalizado','Trabalho','2025-10-03','12:00:00',2,NULL,NULL,0),(3,22,'2025-10-04','11:04:00','2025-10-04','11:46:00',250.00,0.00,'finalizado','descansar','2025-10-04','11:06:00',4,NULL,NULL,0),(4,1,'2025-10-04','11:05:00','2025-10-24','15:09:00',100.00,0.00,'finalizado','testar','2025-10-09','11:05:00',2,NULL,NULL,0),(5,5,'2025-10-04','11:06:00','2025-10-24','15:09:00',500.00,0.00,'finalizado','des','2025-10-18','11:06:00',3,NULL,NULL,0),(6,5,'2025-11-12','09:48:00','2025-11-12','11:56:00',500.00,0.00,'finalizado','Trabalho','2025-11-13','09:49:00',2,NULL,NULL,0),(7,5,'2025-11-12','14:14:00','2025-11-12','14:44:00',550.00,0.00,'finalizado','descansar','2025-11-13','14:15:00',2,NULL,NULL,0),(8,5,'2025-11-12','14:44:00',NULL,NULL,550.00,0.00,'ativo','descansar','2025-11-13','14:45:00',2,NULL,NULL,0);
 /*!40000 ALTER TABLE `reservas` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -361,7 +393,7 @@ CREATE TABLE `usuarios` (
   `nivel_acesso` enum('admin','gerente','padrão') DEFAULT 'padrão',
   PRIMARY KEY (`id`),
   UNIQUE KEY `usuario` (`usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -370,7 +402,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'admin','admin','Administrador','admin');
+INSERT INTO `usuarios` VALUES (1,'admin','admin','Administrador','admin'),(9,'Joao','joao','joao','padrão'),(10,'gerente','123','gerente','gerente');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -383,6 +415,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-11 18:53:00
-ALTER TABLE Reservas
-ADD COLUMN pago_booking BOOLEAN DEFAULT FALSE;
+-- Dump completed on 2025-11-13 18:11:00

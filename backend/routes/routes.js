@@ -820,7 +820,7 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
 
       const cliente_id = resultId[0].id;
       db.query(
-        `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria
+  `SELECT r.*, c.nome, c.telefone, c.email, c.cep, c.endereco, q.numero as quarto, tq.valor_diaria AS tq_valor_diaria
          FROM Reservas r
          JOIN Clientes c ON r.cliente_id = c.id
          JOIN Quartos q ON r.quarto_numero = q.numero
@@ -840,7 +840,7 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
 
           // Calcular valor final com taxa (se houver acompanhantes e taxa)
           const reserva = results[0];
-          const valorBase = reserva.valor_diaria_base || reserva.valor_diaria || reserva.valor_diaria || reserva.tq_valor_diaria;
+          const valorBase = reserva.valor_diaria_base || reserva.valor_diaria || reserva.tq_valor_diaria || 0;
           // chamar utilitário para calcular (ignora erro de cálculo e devolve reserva como está)
           calcularDiariaComAcompanhantes(db, reserva.id, Number(valorBase), reserva.taxa_acompanhante || null)
             .then((calculo) => {
@@ -1682,51 +1682,6 @@ router.put('/configuracoes/taxa-acompanhante', requireAuth, requireAdminOrGerent
   db.query(
     'UPDATE configuracoes_precos SET taxa_acompanhante_padrao = ?, descricao = ?, atualizado_por = ? WHERE id = (SELECT MAX(id) FROM configuracoes_precos)',
     [taxa, descricao || 'Taxa de café da manhã por acompanhante', req.user.id],
-// Novo: Atualizar cliente por ID
-router.put("/api/clientes/:id", (req, res) => {
-  const id = req.params.id;
-  const {
-    cpf,
-    passaporte,
-    nome,
-    telefone,
-    email,
-    endereco,
-    cep,
-    data_nascimento,
-    nacionalidade,
-    pago_booking
-  } = req.body;
-
-  const sql = `
-    UPDATE clientes SET
-      cpf = ?,
-      passaporte = ?,
-      nome = ?,
-      telefone = ?,
-      email = ?,
-      endereco = ?,
-      cep = ?,
-      data_nascimento = ?,
-      nacionalidade = ?,
-      pago_booking = ?
-    WHERE id = ?
-  `;
-  db.query(
-    sql,
-    [
-      cpf,
-      passaporte,
-      nome,
-      telefone,
-      email,
-      endereco,
-      cep,
-      data_nascimento,
-      nacionalidade,
-      pago_booking || 0,
-      id
-    ],
     (err, result) => {
       if (err) {
         console.error('Erro ao salvar configuracoes_precos:', err);
@@ -1734,25 +1689,26 @@ router.put("/api/clientes/:id", (req, res) => {
       }
 
       if (result.affectedRows === 0) {
-        // Se não houver registro, criar um novo
+        // Se não houver registro existente, inserir novo registro
         db.query(
           'INSERT INTO configuracoes_precos (taxa_acompanhante_padrao, descricao, atualizado_por) VALUES (?, ?, ?)',
           [taxa, descricao || 'Taxa de café da manhã por acompanhante', req.user.id],
-          (err, result) => {
-            if (err) {
-              return res.status(500).json({ message: 'Erro ao criar configuração', error: err });
+          (err2, result2) => {
+            if (err2) {
+              console.error('Erro ao criar nova configuração:', err2);
+              return res.status(500).json({ message: 'Erro ao criar configuração', error: err2 });
             }
-            res.json({
+            return res.json({
               message: 'Configuração criada com sucesso',
-              id: result.insertId,
-              taxa_acompanhante_padrao: taxa
+              id: result2.insertId,
+              taxa_acompanhante_padrao: taxa,
             });
           }
         );
       } else {
-        res.json({
+        return res.json({
           message: 'Configuração atualizada com sucesso',
-          taxa_acompanhante_padrao: taxa
+          taxa_acompanhante_padrao: taxa,
         });
       }
     }
