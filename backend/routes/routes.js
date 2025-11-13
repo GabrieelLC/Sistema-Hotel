@@ -169,7 +169,8 @@ router.put("/clientes/:id", (req, res) => {
     endereco,
     cep,
     data_nascimento,
-    nacionalidade
+    nacionalidade,
+    pago_booking
   } = req.body;
 
   // Adicionando validação para garantir que pelo menos um dos identificadores está presente.
@@ -187,7 +188,8 @@ router.put("/clientes/:id", (req, res) => {
       endereco = ?,
       cep = ?,
       data_nascimento = ?,
-      nacionalidade = ?
+      nacionalidade = ?,
+      pago_booking = ?
     WHERE id = ?
   `;
   db.query(
@@ -202,6 +204,7 @@ router.put("/clientes/:id", (req, res) => {
       cep,
       data_nascimento,
       nacionalidade,
+      pago_booking || 0,
       id
     ],
     (err, result) => {
@@ -482,6 +485,7 @@ router.post("/checkin", (req, res) => {
     hora_checkout_prevista,
     ignorar_reserva_ativa,
     taxa_acompanhante,  // Taxa de café da manhã por acompanhante (opcional)
+    pago_booking
   } = req.body;
 
   // CORREÇÃO DE VALIDAÇÃO: Verifica se há CPF OU Passaporte
@@ -547,10 +551,10 @@ router.post("/checkin", (req, res) => {
               // PASSO 4: Inserir a nova reserva (AGORA USANDO CLIENTE_ID)
               db.query(
                 `INSERT INTO Reservas 
-     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, valor_diaria_base, taxa_acompanhante, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, valor_diaria_base, taxa_acompanhante, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status, pago_booking)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo', ?)`, 
                 [
-                  cliente_id, // CORREÇÃO: Usar cliente_id
+                  cliente_id, 
                   quarto_numero,
                   data_checkin,
                   hora_checkin,
@@ -560,6 +564,7 @@ router.post("/checkin", (req, res) => {
                   motivo_hospedagem || null,
                   data_checkout_prevista || null,
                   hora_checkout_prevista || null,
+                  pago_booking || 0 // Agora este parâmetro corresponde ao '?'
                 ],
                 (err, result) => {
                   if (err) {
@@ -902,6 +907,13 @@ const Produtos = {
       callback
     );
   },
+  update: (id, data, callback) => {
+    db.query(
+      "UPDATE Produtos SET nome = ?, preco_unitario = ?, estoque = ? WHERE id = ?",
+      [data.nome, data.preco, data.estoque, id],
+      callback
+    );
+  },
   delete: (id, callback) => {
     db.query("DELETE FROM Produtos WHERE id = ?", [id], callback);
   },
@@ -931,7 +943,29 @@ router.post("/produtos", (req, res) => {
     res.status(201).json({ message: "Produto cadastrado com sucesso", result });
   });
 });
+  router.put("/produtos/:id", (req, res) => {
+  const { id } = req.params;
+  const { nome, preco, estoque } = req.body; // 'preco' vem do body
 
+  if (!nome || preco === undefined || estoque === undefined) {
+    return res.status(400).json({ message: "Preencha todos os campos!" });
+  }
+
+  Produtos.update(id, { nome, preco, estoque }, (err, result) => {
+    if (err) {
+      console.error("Erro ao atualizar produto:", err);
+      return res
+        .status(500)
+        .json({ message: "Erro ao atualizar produto", error: err });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Produto não encontrado" });
+    }
+    res
+      .status(200)
+      .json({ message: "Produto atualizado com sucesso", result });
+  });
+});
 router.delete("/produtos/:id", (req, res) => {
   Produtos.delete(req.params.id, (err, result) => {
     if (err)
@@ -978,20 +1012,71 @@ router.get("/consumos/:reserva_id", (req, res) => {
 // Adicionar consumo a um quarto
 router.post("/consumos", (req, res) => {
   const { reserva_id, produto_id, quantidade, preco_unitario } = req.body;
-  if (!reserva_id || !produto_id || !quantidade || !preco_unitario) {
-    return res.status(400).json({ message: "Preencha todos os campos!" });
+  const quantNum = parseInt(quantidade, 10); // Garantir que a quantidade é um número
+
+  if (!reserva_id || !produto_id || !quantNum || quantNum <= 0 || !preco_unitario) {
+    return res.status(400).json({ message: "Dados do consumo inválidos (Verifique a quantidade)!" });
   }
-  db.query(
-    "INSERT INTO Consumos (reserva_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)",
-    [reserva_id, produto_id, quantidade, preco_unitario],
-    (err, result) => {
-      if (err)
-        return res
-          .status(500)
-          .json({ message: "Erro ao adicionar consumo", error: err });
-      res.status(201).json({ message: "Consumo adicionado", result });
+
+  // 1. Iniciar a transação
+  db.beginTransaction((err) => {
+    if (err) {
+      console.error("Erro ao iniciar transação:", err);
+      return res.status(500).json({ message: "Erro ao iniciar transação", error: err });
     }
-  );
+
+    // 2. Atualizar o estoque PRIMEIRO (e verificar se há estoque disponível)
+    db.query(
+      // Esta query só vai subtrair se o estoque (estoque) for >= a quantNum
+      "UPDATE Produtos SET estoque = estoque - ? WHERE id = ? AND estoque >= ?",
+      [quantNum, produto_id, quantNum],
+      (errUpdate, resultUpdate) => {
+        if (errUpdate) {
+          // Se der erro no UPDATE, desfaz a transação
+          return db.rollback(() => {
+            console.error("Erro ao atualizar estoque:", errUpdate);
+            res.status(500).json({ message: "Erro ao atualizar estoque", error: errUpdate });
+          });
+        }
+
+        // 3. Verificar se o update realmente alterou alguma linha
+        if (resultUpdate.affectedRows === 0) {
+          // Se não alterou, significa que não havia estoque (estoque < quantNum)
+          return db.rollback(() => {
+            res.status(400).json({ message: "Erro: Estoque insuficiente para este produto." });
+          });
+        }
+
+        // 4. Se o estoque foi atualizado, INSERIR o consumo
+        db.query(
+          "INSERT INTO Consumos (reserva_id, produto_id, quantidade, preco_unitario) VALUES (?, ?, ?, ?)",
+          [reserva_id, produto_id, quantNum, preco_unitario],
+          (errInsert, resultInsert) => {
+            if (errInsert) {
+              // Se der erro no INSERT, desfaz o UPDATE
+              return db.rollback(() => {
+                console.error("Erro ao adicionar consumo:", errInsert);
+                res.status(500).json({ message: "Erro ao adicionar consumo (estoque será revertido)", error: errInsert });
+              });
+            }
+
+            // 5. Se tudo deu certo, Confirmar (Commit) a transação
+            db.commit((errCommit) => {
+              if (errCommit) {
+                // Se o commit falhar, desfaz tudo
+                return db.rollback(() => {
+                  console.error("Erro ao confirmar transação:", errCommit);
+                  res.status(500).json({ message: "Erro ao confirmar transação", error: errCommit });
+                });
+              }
+              // Sucesso!
+              res.status(201).json({ message: "Consumo adicionado e estoque atualizado", resultInsert });
+            });
+          }
+        );
+      }
+    );
+  });
 });
 
 // Nova rota para buscar a reserva ativa de um quarto pelo número
@@ -1597,6 +1682,51 @@ router.put('/configuracoes/taxa-acompanhante', requireAuth, requireAdminOrGerent
   db.query(
     'UPDATE configuracoes_precos SET taxa_acompanhante_padrao = ?, descricao = ?, atualizado_por = ? WHERE id = (SELECT MAX(id) FROM configuracoes_precos)',
     [taxa, descricao || 'Taxa de café da manhã por acompanhante', req.user.id],
+// Novo: Atualizar cliente por ID
+router.put("/api/clientes/:id", (req, res) => {
+  const id = req.params.id;
+  const {
+    cpf,
+    passaporte,
+    nome,
+    telefone,
+    email,
+    endereco,
+    cep,
+    data_nascimento,
+    nacionalidade,
+    pago_booking
+  } = req.body;
+
+  const sql = `
+    UPDATE clientes SET
+      cpf = ?,
+      passaporte = ?,
+      nome = ?,
+      telefone = ?,
+      email = ?,
+      endereco = ?,
+      cep = ?,
+      data_nascimento = ?,
+      nacionalidade = ?,
+      pago_booking = ?
+    WHERE id = ?
+  `;
+  db.query(
+    sql,
+    [
+      cpf,
+      passaporte,
+      nome,
+      telefone,
+      email,
+      endereco,
+      cep,
+      data_nascimento,
+      nacionalidade,
+      pago_booking || 0,
+      id
+    ],
     (err, result) => {
       if (err) {
         console.error('Erro ao salvar configuracoes_precos:', err);

@@ -29,41 +29,33 @@
     <script src="js/ui.js"></script>
     <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
-      /* Reset básico e configurações globais */
-      :root {
+:root {
         --background-color: #f4f7fa;
         --sidebar-bg: #ffffff;
         --card-bg: #ffffff;
         --text-color: #4a5568;
         --heading-color: #1a202c;
         --primary-color: #4a90e2;
-        --danger-color: #e53e3e;
         --border-color: #e2e8f0;
         --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
           0 2px 4px -1px rgba(0, 0, 0, 0.06);
       }
-
       * {
         margin: 0;
         padding: 0;
         box-sizing: border-box;
       }
-
       body {
-        font-family: "Inter", sans-serif;
+        display: flex;
         background-color: var(--background-color);
         color: var(--text-color);
-        display: flex;
+        font-family: "Inter", sans-serif;
       }
-
-      /* Estrutura principal com Flexbox */
-      .main-flex {
+      .container {
         display: flex;
         width: 100%;
         min-height: 100vh;
       }
-
-      /* Barra Lateral (Sidebar) */
       .sidebar {
         width: 240px;
         background-color: var(--sidebar-bg);
@@ -71,38 +63,41 @@
         display: flex;
         flex-direction: column;
         border-right: 1px solid var(--border-color);
-        flex-shrink: 0;
+        transition: width 0.3s;
       }
-
-      .sidebar .calendar {
-        text-align: center;
+      .sidebar-header {
         margin-bottom: 2.5rem;
       }
-
-      .sidebar .calendar-icon {
+      .logo {
         font-size: 1.5rem;
-        margin-bottom: 0.5rem;
+        font-weight: 700;
+        color: var(--heading-color);
+        text-align: center;
       }
-
-      .sidebar #dateTime {
+      .date-time {
+        text-align: center;
         font-size: 0.9rem;
+        margin-top: 0.5rem;
         line-height: 1.4;
       }
-
-      .sidebar .menu-btn {
+      .nav-menu {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+      .menu-btn {
         display: flex;
         align-items: center;
         padding: 0.75rem 1rem;
-        margin-bottom: 0.5rem;
         border-radius: 8px;
         text-decoration: none;
         color: var(--text-color);
         font-weight: 500;
         transition: background-color 0.2s, color 0.2s;
       }
-
-      .sidebar .menu-btn.active,
-      .sidebar .menu-btn:hover {
+      .menu-btn:hover,
+      .menu-btn.active {
         background-color: var(--primary-color);
         color: #fff;
       }
@@ -155,157 +150,172 @@
       .main-content {
         flex-grow: 1;
         padding: 2rem;
-        overflow-y: auto;
+        overflow: auto;
       }
-
       .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
         margin-bottom: 2rem;
       }
-
-      h1 {
-        font-size: 1.8rem;
+      .header h1 {
+        font-size: 2rem;
+        font-weight: 700;
         color: var(--heading-color);
       }
-
-      /* Cards para as seções */
       .card {
         background-color: var(--card-bg);
-        border-radius: 12px;
-        padding: 1.5rem 2rem;
+        border-radius: 10px;
+        padding: 2rem;
         box-shadow: var(--shadow);
         margin-bottom: 2rem;
       }
-
       .card-title {
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         font-weight: 600;
         color: var(--heading-color);
         margin-bottom: 1.5rem;
       }
-
-      /* Estilos do Formulário */
       .form-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 1.5rem;
       }
-
       .form-group {
         display: flex;
         flex-direction: column;
       }
-
       .form-group label {
         margin-bottom: 0.5rem;
         font-weight: 500;
-        font-size: 0.9rem;
+        color: #333;
       }
-
-      .form-group input {
+      .form-group input,
+      .form-group select,
+      .form-control { /* Classe para os inputs in-line */
         padding: 0.75rem;
         border: 1px solid var(--border-color);
         border-radius: 8px;
         font-size: 1rem;
-        font-family: "Inter", sans-serif;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        width: 100%;
       }
-
-      .form-group input:focus {
+      .form-group input:focus,
+      .form-control:focus {
         outline: none;
         border-color: var(--primary-color);
         box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
       }
-
       .form-actions {
         margin-top: 1.5rem;
-        text-align: right;
       }
-
       .submit-btn {
         background-color: var(--primary-color);
         color: white;
-        padding: 0.75rem 2rem;
         border: none;
         border-radius: 8px;
-        cursor: pointer;
-        font-weight: 600;
         font-size: 1rem;
-        transition: background-color 0.2s;
+        font-weight: bold;
+        cursor: pointer;
+        padding: 0.75rem 1.5rem;
+        transition: background-color 0.3s ease;
       }
-
       .submit-btn:hover {
         background-color: #357abd;
       }
 
-      /* Estilo das Tabelas */
+      /* Estilos da Tabela */
       .table-wrapper {
         overflow-x: auto;
       }
-
       table {
         width: 100%;
         border-collapse: collapse;
-        font-size: 0.9rem;
       }
-
       th,
       td {
         padding: 1rem;
         text-align: left;
         border-bottom: 1px solid var(--border-color);
+        /* Adicionado para os inputs caberem bem */
+        vertical-align: middle; 
       }
-
-      thead th {
+      th {
+        font-size: 0.875rem;
         font-weight: 600;
-        color: var(--heading-color);
-        background-color: #f8f9fa;
+        text-transform: uppercase;
+        color: #666;
+      }
+      /* Ajusta o tamanho do input dentro da tabela */
+      td input.form-control {
+        padding: 0.5rem;
+        font-size: 0.9rem;
       }
 
-      tbody tr:last-child td {
-        border-bottom: none;
-      }
+      /* ======================================================= */
+      /* ===== 1. CSS DOS NOVOS BOTÕES DE AÇÃO ADICIONADO ====== */
+      /* ======================================================= */
 
-      tbody tr:hover {
-        background-color: #f8f9fa;
-      }
-
-      .btn-delete {
-        background-color: var(--danger-color);
-        color: white;
-        padding: 0.5rem 1rem;
-        font-size: 0.8rem;
+      .btn-edit,
+      .btn-delete,
+      .btn-save,   /* NOVO */
+      .btn-cancel { /* NOVO */
+        padding: 5px 10px;
         border: none;
-        border-radius: 6px;
+        border-radius: 5px;
         cursor: pointer;
-        transition: background-color 0.2s;
+        font-weight: bold;
+        color: white;
+        margin-right: 5px;
+        font-size: 0.875rem;
+      }
+      .btn-edit {
+        background-color: #4a90e2; /* Azul */
+      }
+      .btn-edit:hover {
+        background-color: #357abd;
+      }
+      .btn-delete {
+        background-color: #e24a4a; /* Vermelho */
       }
       .btn-delete:hover {
-        background-color: #c53030;
+        background-color: #c0392b;
       }
+      
+      /* Botão Salvar (NOVO) */
+      .btn-save {
+        background-color: #28a745; /* Verde */
+      }
+      .btn-save:hover {
+        background-color: #218838;
+      }
+      
+      /* Botão Cancelar (NOVO) */
+      .btn-cancel {
+        background-color: #6c757d; /* Cinza */
+      }
+      .btn-cancel:hover {
+        background-color: #5a6268;
+      }
+
     </style>
   </head>
-
   <body>
-    <div class="main-flex">
-      <div class="sidebar">
-        <div class="calendar">
-          <div class="calendar-icon">
-            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="" />
+    <div class="container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="Logo Hotel" />
           </div>
           <div class="date-time" id="dateTime"></div>
         </div>
-        <a href="index.html" class="menu-btn">🏠 Ínicio</a>
-        <a href="checkin.html" class="menu-btn">📥 Check-in</a>
-        <a href="checkout.html" class="menu-btn">📤 Check-out</a>
-        <a href="clientes.html" class="menu-btn">👤 Clientes</a>
-        <a href="quartos.html" class="menu-btn">🛏️ Quartos</a>
-        <a href="reservas.html" class="menu-btn">📋 Reservas</a>
-        <a href="produtos.html" class="menu-btn active">🛒 Produtos</a>
-        <a href="calendario.html" class="menu-btn">📅 Calendário</a>
-        <a href="gerenciamento_usuarios.html" class="menu-btn" id="usuariosMenuBtn" style="display: none;">👥 Usuários</a>
+        <nav class="nav-menu">
+          <a href="index.html" class="menu-btn">🏠 Ínicio</a>
+          <a href="checkin.html" class="menu-btn">📥 Check-in</a>
+          <a href="checkout.html" class="menu-btn">📤 Check-out</a>
+          <a href="clientes.html" class="menu-btn">👤 Clientes</a>
+          <a href="quartos.html" class="menu-btn">🛏️ Quartos</a>
+          <a href="reservas.html" class="menu-btn">📋 Reservas</a>
+          <a href="produtos.html" class="menu-btn active">🛒 Produtos</a>
+          <a href="calendario.html" class="menu-btn">📅 Calendário</a>
+          <a href="gerenciamento_usuarios.html" class="menu-btn" id="usuariosMenuBtn" style="display: none;">👥 Usuários</a>
+        </nav>
         <div class="user-card">
           <div class="user-info">
             <div class="user-name" id="sidebarUserName">—</div>
@@ -313,9 +323,9 @@
           </div>
           <button class="logout-btn" id="sidebarLogoutBtn">Sair</button>
         </div>
-      </div>
+      </aside>
 
-      <div class="main-content">
+      <main class="main-content">
         <header class="header">
           <h1>Gerenciar Produtos</h1>
         </header>
@@ -363,16 +373,15 @@
                 </tr>
               </thead>
               <tbody id="produtos-tbody">
-                <!-- Dados dos produtos serão inseridos aqui -->
-              </tbody>
+                </tbody>
             </table>
           </div>
         </section>
-      </div>
+      </main>
     </div>
 
     <script>
-      // Atualiza data e hora em tempo real
+ // Função para atualizar data e hora
       function updateDateTime() {
         const now = new Date();
         const date = now.toLocaleDateString("pt-BR", {
@@ -385,22 +394,32 @@
           hour: "2-digit",
           minute: "2-digit",
         });
-        document.getElementById("dateTime").textContent = `${date}\n${time}`;
+        const el = document.getElementById("dateTime");
+        if (el) el.innerHTML = `${date}<br>${time}`;
       }
       updateDateTime();
       setInterval(updateDateTime, 1000);
 
-      // Carrega os produtos na tabela
+      // Função VoltarPagina
+      function VoltarPagina() {
+        window.location.href = "index.html";
+      }
+
+      /**
+       * Função auxiliar para escapar aspas simples de strings para uso em HTML
+       */
+      function escaparAspas(str) {
+         return str.replace(/'/g, "\\'");
+      }
+
+      /**
+       * Função para carregar os produtos na tabela
+       */
       async function carregarProdutos() {
         const tbody = document.getElementById("produtos-tbody");
         tbody.innerHTML = '<tr><td colspan="5">Carregando...</td></tr>';
         try {
           const response = await fetch("/api/produtos");
-          if (!response.ok) {
-            throw new Error(
-              `Erro na API: ${response.status} ${response.statusText}`
-            );
-          }
           const produtos = await response.json();
 
           tbody.innerHTML = "";
@@ -409,24 +428,30 @@
               '<tr><td colspan="5">Nenhum produto cadastrado.</td></tr>';
             return;
           }
+          
           produtos.forEach((produto) => {
-            // **CORREÇÃO FINAL BASEADA NO CÓDIGO ANTIGO**
-            const precoNumerico = parseFloat(produto.preco_unitario);
-            const precoFormatado = !isNaN(precoNumerico)
-              ? `R$ ${precoNumerico.toFixed(2)}`
-              : "Valor inválido";
+            // Adicionamos IDs únicos para cada célula (td) da linha
+            // para que possamos encontrá-las e substituí-las.
+            const precoFormatado = `R$ ${Number(produto.preco_unitario).toFixed(2)}`;
+            const nomeEscapado = escaparAspas(produto.nome);
 
             tbody.innerHTML += `
-                        <tr>
-                            <td>${produto.id}</td>
-                            <td>${produto.nome}</td>
-                            <td>${precoFormatado}</td>
-                            <td>${produto.estoque}</td>
-                            <td>
-                                <button class="btn-delete" onclick="deletarProduto(${produto.id})">Deletar</button>
-                            </td>
-                        </tr>
-                    `;
+              <tr id="produto-row-${produto.id}">
+                  <td>${produto.id}</td>
+                  <td id="produto-nome-${produto.id}">${produto.nome}</td>
+                  <td id="produto-preco-${produto.id}">${precoFormatado}</td>
+                  <td id="produto-estoque-${produto.id}">${produto.estoque}</td>
+                  <td id="produto-acoes-${produto.id}">
+                      <button class="btn-edit" onclick="transformarEmInputs(
+                          ${produto.id}, 
+                          '${nomeEscapado}', 
+                          ${produto.preco_unitario}, 
+                          ${produto.estoque}
+                      )">Editar</button>
+                      <button class="btn-delete" onclick="deletarProduto(${produto.id})">Deletar</button>
+                  </td>
+              </tr>
+            `;
           });
         } catch (error) {
           tbody.innerHTML =
@@ -435,62 +460,179 @@
         }
       }
 
-      // Submete o formulário para adicionar um novo produto
-      async function submitForm(event) {
-        event.preventDefault();
-        const formData = new FormData(event.target);
-        const data = Object.fromEntries(formData.entries());
-
+      /**
+       * Função para deletar produto
+       */
+      async function deletarProduto(id) {
+        if (!confirm("Tem certeza que deseja excluir este produto?")) {
+          return;
+        }
         try {
-          const response = await fetch("/api/produtos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
+          const response = await fetch(`/api/produtos/${id}`, { method: 'DELETE' });
+          const data = await response.json();
+          alert(data.message);
           if (response.ok) {
-            alert("Produto cadastrado com sucesso!");
-            event.target.reset();
-            carregarProdutos();
-          } else {
-            const errorData = await response.json();
-            alert(
-              `Erro ao cadastrar produto: ${
-                errorData.message || "Erro desconhecido"
-              }`
-            );
+            carregarProdutos(); // Recarrega a lista
           }
         } catch (error) {
-          console.error("Erro:", error);
-          alert("Erro de conexão ao cadastrar produto.");
+          console.error('Erro ao deletar produto:', error);
+          alert('Erro ao conectar com o servidor.');
         }
       }
 
-      // Deleta um produto
-      async function deletarProduto(id) {
-        if (confirm("Tem certeza que deseja deletar este produto?")) {
-          try {
-            const response = await fetch(`/api/produtos/${id}`, {
-              method: "DELETE",
-            });
-            if (response.ok) {
-              alert("Produto deletado com sucesso!");
-              carregarProdutos();
-            } else {
-              alert("Erro ao deletar produto.");
-            }
-          } catch (error) {
-            console.error("Erro:", error);
-            alert("Erro de conexão ao deletar produto.");
+      // -----------------------------------------------------------------
+      // --- NOVAS FUNÇÕES PARA EDIÇÃO IN-LINE ---
+      // -----------------------------------------------------------------
+
+      /**
+       * Transforma a linha de texto em campos de input
+       */
+      function transformarEmInputs(id, nome, preco, estoque) {
+        // Encontra as células específicas daquela linha
+        const nomeCell = document.getElementById(`produto-nome-${id}`);
+        const precoCell = document.getElementById(`produto-preco-${id}`);
+        const estoqueCell = document.getElementById(`produto-estoque-${id}`);
+        const acoesCell = document.getElementById(`produto-acoes-${id}`);
+        
+        const nomeEscapado = escaparAspas(nome);
+
+        // Substitui o conteúdo das células por inputs
+        nomeCell.innerHTML = `<input id="edit-nome-${id}" class="form-control" value="${nome}" />`;
+        precoCell.innerHTML = `<input id="edit-preco-${id}" class="form-control" value="${preco}" type="number" step="0.01" />`;
+        estoqueCell.innerHTML = `<input id="edit-estoque-${id}" class="form-control" value="${estoque}" type="number" />`;
+
+        // Substitui os botões por "Salvar" e "Cancelar"
+        acoesCell.innerHTML = `
+            <button class="btn-save" onclick="salvarEdicao(${id})">Salvar</button>
+            <button class="btn-cancel" onclick="cancelarEdicao(
+                ${id}, 
+                '${nomeEscapado}', 
+                ${preco}, 
+                ${estoque}
+            )">Cancelar</button>
+        `;
+      }
+
+      /**
+       * Salva os dados editados no backend
+       */
+      async function salvarEdicao(id) {
+        // Pega os *novos* valores dos inputs
+        const novoNome = document.getElementById(`edit-nome-${id}`).value;
+        const novoPreco = parseFloat(document.getElementById(`edit-preco-${id}`).value);
+        const novoEstoque = parseInt(document.getElementById(`edit-estoque-${id}`).value, 10);
+
+        if (!novoNome || isNaN(novoPreco) || isNaN(novoEstoque)) {
+          alert("Dados inválidos. Preencha todos os campos corretamente.");
+          return;
+        }
+
+        try {
+          const response = await fetch(`/api/produtos/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nome: novoNome,
+              preco: novoPreco, // A rota PUT espera "preco"
+              estoque: novoEstoque,
+            }),
+          });
+
+          const data = await response.json();
+          alert(data.message);
+
+          if (response.ok) {
+            // Se salvou com sucesso, reverte a linha para texto com os NOVOS dados
+            reverterLinhaParaTexto(id, novoNome, novoPreco, novoEstoque);
           }
+        } catch (error) {
+          console.error("Erro ao salvar produto:", error);
+          alert("Erro ao conectar com o servidor.");
         }
       }
 
-      // Inicializa a página
+      /**
+       * Cancela a edição e reverte para texto com os dados ORIGINAIS
+       */
+      function cancelarEdicao(id, nomeOriginal, precoOriginal, estoqueOriginal) {
+        reverterLinhaParaTexto(id, nomeOriginal, precoOriginal, estoqueOriginal);
+      }
+
+      /**
+       * Função auxiliar que reverte as células de input para texto
+       */
+      function reverterLinhaParaTexto(id, nome, preco, estoque) {
+        const nomeCell = document.getElementById(`produto-nome-${id}`);
+        const precoCell = document.getElementById(`produto-preco-${id}`);
+        const estoqueCell = document.getElementById(`produto-estoque-${id}`);
+        const acoesCell = document.getElementById(`produto-acoes-${id}`);
+        
+        const precoFormatado = `R$ ${Number(preco).toFixed(2)}`;
+        const nomeEscapado = escaparAspas(nome);
+
+        // Reverte as células para texto
+        nomeCell.innerHTML = nome;
+        precoCell.innerHTML = precoFormatado;
+        estoqueCell.innerHTML = estoque;
+
+        // Reverte os botões para "Editar" e "Deletar"
+        acoesCell.innerHTML = `
+            <button class="btn-edit" onclick="transformarEmInputs(
+                ${id}, 
+                '${nomeEscapado}', 
+                ${preco}, 
+                ${estoque}
+            )">Editar</button>
+            <button class="btn-delete" onclick="deletarProduto(${id})">Deletar</button>
+        `;
+      }
+
+
+      // Adiciona os listeners quando o DOM estiver pronto
       document.addEventListener("DOMContentLoaded", () => {
+        // 1. Carrega a lista de produtos
         carregarProdutos();
-        const form = document.getElementById("produto-form");
-        form.addEventListener("submit", submitForm);
-      });
+
+        // 2. Listener para o formulário de ADICIONAR
+        //    (Corrigido para usar o ID "produto-form" do seu HTML)
+        const cadastroForm = document.getElementById("produto-form"); 
+        if (cadastroForm) {
+          cadastroForm.addEventListener("submit", async function (e) {
+            e.preventDefault();
+            const nome = document.getElementById("nome").value;
+            const preco = parseFloat(document.getElementById("preco").value);
+            const estoque = parseInt(
+              document.getElementById("estoque").value,
+              10
+            );
+
+            if (!nome || isNaN(preco) || isNaN(estoque)) {
+              alert("Por favor, preencha todos os campos corretamente.");
+              return;
+            }
+
+            try {
+              const response = await fetch("/api/produtos", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ nome, preco, estoque }),
+              });
+              const data = await response.json();
+              alert(data.message);
+              if (response.ok) {
+                this.reset();
+                carregarProdutos(); // Recarrega a lista
+              }
+            } catch (error) {
+              console.error("Erro ao cadastrar produto:", error);
+              alert("Erro ao conectar com o servidor.");
+            }
+          });
+        }
+        
+        // 3. O listener do modal foi removido
+        
+      }); // Fim do DOMContentLoaded
     </script>
   </body>
 </html>
