@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tela de Check-in</title>
+    <script>
+      if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+        window.location.replace('login.html');
+      }
+    </script>
         <link rel="icon" type="image/x-icon" href="imagens/logo_branco .svg" />
     <link
       rel="icon"
@@ -12,6 +17,9 @@
       href="imagens/logo_branco .svg"
     />
     <link rel="logo" href="imagens/logo_branco .svg" />
+    <!-- Scripts de autenticação e UI -->
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
     <style>
       :root {
         --background-color: #f4f7fa;
@@ -65,6 +73,10 @@
         font-size: 0.9rem;
         margin-top: 0.5rem;
         line-height: 1.4;
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .nav-menu {
         flex-grow: 1;
@@ -87,6 +99,51 @@
         background-color: var(--primary-color);
         color: #fff;
       }
+
+      /* Estilos do User Card */
+      .user-card {
+        margin-top: auto;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .user-name {
+        font-weight: 600;
+        color: var(--heading-color);
+        font-size: 0.95rem;
+      }
+
+      .user-role {
+        font-size: 0.8rem;
+        color: var(--text-color);
+        opacity: 0.8;
+      }
+
+      .logout-btn {
+        background-color: #e53e3e;
+        color: white;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+      }
+
+      .logout-btn:hover {
+        background-color: #c53030;
+      }
+
       .main-content {
         flex-grow: 1;
         padding: 2rem;
@@ -236,15 +293,23 @@
           <div class="date-time" id="dateTime"></div>
         </div>
         <nav class="nav-menu">
-          <a href="index.html" class="menu-btn">Ínicio</a>
-          <a href="checkin.html" class="menu-btn active">Check-in</a>
-          <a href="checkout.html" class="menu-btn">Check-out</a>
-          <a href="clientes.html" class="menu-btn">Clientes</a>
-          <a href="quartos.html" class="menu-btn">Quartos</a>
-          <a href="reservas.html" class="menu-btn">Reservas</a>
-          <a href="produtos.html" class="menu-btn">Produtos</a>
-          <a href="calendario.html" class="menu-btn">Calendário</a>
+          <a href="index.html" class="menu-btn">🏠 Ínicio</a>
+          <a href="checkin.html" class="menu-btn active">📥 Check-in</a>
+          <a href="checkout.html" class="menu-btn">📤 Check-out</a>
+          <a href="clientes.html" class="menu-btn">👤 Clientes</a>
+          <a href="quartos.html" class="menu-btn">🛏️ Quartos</a>
+          <a href="reservas.html" class="menu-btn">📋 Reservas</a>
+          <a href="produtos.html" class="menu-btn">🛒 Produtos</a>
+          <a href="calendario.html" class="menu-btn">📅 Calendário</a>
+          <a href="gerenciamento_usuarios.html" class="menu-btn" id="usuariosMenuBtn" style="display: none;">👥 Usuários</a>
         </nav>
+        <div class="user-card">
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">—</div>
+            <div class="user-role" id="sidebarUserRole">padrão</div>
+          </div>
+          <button class="logout-btn" id="sidebarLogoutBtn">Sair</button>
+        </div>
       </aside>
 
       <main class="main-content">
@@ -452,6 +517,20 @@
                     readonly
                   />
                 </div>
+                <div class="checkoutscreenfield_group">
+                  <label class="checkoutscreenlabel" for="taxa_acompanhante"
+                    >Taxa de Café da Manhã (por pessoa)</label
+                  >
+                  <input
+                    class="checkoutscreeninput"
+                    type="number"
+                    id="taxa_acompanhante"
+                    name="taxa_acompanhante"
+                    placeholder="50.00"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
                 <button class="checkoutscreensubmit_button" type="submit">
                   Registrar
                 </button>
@@ -553,9 +632,39 @@
         }
       }
 
+      // Função para carregar a taxa de acompanhante padrão
+      async function carregarTaxaAcompanhante() {
+        try {
+          const token = localStorage.getItem('token');
+          const resp = await fetch("/api/configuracoes/taxa-acompanhante", {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+          const data = await resp.json();
+          const taxaInput = document.getElementById("taxa_acompanhante");
+          if (taxaInput && data.taxa_acompanhante_padrao) {
+            // apenas placeholder — não preencher o valor automaticamente
+            taxaInput.placeholder = `${Number(data.taxa_acompanhante_padrao).toFixed(2)}`;
+            taxaInput.value = "";
+          }
+        } catch (error) {
+          console.error("Erro ao carregar taxa de acompanhante:", error);
+          // deixar campo vazio — apenas placeholder
+          const taxaInput = document.getElementById("taxa_acompanhante");
+          if (taxaInput) {
+            taxaInput.placeholder = "50.00";
+            taxaInput.value = "";
+          }
+        }
+      }
+
       document.addEventListener("DOMContentLoaded", () => {
         // Carrega os quartos assim que a página é aberta
         carregarQuartosDisponiveis();
+        
+        // Carrega a taxa de acompanhante padrão
+        carregarTaxaAcompanhante();
 
         // Adiciona o listener para quando o usuário muda a seleção do quarto
         document
@@ -798,6 +907,7 @@
                 );
               }
 
+              const taxaVal = document.getElementById("taxa_acompanhante").value;
               const checkinData = {
                 cliente_cpf,
                 cliente_passaporte: passaporte_cliente,
@@ -812,6 +922,7 @@
                 cpfs_acompanhantes,
                 passaportes_acompanhantes,
                 nascimentos_acompanhantes,
+                taxa_acompanhante: taxaVal === "" ? null : taxaVal,
               };
 
               const resp = await fetch("/api/checkin", {
@@ -862,3 +973,4 @@
     </script>
   </body>
 </html>
+

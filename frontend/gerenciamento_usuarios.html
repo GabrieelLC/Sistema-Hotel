@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerenciamento de Usuários</title>
+    <script>
+      if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+        window.location.replace('login.html');
+      }
+    </script>
+  <script src="js/auth.js"></script>
+  <script src="js/ui.js"></script>
+  <style>
+      /* Estilos básicos da página */
+      :root {
+        --primary-color: #4a90e2;
+        --danger-color: #e53e3e;
+        --success-color: #38a169;
+        --text-color: #4a5568;
+        --heading-color: #1a202c;
+        --border-color: #e2e8f0;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f4f7fa;
+      }
+      /* Sidebar styles (match other pages: sidebar is part of the flex layout) */
+      .sidebar {
+        width: 240px;
+        background-color: #ffffff;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border-color);
+      }
+
+      .sidebar-header {
+        padding: 1.5rem 1rem;
+        text-align: center;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .logo {
+        margin-bottom: 1rem;
+      }
+
+      .logo img {
+        max-width: 100%;
+        height: auto;
+      }
+
+      .date-time {
+        font-size: 0.9rem;
+        color: var(--text-color);
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .nav-menu {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 1rem;
+        flex-grow: 1;
+        /* Ensure menu items don't shrink and keep consistent larger width */
+        align-items: stretch;
+      }
+
+      .menu-btn {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        border-radius: 6px;
+        text-decoration: none;
+        color: var(--text-color);
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+        width: 100%;
+        box-sizing: border-box;
+        flex: 0 0 auto; /* prevent shrinking */
+      }
+
+      .menu-btn:hover,
+      .menu-btn.active {
+        background-color: var(--primary-color);
+        color: #fff;
+      }
+
+      /* Estilos do User Card */
+      .user-card {
+        margin-top: auto;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        padding-bottom: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+      }
+
+      .user-name {
+        font-weight: 600;
+        color: var(--heading-color);
+        font-size: 0.95rem;
+      }
+
+      .user-role {
+        font-size: 0.8rem;
+        color: var(--text-color);
+        opacity: 0.8;
+      }
+
+      .logout-btn {
+        background-color: #e53e3e;
+        color: white;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+      }
+
+      .logout-btn:hover {
+        background-color: #c53030;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background-color: #f4f7fa;
+        display: flex;
+      }
+
+      .container {
+        display: flex;
+        width: 100%;
+        min-height: 100vh;
+      }
+
+      .main-content {
+        flex-grow: 1;
+        padding: 2rem;
+        overflow-y: auto;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      h1 {
+        font-size: 1.8rem;
+        color: var(--heading-color);
+      }
+
+      .card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+      }
+
+      .card-title {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--heading-color);
+        margin-bottom: 0;
+      }
+
+      .card-header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 1rem;
+      }
+
+      .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: background-color 0.2s;
+      }
+
+      .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #357abd;
+      }
+
+      .btn-danger {
+        background-color: var(--danger-color);
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #c53030;
+      }
+
+      .btn-secondary {
+        background-color: #e2e8f0;
+        color: var(--text-color);
+      }
+
+      .btn-secondary:hover {
+        background-color: #cbd5e0;
+      }
+
+      .table-wrapper {
+        overflow-x: auto;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+
+      thead {
+        background-color: #f7fafc;
+        border-bottom: 2px solid var(--border-color);
+      }
+
+      th {
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--heading-color);
+      }
+
+      td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      tbody tr:hover {
+        background-color: #f7fafc;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+      }
+
+      .btn-sm {
+        padding: 0.5rem 1rem;
+        font-size: 0.85rem;
+      }
+
+      /* Modal styles */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.4);
+      }
+
+      .modal.show {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .modal-content {
+        background-color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: var(--shadow);
+      }
+
+      .modal-header {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--heading-color);
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        color: var(--text-color);
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        font-size: 1rem;
+        font-family: inherit;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+      }
+
+      .modal-footer {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-color);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-color);
+      }
+
+      .nivel-badge {
+        display: inline-block;
+        padding: 0.35rem 0.75rem;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+
+      .nivel-admin {
+        background-color: #fed7d7;
+        color: #742a2a;
+      }
+
+      .nivel-gerente {
+        background-color: #fef5e7;
+        color: #7d6608;
+      }
+
+      .nivel-padrão {
+        background-color: #e6ffed;
+        color: #22543d;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <!-- Barra Lateral -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <div class="logo">
+            <img src="imagens/LOGO HOTEL azul .svg.svg" alt="Logo Hotel" />
+          </div>
+          <div class="date-time" id="dateTime"></div>
+        </div>
+        <nav class="nav-menu">
+          <a href="index.html" class="menu-btn">🏠 Ínicio</a>
+          <a href="checkin.html" class="menu-btn">📥 Check-in</a>
+          <a href="checkout.html" class="menu-btn">📤 Check-out</a>
+          <a href="clientes.html" class="menu-btn">👤 Clientes</a>
+          <a href="quartos.html" class="menu-btn">🛏️ Quartos</a>
+          <a href="reservas.html" class="menu-btn">📋 Reservas</a>
+          <a href="produtos.html" class="menu-btn">🛒 Produtos</a>
+          <a href="calendario.html" class="menu-btn">📅 Calendário</a>
+          <a href="gerenciamento_usuarios.html" class="menu-btn active" id="usuariosMenuBtn">👥 Usuários</a>
+        </nav>
+        <div class="user-card">
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">—</div>
+            <div class="user-role" id="sidebarUserRole">padrão</div>
+          </div>
+          <button class="logout-btn" id="sidebarLogoutBtn">Sair</button>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="header">
+          <h1>👥 Gerenciamento de Usuários</h1>
+        </header>
+
+        <section class="card">
+          <div class="card-header-actions">
+            <h2 class="card-title">Usuários Cadastrados</h2>
+            <button class="btn btn-primary" id="addUserBtn">+ Novo Usuário</button>
+          </div>
+          <div class="table-wrapper">
+            <div id="usuariosTableContainer">
+              <p class="loading">Carregando usuários...</p>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal de Criar/Editar Usuário -->
+    <div class="modal" id="usuarioModal">
+      <div class="modal-content">
+        <div class="modal-header" id="modalTitle">Novo Usuário</div>
+        <form id="usuarioForm">
+          <div class="form-group">
+            <label for="usuarioInput">Usuário</label>
+            <input type="text" id="usuarioInput" required />
+          </div>
+
+          <div class="form-group">
+            <label for="senhaInput">Senha</label>
+            <input type="password" id="senhaInput" />
+            <small style="color: #666; margin-top: 0.25rem; display: block;">
+              Deixe em branco para manter a senha atual
+            </small>
+          </div>
+
+          <div class="form-group">
+            <label for="nomeInput">Nome</label>
+            <input type="text" id="nomeInput" required />
+          </div>
+
+          <div class="form-group">
+            <label for="nivelInput">Nível de Acesso</label>
+            <select id="nivelInput" required>
+              <option value="">Selecione um nível</option>
+              <option value="admin">Admin</option>
+              <option value="gerente">Gerente</option>
+              <option value="padrão">Padrão</option>
+            </select>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" id="closeModalBtn">
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary">Salvar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // Atualizar data e hora
+      function updateDateTime() {
+        const dateTimeElement = document.getElementById('dateTime');
+        if (dateTimeElement) {
+          const now = new Date();
+          const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+          const months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+          
+          const dayName = days[now.getDay()];
+          const day = now.getDate();
+          const month = months[now.getMonth()];
+          const year = now.getFullYear();
+          
+          dateTimeElement.textContent = `${dayName}, ${day} de ${month} de ${year}`;
+        }
+      }
+
+      // Chamar ao carregar
+      updateDateTime();
+      // Atualizar a cada minuto
+      setInterval(updateDateTime, 60000);
+
+      let usuarioEmEdicao = null;
+
+      // Elementos do DOM
+      let modal;
+      let usuarioForm;
+      let addUserBtn;
+      let closeModalBtn;
+      let modalTitle;
+      let usuariosTableContainer;
+
+      function initializeElements() {
+        modal = document.getElementById('usuarioModal');
+        usuarioForm = document.getElementById('usuarioForm');
+        addUserBtn = document.getElementById('addUserBtn');
+        closeModalBtn = document.getElementById('closeModalBtn');
+        modalTitle = document.getElementById('modalTitle');
+        usuariosTableContainer = document.getElementById('usuariosTableContainer');
+      }
+
+      // Inicializar apenas quando o DOM estiver pronto
+      document.addEventListener('DOMContentLoaded', () => {
+        initializeElements();
+        
+        if (!addUserBtn) {
+          console.error('Botão "Novo Usuário" não encontrado');
+          return;
+        }
+
+        // Mostrar/ocultar botão de novo usuário conforme nível do usuário
+        const currentUser = getUser();
+        if (!currentUser || (currentUser.nivel_acesso !== 'admin' && currentUser.nivel_acesso !== 'gerente')) {
+          addUserBtn.style.display = 'none';
+        } else {
+          addUserBtn.style.display = 'inline-flex';
+        }
+
+        // Abrir modal para novo usuário
+        addUserBtn.addEventListener('click', () => {
+          usuarioEmEdicao = null;
+          usuarioForm.reset();
+          document.getElementById('senhaInput').required = true;
+          modalTitle.textContent = 'Novo Usuário';
+          modal.classList.add('show');
+        });
+
+        // Fechar modal
+        closeModalBtn.addEventListener('click', () => {
+          modal.classList.remove('show');
+          usuarioForm.reset();
+        });
+
+        // Fechar modal ao clicar fora
+        window.addEventListener('click', (e) => {
+          if (e.target === modal) {
+            modal.classList.remove('show');
+          }
+        });
+
+        // Submeter formulário
+        usuarioForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          const usuario = document.getElementById('usuarioInput').value.trim();
+          const senha = document.getElementById('senhaInput').value;
+          const nome = document.getElementById('nomeInput').value.trim();
+          const nivel_acesso = document.getElementById('nivelInput').value;
+
+          if (!usuario || !nome || !nivel_acesso) {
+            showNotification('Preencha todos os campos obrigatórios', 'warning');
+            return;
+          }
+
+          if (!usuarioEmEdicao && !senha) {
+            showNotification('Senha é obrigatória para novo usuário', 'warning');
+            return;
+          }
+
+          // Gerentes não podem criar usuários admin
+          const currentUser = getUser();
+          if (!usuarioEmEdicao && currentUser && currentUser.nivel_acesso === 'gerente' && nivel_acesso === 'admin') {
+            showNotification('Gerentes não podem criar usuários admin', 'warning');
+            return;
+          }
+
+          // Gerentes não podem editar para admin
+          if (usuarioEmEdicao && currentUser && currentUser.nivel_acesso === 'gerente' && nivel_acesso === 'admin') {
+            showNotification('Gerentes não podem editar usuários para nível admin', 'warning');
+            return;
+          }
+
+          try {
+            let url = '/api/usuarios';
+            let method = 'POST';
+            let body = { usuario, nome, nivel_acesso };
+
+            if (usuarioEmEdicao) {
+              url = `/api/usuarios/${usuarioEmEdicao.id}`;
+              method = 'PUT';
+              if (senha) {
+                body.senha = senha;
+              }
+            } else {
+              body.senha = senha;
+            }
+
+            // Prevent admin from downgrading their own access
+            const currentUser = getUser();
+            if (
+              usuarioEmEdicao &&
+              currentUser &&
+              currentUser.id === usuarioEmEdicao.id &&
+              currentUser.nivel_acesso === 'admin' &&
+              body.nivel_acesso &&
+              body.nivel_acesso !== 'admin'
+            ) {
+              showNotification('Você não pode remover seu próprio nível de administrador.', 'warning');
+              return;
+            }
+
+            const response = await fetchWithAuth(url, {
+              method,
+              body: JSON.stringify(body),
+            });
+
+            let data;
+            try {
+              data = await response.json();
+            } catch (parseError) {
+              console.error('Erro ao parsear JSON:', parseError, 'Response:', response);
+              showNotification('Erro: Resposta inválida do servidor', 'danger');
+              return;
+            }
+
+            if (!response.ok) {
+              console.error('Erro na resposta:', response.status, data);
+              showNotification(data.message || `Erro ao salvar usuário (${response.status})`, 'danger');
+              return;
+            }
+
+            showNotification(
+              usuarioEmEdicao ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!',
+              'success'
+            );
+            modal.classList.remove('show');
+            usuarioForm.reset();
+            carregarUsuarios();
+          } catch (error) {
+            showNotification('Erro ao salvar usuário: ' + error.message, 'danger');
+          }
+        });
+
+        setupSidebar();
+        carregarUsuarios();
+      });
+
+      // Carregar usuários
+      async function carregarUsuarios() {
+        usuariosTableContainer.innerHTML = '<p class="loading">Carregando usuários...</p>';
+
+        try {
+          const response = await fetchWithAuth('/api/usuarios');
+
+          if (!response.ok) {
+            usuariosTableContainer.innerHTML =
+              '<p class="empty-state">Erro ao carregar usuários</p>';
+            return;
+          }
+
+          const usuarios = await response.json();
+
+          if (!Array.isArray(usuarios) || usuarios.length === 0) {
+            usuariosTableContainer.innerHTML =
+              '<p class="empty-state">Nenhum usuário cadastrado</p>';
+            return;
+          }
+
+          let html = `
+            <table>
+              <thead>
+                <tr>
+                  <th>Usuário</th>
+                  <th>Nome</th>
+                  <th>Nível de Acesso</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+          `;
+
+          const currentUser = getUser();
+          usuarios.forEach((u) => {
+            const nivelClass = `nivel-${u.nivel_acesso}`;
+
+            // Permissões de ação: 
+            // - Admin: pode editar/deletar tudo (exceto a si mesmo)
+            // - Gerente: pode editar/deletar não-admins (exceto a si mesmo)
+            const isTargetAdmin = u.nivel_acesso === 'admin';
+            const isCurrentAdmin = currentUser && currentUser.nivel_acesso === 'admin';
+            const isCurrentGerente = currentUser && currentUser.nivel_acesso === 'gerente';
+            const isSameUser = currentUser && currentUser.id === u.id;
+
+            let actionsHtml = '';
+
+            // Mostrar Editar se:
+            // - Admin editando não-admin, ou editando a si mesmo
+            // - Gerente editando não-admin, ou editando a si mesmo
+            if ((isCurrentAdmin && (!isTargetAdmin || isSameUser)) || (isCurrentGerente && !isTargetAdmin) || (!isCurrentAdmin && !isCurrentGerente && isSameUser)) {
+              actionsHtml += `
+                <button class="btn btn-secondary btn-sm" onclick="editarUsuario(${u.id}, '${u.usuario}', '${u.nome}', '${u.nivel_acesso}')">Editar</button>`;
+            }
+
+            // Mostrar Deletar somente se:
+            // - Admin deletando não-admin (mas não a si mesmo)
+            // - Gerente deletando não-admin
+            if ((isCurrentAdmin && !isTargetAdmin) || (isCurrentGerente && !isTargetAdmin)) {
+              actionsHtml += `
+                <button class="btn btn-danger btn-sm" onclick="deletarUsuario(${u.id}, '${u.usuario}')">Deletar</button>`;
+            }
+
+            html += `
+              <tr>
+                <td>${u.usuario}</td>
+                <td>${u.nome}</td>
+                <td><span class="nivel-badge ${nivelClass}">${u.nivel_acesso}</span></td>
+                <td>
+                  <div class="action-buttons">
+                    ${actionsHtml || '<span style="color: #718096;">Sem ações</span>'}
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+
+          html += `
+              </tbody>
+            </table>
+          `;
+
+          usuariosTableContainer.innerHTML = html;
+        } catch (error) {
+          usuariosTableContainer.innerHTML =
+            '<p class="empty-state">Erro ao carregar usuários</p>';
+          console.error('Erro:', error);
+        }
+      }
+
+      // Editar usuário
+      window.editarUsuario = function (id, usuario, nome, nivel_acesso) {
+        const currentUser = getUser();
+        
+        // Prevent editing self to downgrade from admin
+        if (currentUser && currentUser.id === id && currentUser.nivel_acesso === 'admin') {
+          // Check if user is trying to change level or something else that would downgrade
+          // For now, allow self-edit but we'll validate on submit
+        }
+        
+        usuarioEmEdicao = { id, usuario, nome, nivel_acesso };
+        document.getElementById('usuarioInput').value = usuario;
+        document.getElementById('senhaInput').value = '';
+        document.getElementById('senhaInput').required = false;
+        document.getElementById('nomeInput').value = nome;
+        document.getElementById('nivelInput').value = nivel_acesso;
+        modalTitle.textContent = 'Editar Usuário';
+        modal.classList.add('show');
+      };
+
+      // Deletar usuário
+      window.deletarUsuario = function (id, usuario) {
+        const currentUser = getUser();
+        
+        // Prevent deletion of self (admin cannot delete their own account)
+        if (currentUser && currentUser.id === id) {
+          showNotification('Você não pode deletar sua própria conta!', 'warning');
+          return;
+        }
+
+        showConfirmDialog(
+          'Deletar usuário?',
+          `Tem certeza que deseja deletar o usuário "${usuario}"?`,
+          async () => {
+            try {
+              const response = await fetchWithAuth(`/api/usuarios/${id}`, {
+                method: 'DELETE',
+              });
+
+              if (!response.ok) {
+                const data = await response.json();
+                showNotification(data.message || 'Erro ao deletar usuário', 'danger');
+                return;
+              }
+
+              showNotification('Usuário deletado com sucesso', 'success');
+              carregarUsuarios();
+            } catch (error) {
+              showNotification('Erro ao deletar usuário: ' + error.message, 'danger');
+            }
+          }
+        );
+      };
+
+      // Inicializar página (finalization handled in the main DOMContentLoaded above)
+    </script>
+  </body>
+</html>

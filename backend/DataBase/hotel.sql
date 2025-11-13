@@ -358,10 +358,10 @@ CREATE TABLE `usuarios` (
   `usuario` varchar(50) NOT NULL,
   `senha` varchar(255) NOT NULL,
   `nome` varchar(100) NOT NULL,
-  `nivel_acesso` enum('admin','funcionario') DEFAULT 'funcionario',
+  `nivel_acesso` enum('admin','gerente','padrão') DEFAULT 'padrão',
   PRIMARY KEY (`id`),
   UNIQUE KEY `usuario` (`usuario`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -370,7 +370,7 @@ CREATE TABLE `usuarios` (
 
 LOCK TABLES `usuarios` WRITE;
 /*!40000 ALTER TABLE `usuarios` DISABLE KEYS */;
-INSERT INTO `usuarios` VALUES (1,'admin','123456','Administrador','admin');
+INSERT INTO `usuarios` VALUES (1,'admin','admin','Administrador','admin');
 /*!40000 ALTER TABLE `usuarios` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -383,4 +383,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-10-27 20:19:35
+-- Dump completed on 2025-11-11 18:53:00

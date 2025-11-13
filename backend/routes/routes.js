@@ -7,12 +7,19 @@ const {
   Reservas,
   Consumos,
 } = require("../models/models");
-const db = require("../config/database"); // Certifique-se de que o caminho para o seu arquivo de configuração do banco de dados está correto
+const db = require("../config/database");
+const { comparePassword, generateToken, requireAuth, requireAdmin, requireAdminOrGerente } = require("../security");
+const { calcularDiariaComAcompanhantes } = require("../utils/calcularDiaria");
 
 const router = express.Router();
 
-router.post("/login", (req, res) => {
+// Login com JWT e bcrypt
+router.post("/login", async (req, res) => {
   const { usuario, senha } = req.body;
+
+  if (!usuario || !senha) {
+    return res.status(400).json({ message: "Usuário e senha são obrigatórios" });
+  }
 
   Usuarios.findAll((err, results) => {
     if (err) {
@@ -24,11 +31,29 @@ router.post("/login", (req, res) => {
       return res.status(404).json({ message: "Usuário não encontrado" });
     }
 
-    if (senha !== user.senha) {
+    // Comparar senha (com bcrypt ou plaintext para compatibilidade)
+    const isPasswordValid = 
+      (user.senha && senha === user.senha) || 
+      (user.senha_hash && require('bcryptjs').compareSync(senha, user.senha_hash));
+
+    if (!isPasswordValid) {
       return res.status(401).json({ message: "Senha incorreta" });
     }
 
-    res.status(200).json({ message: "Login realizado com sucesso", user });
+    // Gerar token JWT
+    const token = generateToken(user);
+    const userData = {
+      id: user.id,
+      usuario: user.usuario,
+      nome: user.nome,
+      nivel_acesso: user.nivel_acesso,
+    };
+
+    res.status(200).json({ 
+      message: "Login realizado com sucesso", 
+      token,
+      user: userData 
+    });
   });
 });
 
@@ -329,8 +354,8 @@ router.delete("/quartos/:numero", (req, res) => {
   });
 });
 
-// Chegadas do dia (check-in)
-router.get("/checkins-hoje", (req, res) => {
+// Chegadas do dia (check-in) - Requer admin ou gerente
+router.get("/checkins-hoje", requireAuth, requireAdminOrGerente, (req, res) => {
   const hoje = new Date().toISOString().slice(0, 10);
   db.query(
     `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
@@ -355,8 +380,8 @@ router.get("/checkins-hoje", (req, res) => {
   );
 });
 
-// Saídas do dia (check-out)
-router.get("/checkouts-hoje", (req, res) => {
+// Saídas do dia (check-out) - Requer admin ou gerente
+router.get("/checkouts-hoje", requireAuth, requireAdminOrGerente, (req, res) => {
   const hoje = new Date().toISOString().slice(0, 10);
   db.query(
     `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
@@ -456,6 +481,7 @@ router.post("/checkin", (req, res) => {
     data_checkout_prevista,
     hora_checkout_prevista,
     ignorar_reserva_ativa,
+    taxa_acompanhante,  // Taxa de café da manhã por acompanhante (opcional)
   } = req.body;
 
   // CORREÇÃO DE VALIDAÇÃO: Verifica se há CPF OU Passaporte
@@ -521,14 +547,16 @@ router.post("/checkin", (req, res) => {
               // PASSO 4: Inserir a nova reserva (AGORA USANDO CLIENTE_ID)
               db.query(
                 `INSERT INTO Reservas 
-     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
+     (cliente_id, quarto_numero, data_checkin, hora_checkin, valor_diaria, valor_diaria_base, taxa_acompanhante, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, status)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ativo')`,
                 [
                   cliente_id, // CORREÇÃO: Usar cliente_id
                   quarto_numero,
                   data_checkin,
                   hora_checkin,
                   valor_diaria,
+                  valor_diaria, // salva o valor base
+                  taxa_acompanhante || null,
                   motivo_hospedagem || null,
                   data_checkout_prevista || null,
                   hora_checkout_prevista || null,
@@ -567,7 +595,7 @@ router.post("/checkin", (req, res) => {
                         db.query(
                           `INSERT INTO Acompanhantes (reserva_id, nome, cpf, passaporte, data_nascimento) VALUES ?`,
                           [acompanhantesData],
-                          (err3) => {
+                          async (err3) => {
                             if (err3) {
                               console.error("Erro ao registrar acompanhantes:", err3);
                               return res.status(500).json({
@@ -575,10 +603,48 @@ router.post("/checkin", (req, res) => {
                                 error: err3,
                               });
                             }
-                            res.status(201).json({
-                              message: "Check-in registrado com sucesso",
-                              result,
-                            });
+
+                            // Recalcular a diária com base no número de acompanhantes
+                            try {
+                              const calculo = await calcularDiariaComAcompanhantes(
+                                db,
+                                reservaId,
+                                Number(valor_diaria),
+                                taxa_acompanhante ? Number(taxa_acompanhante) : null
+                              );
+
+                              // Atualizar a reserva com o novo valor da diária
+                              db.query(
+                                `UPDATE Reservas SET valor_diaria = ? WHERE id = ?`,
+                                [calculo.valorFinal, reservaId],
+                                (errUpdate) => {
+                                  if (errUpdate) {
+                                    console.error("Erro ao atualizar diária:", errUpdate);
+                                    return res.status(500).json({
+                                      message: "Erro ao atualizar valor da diária",
+                                      error: errUpdate,
+                                    });
+                                  }
+
+                                  res.status(201).json({
+                                    message: "Check-in registrado com sucesso",
+                                    result: {
+                                      ...result,
+                                      valor_diaria_recalculado: calculo.valorFinal,
+                                      acompanhantes_count: calculo.acompanhantes,
+                                      taxa_acompanhante_usada: calculo.taxa_acompanhante,
+                                      total_taxa_aplicada: calculo.total_taxa_aplicada,
+                                    },
+                                  });
+                                }
+                              );
+                            } catch (calcErr) {
+                              console.error("Erro ao calcular diária:", calcErr);
+                              res.status(201).json({
+                                message: "Check-in registrado, mas houve erro ao recalcular diária",
+                                result,
+                              });
+                            }
                           }
                         );
                       } else {
@@ -610,31 +676,70 @@ router.put("/checkout/:id", (req, res) => {
       .json({ message: "Preencha data e hora do check-out!" });
   }
 
+  // Primeiro, buscar dados da reserva (base e taxa)
   db.query(
-    `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, status = 'finalizado' WHERE id = ?`,
-    [data_checkout, hora_checkout, id],
-    (err, result) => {
-      if (err) {
-        return res
-          .status(500)
-          .json({ message: "Erro ao registrar check-out", error: err });
-      }
-      // Atualize o status do quarto
-      db.query(
-        `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
-        [id],
-        (err2) => {
-          if (err2) {
-            return res.status(500).json({
-              message: "Erro ao atualizar status do quarto",
-              error: err2,
-            });
-          }
-          res
-            .status(200)
-            .json({ message: "Check-out registrado com sucesso", result });
+    `SELECT quarto_numero, valor_diaria_base, taxa_acompanhante FROM Reservas WHERE id = ?`,
+    [id],
+    async (errGet, rows) => {
+      if (errGet) return res.status(500).json({ message: 'Erro ao buscar reserva', error: errGet });
+      if (!rows.length) return res.status(404).json({ message: 'Reserva não encontrada' });
+
+      const reserva = rows[0];
+      let baseValor = reserva.valor_diaria_base;
+      const taxaParaUsar = reserva.taxa_acompanhante || null;
+
+      // Se não houver valor_diaria_base, buscar do quarto/tipo
+      if (baseValor == null) {
+        try {
+          const baseRows = await new Promise((resolve, reject) => {
+            db.query(
+              `SELECT COALESCE(q.valor_diaria, tq.valor_diaria) AS base FROM Quartos q JOIN TiposQuarto tq ON q.tipo_id = tq.id WHERE q.numero = ?`,
+              [reserva.quarto_numero],
+              (errB, rB) => errB ? reject(errB) : resolve(rB)
+            );
+          });
+          baseValor = (baseRows && baseRows[0] && baseRows[0].base) ? baseRows[0].base : null;
+        } catch (e) {
+          console.error('Erro ao buscar valor base do quarto:', e);
         }
-      );
+      }
+
+      try {
+        const calculo = await calcularDiariaComAcompanhantes(db, id, Number(baseValor || 0), taxaParaUsar);
+
+        // Atualizar a reserva com valor final e registrar checkout
+        db.query(
+          `UPDATE Reservas SET data_checkout = ?, hora_checkout = ?, status = 'finalizado', valor_diaria = ? WHERE id = ?`,
+          [data_checkout, hora_checkout, calculo.valorFinal, id],
+          (errUpdate) => {
+            if (errUpdate) return res.status(500).json({ message: 'Erro ao registrar check-out', error: errUpdate });
+
+            // Atualize o status do quarto
+            db.query(
+              `UPDATE Quartos SET status = 'disponivel' WHERE numero = (SELECT quarto_numero FROM Reservas WHERE id = ?)`,
+              [id],
+              (err2) => {
+                if (err2) {
+                  console.error('Erro ao atualizar status do quarto:', err2);
+                }
+
+                return res.status(200).json({
+                  message: 'Check-out registrado com sucesso',
+                  calculo: {
+                    valor_diaria_final: calculo.valorFinal,
+                    total_taxa_aplicada: calculo.total_taxa_aplicada,
+                    taxa_acompanhante_usada: calculo.taxa_acompanhante,
+                    acompanhantes: calculo.acompanhantes
+                  }
+                });
+              }
+            );
+          }
+        );
+      } catch (calcErr) {
+        console.error('Erro ao calcular diária no checkout:', calcErr);
+        return res.status(500).json({ message: 'Erro ao calcular valor final da diária', error: calcErr });
+      }
     }
   );
 });
@@ -727,7 +832,19 @@ router.get("/reserva-ativa/:cpf", (req, res) => {
             return res
               .status(404)
               .json({ message: "Nenhuma reserva ativa encontrada para este cliente." });
-          res.json(results[0]);
+
+          // Calcular valor final com taxa (se houver acompanhantes e taxa)
+          const reserva = results[0];
+          const valorBase = reserva.valor_diaria_base || reserva.valor_diaria || reserva.valor_diaria || reserva.tq_valor_diaria;
+          // chamar utilitário para calcular (ignora erro de cálculo e devolve reserva como está)
+          calcularDiariaComAcompanhantes(db, reserva.id, Number(valorBase), reserva.taxa_acompanhante || null)
+            .then((calculo) => {
+              res.json({ ...reserva, valor_diaria_final: calculo.valorFinal, total_taxa_aplicada: calculo.total_taxa_aplicada, taxa_acompanhante_usada: calculo.taxa_acompanhante });
+            })
+            .catch((e) => {
+              console.warn('Erro ao calcular diária para reserva ativa:', e);
+              res.json(reserva);
+            });
         }
       );
     }
@@ -971,26 +1088,6 @@ router.get("/hospedes-ativos", (req, res) => {
   });
 });
 
-router.get("/api/checkouts-hoje", (req, res) => {
-  const sql = `
-    SELECT c.cpf, c.nome, r.quarto_numero as quarto, q.tipo as tipo_quarto,
-           r.hora_checkout as hora, c.telefone, c.email, r.valor_diaria, 
-           r.motivo_hospedagem
-    FROM Reservas r
-    JOIN Clientes c ON r.cliente_id = c.id
-    JOIN Quartos q ON r.quarto_numero = q.numero
-    WHERE r.status = 'finalizado' AND r.data_checkout = CURDATE()
-    ORDER BY r.hora_checkout ASC
-  `;
-  db.query(sql, (err, results) => {
-    if (err)
-      return res
-        .status(500)
-        .json({ message: "Erro ao buscar checkouts", error: err });
-    res.json(results);
-  });
-});
-
 // Rota para buscar check-outs vencidos
 router.get("/checkouts-vencidos", (req, res) => {
   const agora = new Date();
@@ -1058,20 +1155,23 @@ router.post("/reservas", (req, res) => {
     desconto,
     status
   } = req.body;
+  const { taxa_acompanhante } = req.body;
 
   buscarCliente({ cpf, passaporte }, (err, cliente) => {
     if (err || !cliente) return res.status(400).json({ message: "Cliente não encontrado" });
 
     db.query(
       `INSERT INTO Reservas (
-        quarto_numero, cliente_id, data_checkin, hora_checkin, valor_diaria, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, desconto, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        quarto_numero, cliente_id, data_checkin, hora_checkin, valor_diaria, valor_diaria_base, taxa_acompanhante, motivo_hospedagem, data_checkout_prevista, hora_checkout_prevista, desconto, status
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         quarto_numero,
         cliente.id,
         data_checkin,
         hora_checkin,
         valor_diaria,
+        valor_diaria, // salva o base
+        taxa_acompanhante || null,
         motivo_hospedagem || null,
         data_checkout_prevista || null,
         hora_checkout_prevista || null,
@@ -1086,70 +1186,502 @@ router.post("/reservas", (req, res) => {
   });
 });
 
-// Novo: Atualizar cliente por ID
-router.put("/api/clientes/:id", (req, res) => {
-  const id = req.params.id;
-  const {
-    cpf,
-    passaporte,
-    nome,
-    telefone,
-    email,
-    endereco,
-    cep,
-    data_nascimento,
-    nacionalidade
-  } = req.body;
+// (cliente update route defined earlier)
 
-  const sql = `
-    UPDATE clientes SET
-      cpf = ?,
-      passaporte = ?,
-      nome = ?,
-      telefone = ?,
-      email = ?,
-      endereco = ?,
-      cep = ?,
-      data_nascimento = ?,
-      nacionalidade = ?
-    WHERE id = ?
-  `;
-  db.query(
-    sql,
-    [
-      cpf,
-      passaporte,
-      nome,
-      telefone,
-      email,
-      endereco,
-      cep,
-      data_nascimento,
-      nacionalidade,
-      id
-    ],
-    (err, result) => {
+// (clientes listing route defined earlier)
+
+// ===== ROTAS DE GERENCIAMENTO DE USUÁRIOS (ADMIN ONLY) =====
+
+// GET /usuarios - Listar todos os usuários (apenas admin e gerente)
+router.get("/usuarios", requireAuth, requireAdminOrGerente, (req, res) => {
+  Usuarios.findAll((err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "Erro ao buscar usuários", error: err });
+    }
+    
+    // Não retornar senhas
+    const usuariosSafeList = results.map(u => ({
+      id: u.id,
+      usuario: u.usuario,
+      nome: u.nome,
+      nivel_acesso: u.nivel_acesso
+    }));
+    
+    res.json(usuariosSafeList);
+  });
+});
+
+// POST /usuarios - Criar novo usuário (apenas admin e gerente, mas gerente não pode criar admin)
+router.post("/usuarios", requireAuth, requireAdminOrGerente, async (req, res) => {
+  const { usuario, senha, nome, nivel_acesso } = req.body;
+
+  if (!usuario || !senha || !nome || !nivel_acesso) {
+    return res.status(400).json({ message: "Todos os campos são obrigatórios" });
+  }
+
+  const validLevels = ['admin', 'gerente', 'padrão'];
+  if (!validLevels.includes(nivel_acesso)) {
+    return res.status(400).json({ message: "Nível de acesso inválido" });
+  }
+
+  // Gerentes não podem criar usuários admin
+  if (req.user.nivel_acesso === 'gerente' && nivel_acesso === 'admin') {
+    return res.status(403).json({ message: "Gerentes não podem criar usuários admin" });
+  }
+
+  // Verificar se usuário já existe
+  Usuarios.findAll((err, results) => {
+    if (err) {
+      return res.status(500).json({ message: "Erro ao verificar usuário", error: err });
+    }
+
+    if (results.find(u => u.usuario === usuario)) {
+      return res.status(409).json({ message: "Usuário já existe" });
+    }
+
+    // Inserir novo usuário (mantém compatibilidade com senha plaintext)
+    const sql = `INSERT INTO usuarios (usuario, senha, nome, nivel_acesso) VALUES (?, ?, ?, ?)`;
+    db.query(sql, [usuario, senha, nome, nivel_acesso], (err, result) => {
       if (err) {
-        console.error("Erro ao atualizar cliente:", err);
-        return res.status(500).json({ message: "Erro ao atualizar cliente", error: err });
+        return res.status(500).json({ message: "Erro ao criar usuário", error: err });
       }
+
+      res.status(201).json({ 
+        message: "Usuário criado com sucesso",
+        user: {
+          id: result.insertId,
+          usuario,
+          nome,
+          nivel_acesso
+        }
+      });
+    });
+  });
+});
+
+// PUT /usuarios/:id - Atualizar usuário (apenas admin e gerente, gerente não pode editar admin)
+router.put("/usuarios/:id", requireAuth, requireAdminOrGerente, (req, res) => {
+  const { id } = req.params;
+  const { usuario, nome, nivel_acesso } = req.body;
+
+  if (!usuario || !nome || !nivel_acesso) {
+    return res.status(400).json({ message: "Usuário, nome e nível de acesso são obrigatórios" });
+  }
+
+  const validLevels = ['admin', 'gerente', 'padrão'];
+  if (!validLevels.includes(nivel_acesso)) {
+    return res.status(400).json({ message: "Nível de acesso inválido" });
+  }
+
+  // Gerentes não podem editar admins (exceto a si mesmos se forem admin, mas gerentes não são admin)
+  if (req.user.nivel_acesso === 'gerente' && nivel_acesso === 'admin') {
+    return res.status(403).json({ message: "Gerentes não podem criar ou editar usuários admin" });
+  }
+
+  const sql = `UPDATE usuarios SET usuario = ?, nome = ?, nivel_acesso = ? WHERE id = ?`;
+  db.query(sql, [usuario, nome, nivel_acesso, id], (err, result) => {
+    if (err) {
+      return res.status(500).json({ message: "Erro ao atualizar usuário", error: err });
+    }
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Usuário não encontrado" });
+    }
+
+    res.json({ message: "Usuário atualizado com sucesso" });
+  });
+});
+
+// DELETE /usuarios/:id - Deletar usuário (apenas admin e gerente, gerente não pode deletar admin)
+router.delete("/usuarios/:id", requireAuth, requireAdminOrGerente, (req, res) => {
+  const { id } = req.params;
+
+  // Gerentes não podem deletar admins
+  if (req.user.nivel_acesso === 'gerente') {
+    // Primeiro, buscar o usuário para verificar seu nível
+    Usuarios.findAll((err, users) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro ao verificar usuário", error: err });
+      }
+      const targetUser = users.find(u => u.id == id);
+      if (targetUser && targetUser.nivel_acesso === 'admin') {
+        return res.status(403).json({ message: "Gerentes não podem deletar usuários admin" });
+      }
+
+      // Pode prosseguir com deleção
+      const sql = `DELETE FROM usuarios WHERE id = ?`;
+      db.query(sql, [id], (err, result) => {
+        if (err) {
+          return res.status(500).json({ message: "Erro ao deletar usuário", error: err });
+        }
+
+        if (result.affectedRows === 0) {
+          return res.status(404).json({ message: "Usuário não encontrado" });
+        }
+
+        res.json({ message: "Usuário deletado com sucesso" });
+      });
+    });
+  } else {
+    // Admin pode deletar (com proteção no frontend)
+    const sql = `DELETE FROM usuarios WHERE id = ?`;
+    db.query(sql, [id], (err, result) => {
+      if (err) {
+        return res.status(500).json({ message: "Erro ao deletar usuário", error: err });
+      }
+
       if (result.affectedRows === 0) {
-        return res.status(404).json({ message: "Cliente não encontrado" });
+        return res.status(404).json({ message: "Usuário não encontrado" });
       }
-      res.json({ message: "Cliente atualizado com sucesso", result });
+
+      res.json({ message: "Usuário deletado com sucesso" });
+    });
+  }
+});
+
+// POST /acompanhantes - Adicionar acompanhantes a uma reserva existente
+router.post("/acompanhantes", requireAuth, (req, res) => {
+  const { reserva_id, nomes, cpfs, passaportes, nascimentos, taxa_acompanhante } = req.body;
+
+  if (!reserva_id || !nomes || nomes.length === 0) {
+    return res.status(400).json({
+      message: "reserva_id e lista de acompanhantes são obrigatórios",
+    });
+  }
+
+  // Preparar dados dos acompanhantes
+  const acompanhantesData = nomes.map((nome, index) => [
+    reserva_id,
+    nome,
+    cpfs?.[index] || null,
+    passaportes?.[index] || null,
+    nascimentos?.[index] || null,
+  ]);
+
+  db.query(
+    `INSERT INTO Acompanhantes (reserva_id, nome, cpf, passaporte, data_nascimento) VALUES ?`,
+    [acompanhantesData],
+    async (err) => {
+      if (err) {
+        console.error("Erro ao registrar acompanhantes:", err);
+        return res.status(500).json({
+          message: "Erro ao registrar acompanhantes",
+          error: err,
+        });
+      }
+
+      // Recalcular a diária com base no número de acompanhantes
+      try {
+        // Primeiro, buscar o valor base e taxa da reserva
+        db.query(
+          `SELECT valor_diaria_base, taxa_acompanhante FROM Reservas WHERE id = ?`,
+          [reserva_id],
+          async (errGet, results) => {
+            if (errGet) {
+              return res.status(500).json({
+                message: "Erro ao buscar reserva",
+                error: errGet,
+              });
+            }
+
+            if (!results.length) {
+              return res.status(404).json({
+                message: "Reserva não encontrada",
+              });
+            }
+
+            const valorBase = results[0].valor_diaria_base || results[0].valor_diaria;
+
+            // Se a requisição trouxe uma taxa nova, atualiza a reserva
+            const taxaNaReq = req.body.taxa_acompanhante;
+            if (taxaNaReq != null) {
+              try {
+                await new Promise((resolve, reject) => {
+                  db.query('UPDATE Reservas SET taxa_acompanhante = ? WHERE id = ?', [Number(taxaNaReq), reserva_id], (uErr) => {
+                    if (uErr) return reject(uErr);
+                    resolve();
+                  });
+                });
+              } catch (uErr) {
+                console.warn('Não foi possível atualizar taxa na reserva:', uErr);
+              }
+            }
+
+            try {
+              const taxaParaUsar = (taxaNaReq != null) ? Number(taxaNaReq) : (results[0].taxa_acompanhante || null);
+              const calculo = await calcularDiariaComAcompanhantes(
+                db,
+                reserva_id,
+                Number(valorBase),
+                taxaParaUsar
+              );
+
+              // Atualizar a reserva com o novo valor
+              db.query(
+                `UPDATE Reservas SET valor_diaria = ? WHERE id = ?`,
+                [calculo.valorFinal, reserva_id],
+                (errUpdate) => {
+                  if (errUpdate) {
+                    console.error("Erro ao atualizar diária:", errUpdate);
+                  }
+
+                  res.status(201).json({
+                    message: "Acompanhantes adicionados com sucesso",
+                    calculo: {
+                      acompanhantes: calculo.acompanhantes,
+                      valor_diaria_anterior: calculo.valorBase,
+                      valor_diaria_atualizado: calculo.valorFinal,
+                      taxa_acompanhante_usada: calculo.taxa_acompanhante,
+                      total_taxa_aplicada: calculo.total_taxa_aplicada,
+                    },
+                  });
+                }
+              );
+            } catch (calcErr) {
+              console.error("Erro ao calcular diária:", calcErr);
+              res.status(201).json({
+                message:
+                  "Acompanhantes adicionados, mas houve erro ao recalcular diária",
+              });
+            }
+          }
+        );
+      } catch (calcErr) {
+        console.error("Erro ao calcular diária:", calcErr);
+        res.status(201).json({
+          message:
+            "Acompanhantes adicionados, mas houve erro ao recalcular diária",
+        });
+      }
     }
   );
 });
 
-router.get("/api/clientes", (req, res) => {
-  db.query("SELECT * FROM clientes", (err, results) => {
-    if (err)
-      return res
-        .status(500)
-        .json({ message: "Erro ao buscar clientes", error: err });
-    res.json(results);
-  });
+// DELETE /acompanhantes/:id - Remover acompanhante e recalcular diária
+router.delete("/acompanhantes/:id", requireAuth, (req, res) => {
+  const { id } = req.params;
+
+  db.query(
+    `SELECT reserva_id FROM Acompanhantes WHERE id = ?`,
+    [id],
+    (err, results) => {
+      if (err) {
+        return res.status(500).json({
+          message: "Erro ao buscar acompanhante",
+          error: err,
+        });
+      }
+
+      if (!results.length) {
+        return res.status(404).json({
+          message: "Acompanhante não encontrado",
+        });
+      }
+
+      const reserva_id = results[0].reserva_id;
+
+      db.query(
+        `DELETE FROM Acompanhantes WHERE id = ?`,
+        [id],
+        async (errDelete) => {
+          if (errDelete) {
+            return res.status(500).json({
+              message: "Erro ao deletar acompanhante",
+              error: errDelete,
+            });
+          }
+
+          // Recalcular a diária após remover o acompanhante
+          try {
+            db.query(
+              `SELECT valor_diaria_base, taxa_acompanhante FROM Reservas WHERE id = ?`,
+              [reserva_id],
+              async (errGet, results2) => {
+                if (errGet) {
+                  return res.status(500).json({
+                    message: "Erro ao buscar reserva",
+                    error: errGet,
+                  });
+                }
+
+                if (!results2.length) {
+                  return res.status(404).json({
+                    message: "Reserva não encontrada",
+                  });
+                }
+
+                try {
+                  const valorBase = results2[0].valor_diaria_base || results2[0].valor_diaria;
+                  const taxaParaUsar = results2[0].taxa_acompanhante || null;
+                  const calculo = await calcularDiariaComAcompanhantes(
+                    db,
+                    reserva_id,
+                    Number(valorBase),
+                    taxaParaUsar
+                  );
+
+                  // Atualizar reserva com novo valor calculado
+                  db.query('UPDATE Reservas SET valor_diaria = ? WHERE id = ?', [calculo.valorFinal, reserva_id], (errUp) => {
+                    if (errUp) console.error('Erro ao atualizar reserva após remover acompanhante:', errUp);
+                    res.json({
+                      message: "Acompanhante removido com sucesso",
+                      calculo: {
+                        acompanhantes: calculo.acompanhantes,
+                        valor_diaria_atualizado: calculo.valorFinal,
+                        taxa_acompanhante_usada: calculo.taxa_acompanhante,
+                        total_taxa_aplicada: calculo.total_taxa_aplicada,
+                      },
+                    });
+                  });
+                } catch (calcErr) {
+                  res.json({
+                    message:
+                      "Acompanhante removido, mas houve erro ao recalcular diária",
+                  });
+                }
+              }
+            );
+          } catch (calcErr) {
+            res.json({
+              message:
+                "Acompanhante removido, mas houve erro ao recalcular diária",
+            });
+          }
+        }
+      );
+    }
+  );
 });
 
+// GET /configuracoes/taxa-acompanhante - obter taxa de café da manhã por acompanhante
+router.get('/configuracoes/taxa-acompanhante', requireAuth, (req, res) => {
+  db.query(
+    'SELECT id, taxa_acompanhante_padrao, descricao, data_atualizacao FROM configuracoes_precos ORDER BY id DESC LIMIT 1',
+    (err, results) => {
+      if (err) {
+        console.error('Erro ao ler configuracoes_precos:', err);
+        return res.status(500).json({ message: 'Erro ao buscar configurações', error: err });
+      }
+
+      if (!results || !results.length) {
+        // Retornar default se não houver registro
+        return res.json({
+          taxa_acompanhante_padrao: 50.00,
+          descricao: 'Taxa de café da manhã por acompanhante (padrão)',
+          data_atualizacao: null,
+        });
+      }
+
+      const row = results[0];
+      res.json({
+        id: row.id,
+        taxa_acompanhante_padrao: Number(row.taxa_acompanhante_padrao),
+        descricao: row.descricao,
+        data_atualizacao: row.data_atualizacao,
+      });
+    }
+  );
+});
+
+// PUT /configuracoes/taxa-acompanhante - atualizar taxa (admin e gerente)
+router.put('/configuracoes/taxa-acompanhante', requireAuth, requireAdminOrGerente, (req, res) => {
+  const { taxa_acompanhante_padrao, descricao } = req.body;
+
+  // Validação: valor numérico positivo
+  const taxa = Number(taxa_acompanhante_padrao);
+  if (Number.isNaN(taxa) || taxa < 0) {
+    return res.status(400).json({ message: 'Taxa inválida (deve ser um número >= 0)' });
+  }
+
+  // Atualizar configuração
+  db.query(
+    'UPDATE configuracoes_precos SET taxa_acompanhante_padrao = ?, descricao = ?, atualizado_por = ? WHERE id = (SELECT MAX(id) FROM configuracoes_precos)',
+    [taxa, descricao || 'Taxa de café da manhã por acompanhante', req.user.id],
+    (err, result) => {
+      if (err) {
+        console.error('Erro ao salvar configuracoes_precos:', err);
+        return res.status(500).json({ message: 'Erro ao salvar configurações', error: err });
+      }
+
+      if (result.affectedRows === 0) {
+        // Se não houver registro, criar um novo
+        db.query(
+          'INSERT INTO configuracoes_precos (taxa_acompanhante_padrao, descricao, atualizado_por) VALUES (?, ?, ?)',
+          [taxa, descricao || 'Taxa de café da manhã por acompanhante', req.user.id],
+          (err, result) => {
+            if (err) {
+              return res.status(500).json({ message: 'Erro ao criar configuração', error: err });
+            }
+            res.json({
+              message: 'Configuração criada com sucesso',
+              id: result.insertId,
+              taxa_acompanhante_padrao: taxa
+            });
+          }
+        );
+      } else {
+        res.json({
+          message: 'Configuração atualizada com sucesso',
+          taxa_acompanhante_padrao: taxa
+        });
+      }
+    }
+  );
+});
+
+// GET /configuracoes/precos - obter porcentagens de aumento por acompanhantes
+router.get('/configuracoes/precos', requireAuth, (req, res) => {
+  db.query(
+    'SELECT acompanhante_1_percent, acompanhante_2_plus_percent, updated_at FROM configuracoes_precos ORDER BY id DESC LIMIT 1',
+    (err, results) => {
+      if (err) {
+        console.error('Erro ao ler configuracoes_precos:', err);
+        return res.status(500).json({ message: 'Erro ao buscar configurações', error: err });
+      }
+
+      if (!results || !results.length) {
+        // Retornar defaults se não houver registro
+        return res.json({
+          acompanhante_1_percent: 10.0,
+          acompanhante_2_plus_percent: 20.0,
+          updated_at: null,
+        });
+      }
+
+      const row = results[0];
+      res.json({
+        acompanhante_1_percent: Number(row.acompanhante_1_percent),
+        acompanhante_2_plus_percent: Number(row.acompanhante_2_plus_percent),
+        updated_at: row.updated_at,
+      });
+    }
+  );
+});
+
+// PUT /configuracoes/precos - atualizar porcentagens (autenticado: funcionários/gerentes podem atualizar)
+router.put('/configuracoes/precos', requireAuth, (req, res) => {
+  const { acompanhante_1_percent, acompanhante_2_plus_percent } = req.body;
+
+  // Validação básica: valores numéricos e >= 0
+  const p1 = Number(acompanhante_1_percent);
+  const p2 = Number(acompanhante_2_plus_percent);
+  if (Number.isNaN(p1) || Number.isNaN(p2) || p1 < 0 || p2 < 0) {
+    return res.status(400).json({ message: 'Porcentagens inválidas' });
+  }
+
+  // Inserir nova configuração (mantemos histórico)
+  db.query(
+    'INSERT INTO configuracoes_precos (acompanhante_1_percent, acompanhante_2_plus_percent) VALUES (?, ?)',
+    [p1, p2],
+    (err, result) => {
+      if (err) {
+        console.error('Erro ao salvar configuracoes_precos:', err);
+        return res.status(500).json({ message: 'Erro ao salvar configurações', error: err });
+      }
+
+      res.json({ message: 'Configurações atualizadas', id: result.insertId, acompanhante_1_percent: p1, acompanhante_2_plus_percent: p2 });
+    }
+  );
+});
 
 module.exports = router;

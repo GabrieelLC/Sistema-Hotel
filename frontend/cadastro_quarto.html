@@ -3,6 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <title>Cadastro de Quarto</title>
+    <script>
+      if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+        window.location.replace('login.html');
+      }
+    </script>
     <link rel="stylesheet" href="css/style.css" />
         <link rel="icon" type="image/x-icon" href="imagens/logo_branco .svg" />
     <link
@@ -12,6 +17,9 @@
       href="imagens/logo_branco .svg"
     />
     <link rel="logo" href="imagens/logo_branco .svg" />
+    <!-- Scripts de autenticação e UI -->
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
   </head>
   <body>
     <div class="container-quarto">
@@ -108,3 +116,4 @@
     </script>
   </body>
 </html>
+

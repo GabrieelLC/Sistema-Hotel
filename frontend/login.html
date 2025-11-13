@@ -16,7 +16,7 @@
   </head>
   <body>
     <div class="container">
-      <h2>Login</h2>
+      <h2>Login - Sistema Hotel</h2>
       <form id="loginForm">
         <label for="usuario">Digite seu Usuário</label>
         <input
@@ -24,6 +24,7 @@
           id="usuario"
           placeholder="Usuário"
           autocomplete="username"
+          required
         />
 
         <label for="senha">Digite sua senha</label>
@@ -32,11 +33,74 @@
           id="senha"
           placeholder="Senha"
           autocomplete="current-password"
+          required
         />
 
         <button type="submit">Entrar</button>
       </form>
+      <div id="errorMessage" style="color: #e53e3e; margin-top: 1rem; text-align: center; display: none;"></div>
     </div>
-    <script src="js/script.js"></script>
+
+    <script>
+      // Limpar localStorage corrompido no login
+      try {
+        const user = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        
+        // Se houver token válido, ir para index
+        if (token && user) {
+          try {
+            JSON.parse(user);
+            window.location.replace('index.html');
+          } catch (e) {
+            // localStorage corrompido, limpar e continuar no login
+            localStorage.clear();
+          }
+        }
+      } catch (e) {
+        // Ignorar erros de acesso ao localStorage
+      }
+
+      document.getElementById('loginForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const usuario = document.getElementById('usuario').value.trim();
+        const senha = document.getElementById('senha').value;
+        const errorDiv = document.getElementById('errorMessage');
+
+        if (!usuario || !senha) {
+          errorDiv.textContent = 'Usuário e senha são obrigatórios';
+          errorDiv.style.display = 'block';
+          return;
+        }
+
+        try {
+          const response = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, senha }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            errorDiv.textContent = data.message || 'Erro ao fazer login';
+            errorDiv.style.display = 'block';
+            return;
+          }
+
+          // Salvar token e usuário no localStorage
+          localStorage.setItem('token', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+
+          // Redirecionar para index
+          window.location.replace('index.html');
+        } catch (error) {
+          console.error('Erro ao conectar:', error);
+          errorDiv.textContent = 'Erro ao conectar ao servidor';
+          errorDiv.style.display = 'block';
+        }
+      });
+    </script>
   </body>
 </html>

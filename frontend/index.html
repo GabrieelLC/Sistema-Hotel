@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema Hotel - Dashboard Moderno</title>
+    <!-- Verificação de autenticação ANTES de qualquer coisa -->
+    <script>
+      if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+        window.location.replace('login.html');
+      }
+    </script>
     <!-- Importando a fonte Inter do Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -19,6 +25,9 @@
       href="imagens/logo_branco .svg"
     />
     <link rel="logo" href="imagens/logo_branco .svg" />
+    <!-- Scripts de autenticação e UI -->
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
     <!-- Estilos CSS para um visual minimalista e moderno -->
     <style>
       /* Reset básico e configurações globais */
@@ -81,6 +90,10 @@
         font-size: 0.9rem;
         margin-top: 0.5rem;
         line-height: 1.4;
+        min-height: 3rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
 
       .nav-menu {
@@ -105,6 +118,50 @@
       .menu-btn.active {
         background-color: var(--primary-color);
         color: #fff;
+      }
+
+      /* Estilo do Card de Usuário */
+      .user-card {
+        margin-top: auto;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+
+      .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+      }
+
+      .user-name {
+        font-weight: 600;
+        color: var(--heading-color);
+        font-size: 0.95rem;
+      }
+
+      .user-role {
+        font-size: 0.8rem;
+        color: var(--text-color);
+        opacity: 0.8;
+      }
+
+      .logout-btn {
+        background-color: #e53e3e;
+        color: white;
+        border: none;
+        padding: 0.6rem 1rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: all 0.2s;
+      }
+
+      .logout-btn:hover {
+        background-color: #c53030;
       }
 
       /* Conteúdo Principal */
@@ -299,15 +356,25 @@
           <div class="date-time" id="dateTime"></div>
         </div>
         <nav class="nav-menu">
-          <a href="index.html" class="menu-btn active">Ínicio</a>
-          <a href="checkin.html" class="menu-btn">Check-in</a>
-          <a href="checkout.html" class="menu-btn">Check-out</a>
-          <a href="clientes.html" class="menu-btn">Clientes</a>
-          <a href="quartos.html" class="menu-btn">Quartos</a>
-          <a href="reservas.html" class="menu-btn">Reservas</a>
-          <a href="produtos.html" class="menu-btn">Produtos</a>
-          <a href="calendario.html" class="menu-btn">Calendário</a>
+          <a href="index.html" class="menu-btn active">🏠 Ínicio</a>
+          <a href="checkin.html" class="menu-btn">📥 Check-in</a>
+          <a href="checkout.html" class="menu-btn">📤 Check-out</a>
+          <a href="clientes.html" class="menu-btn">👤 Clientes</a>
+          <a href="quartos.html" class="menu-btn">🛏️ Quartos</a>
+          <a href="reservas.html" class="menu-btn">📋 Reservas</a>
+          <a href="produtos.html" class="menu-btn">🛒 Produtos</a>
+          <a href="calendario.html" class="menu-btn">📅 Calendário</a>
+          <a href="gerenciamento_usuarios.html" class="menu-btn" id="usuariosMenuBtn" style="display: none;">👥 Usuários</a>
         </nav>
+
+        <!-- Card de usuário logado e logout -->
+        <div class="user-card">
+          <div class="user-info">
+            <div class="user-name" id="sidebarUserName">—</div>
+            <div class="user-role" id="sidebarUserRole">padrão</div>
+          </div>
+          <button class="logout-btn" id="sidebarLogoutBtn">Sair</button>
+        </div>
       </aside>
 
       <!-- Conteúdo Principal -->
