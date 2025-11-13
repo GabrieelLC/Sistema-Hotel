@@ -790,6 +790,13 @@ const Produtos = {
       callback
     );
   },
+  update: (id, data, callback) => {
+    db.query(
+      "UPDATE Produtos SET nome = ?, preco_unitario = ?, estoque = ? WHERE id = ?",
+      [data.nome, data.preco, data.estoque, id],
+      callback
+    );
+  },
   delete: (id, callback) => {
     db.query("DELETE FROM Produtos WHERE id = ?", [id], callback);
   },
@@ -819,7 +826,29 @@ router.post("/produtos", (req, res) => {
     res.status(201).json({ message: "Produto cadastrado com sucesso", result });
   });
 });
+  router.put("/produtos/:id", (req, res) => {
+  const { id } = req.params;
+  const { nome, preco, estoque } = req.body; // 'preco' vem do body
 
+  if (!nome || preco === undefined || estoque === undefined) {
+    return res.status(400).json({ message: "Preencha todos os campos!" });
+  }
+
+  Produtos.update(id, { nome, preco, estoque }, (err, result) => {
+    if (err) {
+      console.error("Erro ao atualizar produto:", err);
+      return res
+        .status(500)
+        .json({ message: "Erro ao atualizar produto", error: err });
+    }
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "Produto não encontrado" });
+    }
+    res
+      .status(200)
+      .json({ message: "Produto atualizado com sucesso", result });
+  });
+});
 router.delete("/produtos/:id", (req, res) => {
   Produtos.delete(req.params.id, (err, result) => {
     if (err)
