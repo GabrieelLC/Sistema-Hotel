@@ -529,12 +529,10 @@
                   >
                   <input
                     class="checkoutscreeninput"
-                    type="number"
+                    type="text"
                     id="taxa_acompanhante"
                     name="taxa_acompanhante"
                     placeholder="50.00"
-                    step="0.01"
-                    min="0"
                   />
                 </div>
                 <div class="form-group">
@@ -674,6 +672,63 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        // --- Máscara visual de CPF (campo principal) ---
+        const docClienteInput = document.getElementById("documentocliente");
+        function formatarCPF(cpf) {
+          cpf = cpf.replace(/\D/g, "");
+          if (cpf.length > 11) cpf = cpf.slice(0, 11);
+          if (cpf.length <= 3) return cpf;
+          if (cpf.length <= 6) return cpf.slice(0, 3) + "." + cpf.slice(3);
+          if (cpf.length <= 9) return cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6);
+          return cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6, 9) + "-" + cpf.slice(9);
+        }
+        if (docClienteInput) {
+          docClienteInput.addEventListener("input", (e) => {
+            const val = e.target.value;
+            // só mascara se for CPF (evita atrapalhar passaporte)
+            if (/^[0-9 .-]*$/.test(val)) {
+              const pos = e.target.selectionStart;
+              const old = e.target.value;
+              e.target.value = formatarCPF(old);
+              if (e.target.value.length > old.length && pos != null) e.target.setSelectionRange(pos + 1, pos + 1);
+            }
+          });
+        }
+
+        // --- Formatação visual da taxa (R$) e incremento de R$1 ---
+        const taxaInput = document.getElementById("taxa_acompanhante");
+        function normalizarTaxaParaNumero(valor) {
+          if (valor === "" || valor == null) return null;
+          const num = Number(String(valor).replace(/[R$\s.]/g, "").replace(",", "."));
+          return Number.isFinite(num) ? num : null;
+        }
+        function formatarTaxaBRL(num) {
+          if (num == null || Number.isNaN(num)) return "";
+          return `R$ ${num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+        if (taxaInput) {
+          taxaInput.addEventListener("input", (e) => {
+            const raw = e.target.value;
+            const digits = raw.replace(/\D/g, "");
+            if (!digits) {
+              e.target.value = "";
+              return;
+            }
+            // Máscara estilo moeda: 5 -> 0,05 -> 0,50 -> 5,00 ...
+            const num = Number(digits) / 100;
+            e.target.value = formatarTaxaBRL(num);
+          });
+          taxaInput.addEventListener("keydown", (e) => {
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+              e.preventDefault();
+              const numAtual = normalizarTaxaParaNumero(e.target.value) ?? 0;
+              const delta = e.key === "ArrowUp" ? 1 : -1;
+              const novo = Math.max(0, numAtual + delta);
+              e.target.value = formatarTaxaBRL(novo);
+            }
+          });
+        }
+
         // Carrega os quartos assim que a página é aberta
         carregarQuartosDisponiveis();
         
@@ -926,7 +981,10 @@
               }
 
               const taxaValRaw = document.getElementById("taxa_acompanhante").value;
-              const taxaValNumber = taxaValRaw === "" ? null : Number(taxaValRaw.replace(",", "."));
+              const taxaValNumber = (() => {
+                const num = Number(String(taxaValRaw).replace(/[R$\s.]/g, "").replace(",", "."));
+                return Number.isFinite(num) ? num : null;
+              })();
               const taxaVal = Number.isFinite(taxaValNumber) ? taxaValNumber : null;
               const checkinData = {
                 cliente_cpf,

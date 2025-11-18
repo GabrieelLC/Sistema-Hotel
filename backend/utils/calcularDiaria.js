@@ -18,7 +18,9 @@ async function calcularDiariaComAcompanhantes(db, reservaId, valorBase, taxaAcom
       (err, results) => {
         if (err) return reject(err);
 
+        // Inclui o hóspede titular no cálculo da taxa (por pessoa)
         const totalAcompanhantes = (results && results[0] && results[0].total) ? results[0].total : 0;
+        const totalPessoasParaTaxa = totalAcompanhantes + 1; // titular + acompanhantes
 
         // Se taxa não foi informada, buscar do banco
         if (taxaAcompanhante === null) {
@@ -32,7 +34,7 @@ async function calcularDiariaComAcompanhantes(db, reservaId, valorBase, taxaAcom
                 taxaAcompanhante = Number(cfgResults[0].taxa_acompanhante_padrao) || 50.00;
               }
 
-              const totalTaxaAplicada = totalAcompanhantes * taxaAcompanhante;
+              const totalTaxaAplicada = totalPessoasParaTaxa * taxaAcompanhante;
               const valorFinal = Number(valorBase) + totalTaxaAplicada;
 
               resolve({
@@ -45,7 +47,7 @@ async function calcularDiariaComAcompanhantes(db, reservaId, valorBase, taxaAcom
             }
           );
         } else {
-          const totalTaxaAplicada = totalAcompanhantes * taxaAcompanhante;
+          const totalTaxaAplicada = totalPessoasParaTaxa * taxaAcompanhante;
           const valorFinal = Number(valorBase) + totalTaxaAplicada;
 
           resolve({

@@ -511,6 +511,29 @@
       let reservaAtivaId = null;
       let totalConsumos = 0; // Variável global para armazenar o total de consumos
 
+      // Máscara visual de CPF no checkout
+      function formatarCPF(cpf) {
+        cpf = cpf.replace(/\D/g, "");
+        if (cpf.length > 11) cpf = cpf.slice(0, 11);
+        if (cpf.length <= 3) return cpf;
+        if (cpf.length <= 6) return cpf.slice(0, 3) + "." + cpf.slice(3);
+        if (cpf.length <= 9) return cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6);
+        return cpf.slice(0, 3) + "." + cpf.slice(3, 6) + "." + cpf.slice(6, 9) + "-" + cpf.slice(9);
+      }
+      const cpfCheckoutInput = document.getElementById("cpf_cliente");
+      if (cpfCheckoutInput) {
+        cpfCheckoutInput.addEventListener("input", function (e) {
+          const pos = e.target.selectionStart;
+          const old = e.target.value;
+          e.target.value = formatarCPF(old);
+          if (e.target.value.length > old.length && pos != null) e.target.setSelectionRange(pos + 1, pos + 1);
+        });
+      }
+
+      function parseNumero(valor) {
+        return Number(String(valor).replace(/[.]/g, "").replace(",", "."));
+      }
+
       document
         .getElementById("cpf_cliente")
         .addEventListener("blur", async function () {
@@ -526,7 +549,7 @@
           totalConsumos = 0; // Reset ao buscar novo CPF
 
           try {
-            const resp = await fetch(`/api/reserva-ativa/${cpf}`);
+            const resp = await fetch(`/api/reserva-ativa/${cpf.replace(/\D/g, "")}`);
             if (!resp.ok) {
               alert("Nenhuma reserva ativa encontrada para este CPF.");
               return;
@@ -567,17 +590,24 @@
 
       function calcularTotal() {
         const dias = Number(document.getElementById("qtd_dias").value) || 1;
-        const valorDiaria =
-          Number(document.getElementById("valor_diaria").value) || 0;
+        const valorDiaria = parseNumero(
+          document.getElementById("valor_diaria").value
+        ) || 0;
         const total = valorDiaria * dias + totalConsumos;
-        document.getElementById("total").value = total.toFixed(2);
+        document.getElementById("total").value = total.toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
       }
 
       async function preencherFormularioCheckout(reserva) {
         reservaAtivaId = reserva.id;
         // Sempre usa valor_diaria_final se disponível, pois ele já inclui a taxa dos acompanhantes
         const valorFinal = reserva.valor_diaria_final || reserva.valor_diaria || 0;
-        document.getElementById("valor_diaria").value = Number(valorFinal).toFixed(2);
+        document.getElementById("valor_diaria").value = Number(valorFinal).toLocaleString("pt-BR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
         document.getElementById("quarto").value = reserva.quarto || "";
         
         const pagoBookingStatus = reserva.pago_booking == 1 ? "Sim" : "Não";

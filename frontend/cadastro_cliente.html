@@ -121,6 +121,7 @@
       document.addEventListener("DOMContentLoaded", function () {
         const nacionalidadeInput = document.getElementById("nacionalidade");
         const cpfInput = document.getElementById("cpf");
+        const cepInput = document.getElementById("cep");
 
         // Função para formatar CPF no padrão XXX.XXX.XXX-XX
         function formatarCPF(cpf) {
@@ -152,6 +153,22 @@
           if (newValue.length > oldLength) cursorPos++;
           e.target.setSelectionRange(cursorPos, cursorPos);
         });
+
+        // Máscara de CEP (00000-000)
+        function formatarCEP(cep) {
+          cep = cep.replace(/\D/g, "");
+          if (cep.length > 8) cep = cep.slice(0, 8);
+          if (cep.length <= 5) return cep;
+          return cep.slice(0, 5) + "-" + cep.slice(5);
+        }
+        if (cepInput) {
+          cepInput.addEventListener("input", function (e) {
+            const pos = e.target.selectionStart;
+            const old = e.target.value;
+            e.target.value = formatarCEP(old);
+            if (e.target.value.length > old.length && pos != null) e.target.setSelectionRange(pos + 1, pos + 1);
+          });
+        }
         const telefoneInput = document.getElementById("telefone");
 
         const DEFAULT_COUNTRY_CODE = "55";
@@ -656,6 +673,9 @@
           // Remove formatação do CPF antes de enviar
           if (cpfInput.value) {
             formData.set("cpf", cpfInput.value.replace(/\D/g, ""));
+          }
+          if (cepInput && cepInput.value) {
+            formData.set("cep", cepInput.value.replace(/\D/g, ""));
           }
 
           const data = Object.fromEntries(formData.entries());

@@ -366,7 +366,7 @@ router.get("/checkins-hoje", requireAuth, (req, res) => {
   db.query(
     `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkin as hora, c.telefone, c.email, 
-            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
+            COALESCE(r.valor_diaria, r.valor_diaria_base, q.valor_diaria, tq.valor_diaria) as valor_diaria,
             r.motivo_hospedagem
      FROM Reservas r
      JOIN Clientes c ON r.cliente_id = c.id
@@ -398,7 +398,7 @@ router.get("/checkouts-hoje", requireAuth, (req, res) => {
   db.query(
     `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkout as hora, c.telefone, c.email, 
-            COALESCE(q.valor_diaria, tq.valor_diaria) as valor_diaria,
+            COALESCE(r.valor_diaria, r.valor_diaria_base, q.valor_diaria, tq.valor_diaria) as valor_diaria,
             r.motivo_hospedagem
      FROM Reservas r
      JOIN Clientes c ON r.cliente_id = c.id
@@ -597,7 +597,7 @@ router.post("/checkin", (req, res) => {
                   db.query(
                     `UPDATE Quartos SET status = 'ocupado' WHERE numero = ?`,
                     [quarto_numero],
-                    (err2) => {
+                    async (err2) => {
                       if (err2)
                         return res.status(500).json({
                           message: "Erro ao atualizar status do quarto",
@@ -671,10 +671,46 @@ router.post("/checkin", (req, res) => {
                           }
                         );
                       } else {
-                        res.status(201).json({
-                          message: "Check-in registrado com sucesso",
-                          result,
-                        });
+                        // Recalcular diária mesmo sem acompanhantes para aplicar taxa ao titular (se houver)
+                        try {
+                          const calculo = await calcularDiariaComAcompanhantes(
+                            db,
+                            reservaId,
+                            Number(valor_diaria),
+                            taxaAcompanhanteFinal
+                          );
+
+                          db.query(
+                            `UPDATE Reservas SET valor_diaria = ? WHERE id = ?`,
+                            [calculo.valorFinal, reservaId],
+                            (errUpdate) => {
+                              if (errUpdate) {
+                                console.error("Erro ao atualizar diária:", errUpdate);
+                                return res.status(201).json({
+                                  message: "Check-in registrado, mas houve erro ao recalcular diária",
+                                  result,
+                                });
+                              }
+
+                              res.status(201).json({
+                                message: "Check-in registrado com sucesso",
+                                result: {
+                                  ...result,
+                                  valor_diaria_recalculado: calculo.valorFinal,
+                                  acompanhantes_count: calculo.acompanhantes,
+                                  taxa_acompanhante_usada: calculo.taxa_acompanhante,
+                                  total_taxa_aplicada: calculo.total_taxa_aplicada,
+                                },
+                              });
+                            }
+                          );
+                        } catch (calcErr) {
+                          console.error("Erro ao calcular diária:", calcErr);
+                          res.status(201).json({
+                            message: "Check-in registrado com sucesso",
+                            result,
+                          });
+                        }
                       }
                     }
                   );
@@ -1181,7 +1217,8 @@ router.delete("/consumos/:id", (req, res) => {
 router.get("/hospedes-ativos", requireAuth, (req, res) => {
   const sql = `
     SELECT c.cpf, c.passaporte, c.nome, r.quarto_numero as quarto, tq.tipo as tipo_quarto,
-           r.hora_checkin as hora, c.telefone, c.email, r.valor_diaria, 
+           r.hora_checkin as hora, c.telefone, c.email,
+           COALESCE(r.valor_diaria, r.valor_diaria_base, q.valor_diaria, tq.valor_diaria) AS valor_diaria,
            r.motivo_hospedagem
     FROM Reservas r
     JOIN Clientes c ON r.cliente_id = c.id
