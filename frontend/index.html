@@ -547,8 +547,9 @@
           const resp = await fetch("/api/checkins-hoje", {
             headers: { 'Authorization': `Bearer ${token}` }
           });
+          if (!resp.ok) throw new Error(`Erro ${resp.status}`);
           const dados = await resp.json();
-          if (dados.length === 0) {
+          if (!Array.isArray(dados) || dados.length === 0) {
             tbody.innerHTML =
               '<tr><td colspan="9">Nenhum check-in hoje</td></tr>';
             return;
@@ -591,8 +592,9 @@
           const resp = await fetch("/api/checkouts-hoje", {
             headers: { 'Authorization': `Bearer ${token}` }
           });
+          if (!resp.ok) throw new Error(`Erro ${resp.status}`);
           const dados = await resp.json();
-          if (dados.length === 0) {
+          if (!Array.isArray(dados) || dados.length === 0) {
             tbody.innerHTML =
               '<tr><td colspan="9">Nenhum check-out hoje</td></tr>';
             return;

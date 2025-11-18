@@ -909,7 +909,7 @@
                 await fetch(`/api/clientes/${id_cliente}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
-                  // Envia todos os dados do cliente, incluindo o Passaporte
+                  // Envia dados do cliente (sem campo inexistente no DB)
                   body: JSON.stringify({
                     nome,
                     telefone,
@@ -917,7 +917,6 @@
                     endereco,
                     cep,
                     passaporte: passaporte_cliente,
-                    pago_booking: pago_booking,
                   }),
                 });
               } else {
@@ -926,7 +925,9 @@
                 );
               }
 
-              const taxaVal = document.getElementById("taxa_acompanhante").value;
+              const taxaValRaw = document.getElementById("taxa_acompanhante").value;
+              const taxaValNumber = taxaValRaw === "" ? null : Number(taxaValRaw.replace(",", "."));
+              const taxaVal = Number.isFinite(taxaValNumber) ? taxaValNumber : null;
               const checkinData = {
                 cliente_cpf,
                 cliente_passaporte: passaporte_cliente,
@@ -941,7 +942,7 @@
                 cpfs_acompanhantes,
                 passaportes_acompanhantes,
                 nascimentos_acompanhantes,
-                taxa_acompanhante: taxaVal === "" ? null : Number(taxaVal),
+                taxa_acompanhante: taxaVal,
                 pago_booking: pago_booking,
               };
 

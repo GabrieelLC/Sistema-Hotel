@@ -169,8 +169,7 @@ router.put("/clientes/:id", (req, res) => {
     endereco,
     cep,
     data_nascimento,
-    nacionalidade,
-    pago_booking
+    nacionalidade
   } = req.body;
 
   // Adicionando validação para garantir que pelo menos um dos identificadores está presente.
@@ -188,8 +187,7 @@ router.put("/clientes/:id", (req, res) => {
       endereco = ?,
       cep = ?,
       data_nascimento = ?,
-      nacionalidade = ?,
-      pago_booking = ?
+      nacionalidade = ?
     WHERE id = ?
   `;
   db.query(
@@ -204,7 +202,6 @@ router.put("/clientes/:id", (req, res) => {
       cep,
       data_nascimento,
       nacionalidade,
-      pago_booking || 0,
       id
     ],
     (err, result) => {
@@ -357,9 +354,15 @@ router.delete("/quartos/:numero", (req, res) => {
   });
 });
 
-// Chegadas do dia (check-in) - Requer admin ou gerente
-router.get("/checkins-hoje", requireAuth, requireAdminOrGerente, (req, res) => {
-  const hoje = new Date().toISOString().slice(0, 10);
+// Chegadas do dia (check-in) - Disponível para usuários autenticados
+router.get("/checkins-hoje", requireAuth, (req, res) => {
+  // Usa data local (evita virar o dia por causa do fuso ao usar toISOString/UTC)
+  const hoje = (() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
+  })();
   db.query(
     `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkin as hora, c.telefone, c.email, 
@@ -383,9 +386,15 @@ router.get("/checkins-hoje", requireAuth, requireAdminOrGerente, (req, res) => {
   );
 });
 
-// Saídas do dia (check-out) - Requer admin ou gerente
-router.get("/checkouts-hoje", requireAuth, requireAdminOrGerente, (req, res) => {
-  const hoje = new Date().toISOString().slice(0, 10);
+// Saídas do dia (check-out) - Disponível para usuários autenticados
+router.get("/checkouts-hoje", requireAuth, (req, res) => {
+  // Usa data local (evita virar o dia por causa do fuso ao usar toISOString/UTC)
+  const hoje = (() => {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
+  })();
   db.query(
     `SELECT c.cpf, c.passaporte, c.nome, q.numero as quarto, tq.tipo as tipo_quarto, 
             r.hora_checkout as hora, c.telefone, c.email, 
@@ -488,6 +497,15 @@ router.post("/checkin", (req, res) => {
     pago_booking
   } = req.body;
 
+  // Normaliza a taxa (aceita ponto ou vírgula) e evita NaN
+  const taxaAcompanhanteNumber =
+    taxa_acompanhante === null || taxa_acompanhante === undefined || taxa_acompanhante === ""
+      ? null
+      : Number(String(taxa_acompanhante).replace(",", "."));
+  const taxaAcompanhanteFinal = Number.isFinite(taxaAcompanhanteNumber)
+    ? taxaAcompanhanteNumber
+    : null;
+
   // CORREÇÃO DE VALIDAÇÃO: Verifica se há CPF OU Passaporte
   if (
     (!cliente_cpf && !cliente_passaporte) || 
@@ -560,7 +578,7 @@ router.post("/checkin", (req, res) => {
                   hora_checkin,
                   valor_diaria,
                   valor_diaria, // salva o valor base
-                  taxa_acompanhante || null,
+                  taxaAcompanhanteFinal,
                   motivo_hospedagem || null,
                   data_checkout_prevista || null,
                   hora_checkout_prevista || null,
@@ -615,7 +633,7 @@ router.post("/checkin", (req, res) => {
                                 db,
                                 reservaId,
                                 Number(valor_diaria),
-                                taxa_acompanhante ? Number(taxa_acompanhante) : null
+                                taxaAcompanhanteFinal
                               );
 
                               // Atualizar a reserva com o novo valor da diária
