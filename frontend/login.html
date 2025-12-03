@@ -42,10 +42,10 @@
     </div>
 
     <script>
-      // Limpar localStorage corrompido no login
+      // Limpar sessionStorage corrompido no login
       try {
-        const user = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
+        const user = sessionStorage.getItem('user');
+        const token = sessionStorage.getItem('token');
         
         // Se houver token válido, ir para index
         if (token && user) {
@@ -53,12 +53,12 @@
             JSON.parse(user);
             window.location.replace('index.html');
           } catch (e) {
-            // localStorage corrompido, limpar e continuar no login
-            localStorage.clear();
+            // sessionStorage corrompido, limpar e continuar no login
+            sessionStorage.clear();
           }
         }
       } catch (e) {
-        // Ignorar erros de acesso ao localStorage
+        // Ignorar erros de acesso ao sessionStorage
       }
 
       document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -89,9 +89,9 @@
             return;
           }
 
-          // Salvar token e usuário no localStorage
-          localStorage.setItem('token', data.token);
-          localStorage.setItem('user', JSON.stringify(data.user));
+          // Salvar token e usuário no sessionStorage
+          sessionStorage.setItem('token', data.token);
+          sessionStorage.setItem('user', JSON.stringify(data.user));
 
           // Redirecionar para index
           window.location.replace('index.html');

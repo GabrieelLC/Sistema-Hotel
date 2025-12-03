@@ -2,14 +2,14 @@
  * auth.js - Sistema de autenticação e gerenciamento de token
  */
 
-// Função para obter o token do localStorage
+// Função para obter o token do sessionStorage
 function getToken() {
-  return localStorage.getItem('token');
+  return sessionStorage.getItem('token');
 }
 
-// Função para obter dados do usuário do localStorage
+// Função para obter dados do usuário do sessionStorage
 function getUser() {
-  const userStr = localStorage.getItem('user');
+  const userStr = sessionStorage.getItem('user');
   if (!userStr) return null;
   try {
     return JSON.parse(userStr);
@@ -21,8 +21,8 @@ function getUser() {
 
 // Função para fazer logout
 function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('user');
   window.location.replace('login.html');
 }
 

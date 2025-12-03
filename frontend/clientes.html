@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sistema Hotel - Clientes</title>
     <script>
-      if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+      if (!sessionStorage.getItem('user') || !sessionStorage.getItem('token')) {
         window.location.replace('login.html');
       }
     </script>
@@ -180,6 +180,30 @@
         justify-content: space-between;
         align-items: center;
         margin-bottom: 2rem;
+      }
+
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .cadastro-btn {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, filter 0.2s ease;
+      }
+
+      .cadastro-btn:hover {
+        filter: brightness(0.95);
+        transform: translateY(-1px);
       }
 
       h1 {
@@ -379,6 +403,11 @@
       <div class="main-content">
         <header class="header">
           <h1>Gerenciar Clientes</h1>
+          <div class="header-actions">
+            <button class="cadastro-btn" onclick="window.location.href='cadastro_cliente.html'">
+              + Cadastrar Cliente
+            </button>
+          </div>
         </header>
 
         <section class="card">

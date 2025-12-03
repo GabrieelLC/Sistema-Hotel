@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <title>Quartos - Guia de Informações</title>
     <script>
-      if (!localStorage.getItem('user') || !localStorage.getItem('token')) {
+      if (!sessionStorage.getItem('user') || !sessionStorage.getItem('token')) {
         window.location.replace('login.html');
       }
     </script>
@@ -153,6 +153,32 @@
       .checkout_screen_back_arrow { text-decoration: none; color: var(--primary-color); font-weight: 600; }
       h2 { color: var(--heading-color); margin: 12px 0 18px; font-size: 1.6rem; }
 
+      .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+
+      .cadastro-btn {
+        background-color: var(--primary-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.15s ease, filter 0.2s ease;
+      }
+
+      .cadastro-btn:hover {
+        filter: brightness(0.95);
+        transform: translateY(-1px);
+      }
+
       /* Tabs minimalistas */
       .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--border-color); margin-bottom: 16px; overflow-x: auto; }
       .tab { background: transparent; border: 1px solid transparent; border-bottom: 2px solid transparent; padding: 10px 14px; font-size: 0.95rem; color: var(--text-color); cursor: pointer; border-radius: 6px 6px 0 0; }
@@ -224,10 +250,17 @@
         </div>
       </aside>
       <div class="container">
-      <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()"
-        >←</a
-      >
-      <h2 style="color: #357abd; margin-bottom: 18px">Quartos Cadastrados</h2>
+      <div class="page-header">
+        <div>
+          <a href="#" class="checkout_screen_back_arrow" onclick="VoltarPagina()"
+            >←</a
+          >
+          <h2 style="color: #357abd; margin-bottom: 6px">Quartos Cadastrados</h2>
+        </div>
+        <button class="cadastro-btn" onclick="window.location.href='cadastro_quarto.html'">
+          + Cadastrar Quarto
+        </button>
+      </div>
       <div class="tabs" id="tabs"></div>
       <div class="tab-content" id="tabContent">
         <p>Selecione um quarto acima para ver as informações.</p>

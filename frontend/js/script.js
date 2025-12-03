@@ -180,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('checkin-tbody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const resp = await fetch('/api/checkins-hoje', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -210,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tbody = document.getElementById('checkout-tbody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="8">Carregando...</td></tr>';
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     const resp = await fetch('/api/checkouts-hoje', {
       headers: { 'Authorization': `Bearer ${token}` }
     });
