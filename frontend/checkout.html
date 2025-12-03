@@ -602,7 +602,7 @@
 
       async function preencherFormularioCheckout(reserva) {
         reservaAtivaId = reserva.id;
-        // Sempre usa valor_diaria_final se disponível, pois ele já inclui a taxa dos acompanhantes
+        // Usa valor_diaria_final se disponível (ambos já representam o valor final da diária)
         const valorFinal = reserva.valor_diaria_final || reserva.valor_diaria || 0;
         document.getElementById("valor_diaria").value = Number(valorFinal).toLocaleString("pt-BR", {
           minimumFractionDigits: 2,

@@ -81,9 +81,6 @@ async function testValorFinal() {
       console.log(`   - valor_diaria: R$ ${reserva.valor_diaria}`);
       console.log(`   - valor_diaria_base: R$ ${reserva.valor_diaria_base}`);
       console.log(`   - valor_diaria_final: R$ ${reserva.valor_diaria_final}`);
-      console.log(`   - taxa_acompanhante: ${reserva.taxa_acompanhante ? `R$ ${reserva.taxa_acompanhante}` : 'nenhuma'}`);
-      console.log(`   - acompanhantes_count: ${reserva.acompanhantes_count}`);
-      console.log(`   - total_taxa_aplicada: R$ ${reserva.total_taxa_aplicada}\n`);
 
       if (!reserva.valor_diaria_final) {
         console.error('❌ PROBLEMA: valor_diaria_final não foi retornado!');
@@ -103,9 +100,6 @@ async function testValorFinal() {
     console.log(`   - valor_diaria: R$ ${reserva.valor_diaria}`);
     console.log(`   - valor_diaria_base: R$ ${reserva.valor_diaria_base}`);
     console.log(`   - valor_diaria_final: R$ ${reserva.valor_diaria_final}`);
-    console.log(`   - taxa_acompanhante: ${reserva.taxa_acompanhante ? `R$ ${reserva.taxa_acompanhante}` : 'nenhuma'}`);
-    console.log(`   - acompanhantes_count: ${reserva.acompanhantes_count}`);
-    console.log(`   - total_taxa_aplicada: R$ ${reserva.total_taxa_aplicada}\n`);
 
     if (!reserva.valor_diaria_final) {
       console.error('❌ PROBLEMA: valor_diaria_final não foi retornado!');

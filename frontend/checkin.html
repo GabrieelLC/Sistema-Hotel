@@ -523,18 +523,6 @@
                     readonly
                   />
                 </div>
-                <div class="checkoutscreenfield_group">
-                  <label class="checkoutscreenlabel" for="taxa_acompanhante"
-                    >Taxa de Café da Manhã (por pessoa)</label
-                  >
-                  <input
-                    class="checkoutscreeninput"
-                    type="text"
-                    id="taxa_acompanhante"
-                    name="taxa_acompanhante"
-                    placeholder="50.00"
-                  />
-                </div>
                 <div class="form-group">
                   <label for="pago_booking">Pagamento feito pelo Booking?</label>
                   <select id="pago_booking" name="pago_booking" class="form-control">
@@ -644,33 +632,6 @@
         }
       }
 
-      // Função para carregar a taxa de acompanhante padrão
-      async function carregarTaxaAcompanhante() {
-        try {
-          const token = localStorage.getItem('token');
-          const resp = await fetch("/api/configuracoes/taxa-acompanhante", {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          const data = await resp.json();
-          const taxaInput = document.getElementById("taxa_acompanhante");
-          if (taxaInput && data.taxa_acompanhante_padrao) {
-            // apenas placeholder — não preencher o valor automaticamente
-            taxaInput.placeholder = `${Number(data.taxa_acompanhante_padrao).toFixed(2)}`;
-            taxaInput.value = "";
-          }
-        } catch (error) {
-          console.error("Erro ao carregar taxa de acompanhante:", error);
-          // deixar campo vazio — apenas placeholder
-          const taxaInput = document.getElementById("taxa_acompanhante");
-          if (taxaInput) {
-            taxaInput.placeholder = "50.00";
-            taxaInput.value = "";
-          }
-        }
-      }
-
       document.addEventListener("DOMContentLoaded", () => {
         // --- Máscara visual de CPF (campo principal) ---
         const docClienteInput = document.getElementById("documentocliente");
@@ -695,45 +656,8 @@
           });
         }
 
-        // --- Formatação visual da taxa (R$) e incremento de R$1 ---
-        const taxaInput = document.getElementById("taxa_acompanhante");
-        function normalizarTaxaParaNumero(valor) {
-          if (valor === "" || valor == null) return null;
-          const num = Number(String(valor).replace(/[R$\s.]/g, "").replace(",", "."));
-          return Number.isFinite(num) ? num : null;
-        }
-        function formatarTaxaBRL(num) {
-          if (num == null || Number.isNaN(num)) return "";
-          return `R$ ${num.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        }
-        if (taxaInput) {
-          taxaInput.addEventListener("input", (e) => {
-            const raw = e.target.value;
-            const digits = raw.replace(/\D/g, "");
-            if (!digits) {
-              e.target.value = "";
-              return;
-            }
-            // Máscara estilo moeda: 5 -> 0,05 -> 0,50 -> 5,00 ...
-            const num = Number(digits) / 100;
-            e.target.value = formatarTaxaBRL(num);
-          });
-          taxaInput.addEventListener("keydown", (e) => {
-            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-              e.preventDefault();
-              const numAtual = normalizarTaxaParaNumero(e.target.value) ?? 0;
-              const delta = e.key === "ArrowUp" ? 1 : -1;
-              const novo = Math.max(0, numAtual + delta);
-              e.target.value = formatarTaxaBRL(novo);
-            }
-          });
-        }
-
         // Carrega os quartos assim que a página é aberta
         carregarQuartosDisponiveis();
-        
-        // Carrega a taxa de acompanhante padrão
-        carregarTaxaAcompanhante();
 
         // Adiciona o listener para quando o usuário muda a seleção do quarto
         document
@@ -959,33 +883,32 @@
             }
 
             try {
-              // Tenta atualizar o cliente se houver CPF (API PUT usa CPF como chave)
+              // Tenta atualizar o cliente se houver ID (envia CPF e passaporte para passar na validação do backend)
               if (id_cliente) {
-                await fetch(`/api/clientes/${id_cliente}`, {
+                const updateResp = await fetch(`/api/clientes/${id_cliente}`, {
                   method: "PUT",
                   headers: { "Content-Type": "application/json" },
-                  // Envia dados do cliente (sem campo inexistente no DB)
                   body: JSON.stringify({
+                    cpf: cliente_cpf || null,
+                    passaporte: passaporte_cliente || null,
                     nome,
                     telefone,
                     email,
                     endereco,
                     cep,
-                    passaporte: passaporte_cliente,
+                    data_nascimento: null,
+                    nacionalidade: null,
                   }),
                 });
+                if (!updateResp.ok) {
+                  console.warn("PUT /clientes falhou (prosseguindo com check-in):", await updateResp.text());
+                }
               } else {
                 console.log(
                   "Cliente estrangeiro (sem CPF) ou novo cliente. Pulando PUT de atualização por CPF."
                 );
               }
 
-              const taxaValRaw = document.getElementById("taxa_acompanhante").value;
-              const taxaValNumber = (() => {
-                const num = Number(String(taxaValRaw).replace(/[R$\s.]/g, "").replace(",", "."));
-                return Number.isFinite(num) ? num : null;
-              })();
-              const taxaVal = Number.isFinite(taxaValNumber) ? taxaValNumber : null;
               const checkinData = {
                 cliente_cpf,
                 cliente_passaporte: passaporte_cliente,
@@ -1000,7 +923,6 @@
                 cpfs_acompanhantes,
                 passaportes_acompanhantes,
                 nascimentos_acompanhantes,
-                taxa_acompanhante: taxaVal,
                 pago_booking: pago_booking,
               };
 
